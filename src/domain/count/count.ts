@@ -402,7 +402,7 @@ export type MarkerWarning = 'unassigned' | 'incomplete' | 'duplicate';
 /** Warnings per marker: unassigned, incomplete item (CNT-05), unaccepted duplicate tag (CNT-08). */
 export function markerWarningMap(
   doc: CountDoc,
-  entries = countEntries(doc),
+  entries: readonly CountEntry[] = countEntries(doc),
 ): Map<string, MarkerWarning[]> {
   const map = new Map<string, MarkerWarning[]>();
   const add = (markerId: string, warning: MarkerWarning) => {

@@ -310,15 +310,15 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 0.6.0         | Parts count                                                 | Done    |
 | 0.7.0         | Segment notes and drawing links                             | Done    |
 | 0.8.0         | Excel template mapping and export                           | Done ²  |
-| 0.9.0         | Annotated PDF export and pre-export checks                  | Planned |
+| 0.9.0         | Annotated PDF export and pre-export checks                  | Done    |
 | 1.0.0         | First production release                                    | Planned |
 | 1.1.0 – 2.0.0 | Productivity, revisions, navigation aids, assisted counting | Planned |
 
-² Checked against a synthetic client-style template; to be re-checked with the client's own
-template when it is provided.
-
 ¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
 GPL question is decided (see the licence note above).
+
+² Checked against a synthetic client-style template; to be re-checked with the client's own
+template when it is provided.
 
 ## Contributing
 

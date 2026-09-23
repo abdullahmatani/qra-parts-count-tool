@@ -96,6 +96,9 @@ test('maps the client template and exports a filled copy (EXP-02)', async ({ app
   const exportDialog = page.getByRole('dialog', { name: 'Export' });
   await expect(exportDialog).toContainText('Client_template.xlsx (sheet per segment)');
   await exportDialog.getByLabel('CSV item list').check();
+  // Annotated PDFs are covered by pdf-export.spec.ts.
+  await exportDialog.getByLabel('Annotated drawings (PDF)').uncheck();
+  await expect(exportDialog.getByTestId('pre-export-check')).toContainText('All checks passed.');
   await exportDialog.getByRole('button', { name: 'Export', exact: true }).click();
   const result = exportDialog.getByTestId('export-result');
   await expect(result).toContainText('Plant A QRA_PartsCount.xlsx', { timeout: 30_000 });

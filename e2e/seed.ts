@@ -18,6 +18,9 @@ export interface SeedDrawing {
   /** Read the bytes from here instead of e2e/fixtures/<file>. */
   source?: URL;
   page?: number;
+  /** Defaults to 'pdf'; CAD drawings name a layout ("Model" for model space). */
+  fileType?: 'pdf' | 'dxf' | 'dwg';
+  layout?: string;
   drawingNo: string;
   title?: string;
   revision?: string;
@@ -42,8 +45,9 @@ export async function seedProject(
       fileName: d.file,
       originalFileName: d.file,
       fileHash: createHash('sha256').update(bytes).digest('hex'),
-      fileType: 'pdf',
-      page: d.page ?? 1,
+      fileType: d.fileType ?? 'pdf',
+      page: (d.fileType ?? 'pdf') === 'pdf' ? (d.page ?? 1) : null,
+      layout: d.layout ?? null,
       drawingNo: d.drawingNo,
       title: d.title ?? '',
       revision: d.revision ?? 'A',

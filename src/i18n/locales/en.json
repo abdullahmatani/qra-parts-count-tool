@@ -703,13 +703,26 @@
     "mapTemplate": "Map a template…",
     "csv": "CSV item list",
     "csvHint": "One row per counted item, for audit (EXP-06).",
+    "drawingPdfs": "Annotated drawings (PDF)",
+    "drawingPdfsHint": "One PDF per drawing with markers, labels, a legend and a stamp. Original linework is kept as vectors; drawing links are left out.",
+    "segmentPdfs": "Combined PDF per segment",
+    "segmentPdfsHint": "All drawings of a segment in one file, showing only that segment’s markers.",
+    "filenamePattern": "PDF file names",
+    "filenamePatternHint": "Tokens: {project} {segment} {drawingNo} {rev} {sheet} {title} {page}",
+    "filenameExample": "e.g. {{name}}",
+    "patternRequired": "Enter a file name pattern.",
+    "patternHistory": "Edit PDF file name pattern",
+    "outputs": "Outputs",
     "run": "Export",
     "running": "Exporting…",
+    "progress": "Writing PDFs: {{done}} of {{total}}",
     "done": "Exported to {{folder}}",
     "files": "Files written",
     "unmapped_one": "{{count}} count has no cell in the template; it is on the Unmapped sheet.",
     "unmapped_other": "{{count}} counts have no cell in the template; they are on the Unmapped sheet.",
     "failed": "Export failed",
+    "failures_one": "{{count}} file could not be written:",
+    "failures_other": "{{count}} files could not be written:",
     "nothing": "Choose at least one output.",
     "fileSuffix": "PartsCount",
     "sheets": {
@@ -759,6 +772,46 @@
       "macro": "Macro-enabled templates (.xlsm) are not supported. Save an .xlsx copy and use that.",
       "missingSheet": "The template has no sheet called {{sheet}}.",
       "missingTemplate": "The template file {{file}} is missing from templates/."
+    },
+    "pdf": {
+      "legend": "Legend",
+      "esdv": "ESDV (segment boundary)",
+      "unassigned": "Not in a segment",
+      "warning": "Needs attention",
+      "rev": "rev {{rev}}",
+      "sheet": "sheet {{sheet}}",
+      "segment": "Segment {{label}}",
+      "countRevision": "Count revision {{revision}}",
+      "exported": "Exported {{date}}",
+      "errors": {
+        "encrypted": "{{drawing}}: the PDF is password-protected or encrypted, so it cannot be annotated.",
+        "unreadable": "{{drawing}}: the PDF could not be read.",
+        "missingPage": "{{drawing}}: page {{page}} is not in the file any more.",
+        "missingFile": "{{drawing}}: {{file}} is missing from drawings/.",
+        "cad": "{{drawing}}: the CAD drawing could not be read ({{message}})."
+      }
+    },
+    "check": {
+      "title": "Pre-export check",
+      "passed": "All checks passed.",
+      "issues_one": "{{count}} check needs attention. You can export anyway; the export log records it.",
+      "issues_other": "{{count}} checks need attention. You can export anyway; the export log records them.",
+      "show": "Show",
+      "exportAnyway": "Export anyway",
+      "kinds": {
+        "unassignedMarkers_one": "{{count}} marker is not in a segment",
+        "unassignedMarkers_other": "{{count}} markers are not in a segment",
+        "incompleteItems_one": "{{count}} item is missing its type or size",
+        "incompleteItems_other": "{{count}} items are missing their type or size",
+        "emptySegments_one": "{{count}} segment has no counted items",
+        "emptySegments_other": "{{count}} segments have no counted items",
+        "segmentsWithoutDrawings_one": "{{count}} segment has no linked drawing",
+        "segmentsWithoutDrawings_other": "{{count}} segments have no linked drawing",
+        "duplicateTags_one": "{{count}} tag appears more than once",
+        "duplicateTags_other": "{{count}} tags appear more than once",
+        "unmappedCounts_one": "{{count}} count has no cell in the template",
+        "unmappedCounts_other": "{{count}} counts have no cell in the template"
+      }
     }
   },
   "mapper": {
