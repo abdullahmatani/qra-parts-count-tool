@@ -307,7 +307,7 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 0.4.0         | Markup engine                                               | Done    |
 | 0.5.0         | Isolatable segments                                         | Done    |
 | 0.6.0         | Parts count                                                 | Done    |
-| 0.7.0         | Segment notes and drawing links                             | Planned |
+| 0.7.0         | Segment notes and drawing links                             | Done    |
 | 0.8.0         | Excel template mapping and export                           | Planned |
 | 0.9.0         | Annotated PDF export and pre-export checks                  | Planned |
 | 1.0.0         | First production release                                    | Planned |

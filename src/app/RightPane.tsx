@@ -28,14 +28,17 @@ function PanelSection({
   grow?: boolean;
 }) {
   return (
+    // Sections take the height of their content; the pane scrolls as a whole.
     <section
       aria-label={title}
-      className={grow ? 'flex min-h-0 flex-1 flex-col border-t' : 'flex flex-col border-t'}
+      className={
+        grow ? 'flex flex-1 shrink-0 flex-col border-t' : 'flex shrink-0 flex-col border-t'
+      }
     >
       <h2 className="px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {title}
       </h2>
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">{children}</div>
+      <div className="px-3 pb-3">{children}</div>
     </section>
   );
 }

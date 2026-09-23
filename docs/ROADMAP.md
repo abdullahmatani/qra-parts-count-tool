@@ -37,10 +37,10 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 29 | 0.6.0 | Parts count | Live segment count table and project summary with click-to-highlight (CNT-06, CNT-07) | Done — count table per segment and for all segments, grouped by bin set; clicking a cell or the incomplete line highlights the markers (and opens their drawing) |
 | 30 | 0.6.0 | Parts count | Cross-drawing duplicate tag check (CNT-08) | Done — normalised tags compared across markers; duplicates warn until accepted (stored in `acceptedDuplicates`) |
 | 31 | 0.6.0 | Parts count | Pipe length counting as a per-project user setting: manual length entry on dashed-highlight line runs, summed per segment and size bin (CNT-12) | Done — with pipe length counting on, line runs carry a pipe item with size and length; lengths summed per size bin in the count table |
-| 32 | 0.7.0 | Segment notes and drawing links | Segment notes editor with basic formatting (NTE-01) | Planned |
-| 33 | 0.7.0 | Segment notes and drawing links | Drawing link hotspot tool with target drawing and saved view (LNK-01) | Planned |
-| 34 | 0.7.0 | Segment notes and drawing links | Link navigation with Back history; link overlay show/hide (LNK-02, LNK-03) | Planned |
-| 35 | 0.7.0 | Segment notes and drawing links | Ensure links are excluded from all export paths (LNK-04) | Planned |
+| 32 | 0.7.0 | Segment notes and drawing links | Segment notes editor with basic formatting (NTE-01) | Done — notes panel per segment with Bold and Bullet formatting (a small, text-only Markdown subset rendered without HTML), edit and delete with undo; `e2e/notes-links.spec.ts` |
+| 33 | 0.7.0 | Segment notes and drawing links | Drawing link hotspot tool with target drawing and saved view (LNK-01) | Done — link tool (L) draws a hotspot; the link panel sets the target drawing, a label and an optional saved view (the target's current view) |
+| 34 | 0.7.0 | Segment notes and drawing links | Link navigation with Back history; link overlay show/hide (LNK-02, LNK-03) | Done — a click with Select follows a link; Back button and Alt+← return to the previous drawing and view; toolbar toggle hides links; links without a valid target are drawn dashed red (LNK-05) |
+| 35 | 0.7.0 | Segment notes and drawing links | Ensure links are excluded from all export paths (LNK-04) | Done — every export starts from `exportableProject()`, which drops links (`src/domain/export/exportable.ts`, unit-tested); the Excel and PDF writers (#37–41) build on it |
 | 36 | 0.8.0 | Excel template mapping and export | Template upload into templates/ and Template mapper UI (section 7) | Planned |
 | 37 | 0.8.0 | Excel template mapping and export | Implement four layout modes: sheet per segment, row per segment, block per segment, flat item list | Planned |
 | 38 | 0.8.0 | Excel template mapping and export | Write values with ExcelJS preserving formatting, formulas and other sheets; add Notes, Item List, Unmapped sheets (EXP-02, NTE-03) | Planned |
@@ -55,14 +55,14 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 47 | 1.0.0 | First production release | Publish to public URL and package the same build as a zipped static site; release notes | Planned |
 | 48 | 1.1.0 | Productivity features | Stamp mode and keyboard shortcuts for equipment types (ANN-08, ANN-09) | Partial — equipment type key shortcuts done in v0.6.0; stamp mode (ANN-09) not yet built |
 | 49 | 1.1.0 | Productivity features | Bulk edit of items; split/merge/reorder segments; segment status (CNT-10, SEG-07, SEG-09) | Planned |
-| 50 | 1.1.0 | Productivity features | Timestamped notes with author initials for checker review (NTE-02) | Planned |
+| 50 | 1.1.0 | Productivity features | Timestamped notes with author initials for checker review (NTE-02) | Done — built with the notes panel in v0.7.0: each note is a timestamped entry signed with the initials set in Settings |
 | 51 | 1.1.0 | Productivity features | Import/export equipment library and bin sets as JSON (CNT-11) | Planned |
 | 52 | 1.2.0 | Revisions, search and portability | Drawing revision replacement keeping markers, with review flags (DRW-07, LNK-05) | Planned |
 | 53 | 1.2.0 | Revisions, search and portability | PDF text search for tags and line numbers (DRW-08); split view (DRW-06) | Planned |
 | 54 | 1.2.0 | Revisions, search and portability | Project .zip export/import and read-only mode for Firefox/Safari (PRJ-08, risk R2) | Planned |
 | 55 | 1.2.0 | Revisions, search and portability | Read-only lock when project is open in another tab (PRJ-07); CSV item export (EXP-06) | Planned |
 | 56 | 1.3.0 | Navigation aids | Auto-suggest drawing links from off-page connector text (LNK-06) | Planned |
-| 57 | 1.3.0 | Navigation aids | Note references to markers (NTE-04); DWG layer toggles (DRW-09) | Planned |
+| 57 | 1.3.0 | Navigation aids | Note references to markers (NTE-04); DWG layer toggles (DRW-09) | Partial — note references to markers done in v0.7.0; DWG layer toggles (DRW-09) not yet built |
 | 58 | 1.3.0 | Navigation aids | Arabic UI and RTL layout (NFR-08) | Planned |
 | 59 | 2.0.0 | Assisted counting | Research and prototype offline symbol detection (valves, flanges, instruments) running in-browser | Planned |
 | 60 | 2.0.0 | Assisted counting | Suggest candidate markers for user confirmation; never auto-count without review | Planned |

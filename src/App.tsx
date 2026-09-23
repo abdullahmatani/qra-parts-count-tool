@@ -17,6 +17,7 @@ import { MarkerFilterChips } from '@/features/markup/MarkerFilters';
 import { MarkerInspector } from '@/features/markup/MarkerInspector';
 import { MarkupViewer } from '@/features/markup/MarkupViewer';
 import { ShortcutsDialog } from '@/features/markup/ShortcutsDialog';
+import { NotesPanel } from '@/features/notes/NotesPanel';
 import { NewSegmentDialog } from '@/features/segments/NewSegmentDialog';
 import { SegmentDetails } from '@/features/segments/SegmentDetails';
 import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
@@ -49,6 +50,7 @@ export function App() {
             segmentDetails: <SegmentDetails />,
             countTable: <CountTablePanel />,
             itemEditor: <MarkerInspector />,
+            notes: <NotesPanel />,
           }}
           statusBar={{ warningCount, filterChips: <MarkerFilterChips /> }}
         />

@@ -45,6 +45,7 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
     expect(shortcutFor(key('Backspace'))).toEqual({ kind: 'delete' });
     expect(shortcutFor(key('Escape'))).toEqual({ kind: 'clearSelection' });
     expect(shortcutFor(key('c', { altKey: true }))).toBeNull();
+    expect(shortcutFor(key('ArrowLeft', { altKey: true }))).toEqual({ kind: 'back' });
   });
 
   it('never fires while typing or in a dialog', () => {

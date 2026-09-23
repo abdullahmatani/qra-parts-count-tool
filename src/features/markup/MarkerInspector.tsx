@@ -20,6 +20,7 @@ import { itemForMarker } from '@/domain/actions/items';
 import { itemsByMarker as indexItems } from '@/domain/markup/presentation';
 import { ItemEditor } from '@/features/count/ItemEditor';
 import { addItemCommand } from '@/features/count/item-commands';
+import { LinkEditor } from '@/features/links/LinkEditor';
 import { EsdvEditor } from '@/features/segments/EsdvEditor';
 import { assignMarkerIds, deleteMarkerIds } from './marker-commands';
 
@@ -62,6 +63,7 @@ export function MarkerInspector() {
   const selection = useUiStore((s) => s.selection);
   const activeDrawingId = useUiStore((s) => s.activeDrawingId);
   const editRequest = useUiStore((s) => s.editRequest);
+  const selectedLinkId = useUiStore((s) => s.selectedLinkId);
   const markersRecord = useProjectStore((s) => s.doc?.markers);
   const readOnly = useProjectStore((s) => s.readOnly);
   const segments = useOrderedSegments();
@@ -94,6 +96,7 @@ export function MarkerInspector() {
 
   const first = markers[0];
   if (!first) {
+    if (selectedLinkId) return <LinkEditor linkId={selectedLinkId} />;
     return <p className="text-sm text-muted-foreground">{t('panels.noItem')}</p>;
   }
   const ids = markers.map((m) => m.id);

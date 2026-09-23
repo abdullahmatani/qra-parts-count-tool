@@ -64,6 +64,10 @@ export interface UiState {
   editRequest: { markerId: string; field: EditField; at: number } | null;
   /** The last type and actuation used, for the next item (FDS section 6). */
   itemDefaults: ItemDefaults;
+  /** The drawing link being edited (LNK-01); markers and a link are never selected together. */
+  selectedLinkId: string | null;
+  /** LNK-02: where each followed link came from, for the Back button. */
+  navHistory: { drawingId: string; view: Viewport | null }[];
   /** SEG-05: an area of a drawing to bring into view once its viewer is ready. */
   pendingFocus: { drawingId: string; box: Box | null } | null;
 
@@ -86,6 +90,9 @@ export interface UiState {
   /** Opens a drawing and zooms to an area of it (the whole sheet when `box` is null). */
   focusDrawing: (drawingId: string, box: Box | null) => void;
   clearFocus: () => void;
+  setSelectedLink: (linkId: string | null) => void;
+  pushNav: (entry: { drawingId: string; view: Viewport | null }) => void;
+  popNav: () => { drawingId: string; view: Viewport | null } | null;
   reset: () => void;
 }
 
@@ -106,9 +113,11 @@ const initial = {
   editRequest: null,
   itemDefaults: { equipmentTypeId: null, actuation: null },
   pendingFocus: null,
+  selectedLinkId: null,
+  navHistory: [],
 } satisfies Partial<UiState>;
 
-export const useUiStore = create<UiState>()((set) => ({
+export const useUiStore = create<UiState>()((set, get) => ({
   ...initial,
   offlineReady: false,
 
@@ -134,7 +143,8 @@ export const useUiStore = create<UiState>()((set) => ({
 
   setActiveSegment: (activeSegmentId) => set({ activeSegmentId }),
   setTool: (tool) => set({ tool }),
-  setSelection: (selection) => set({ selection }),
+  setSelection: (selection) =>
+    set(selection.length ? { selection, selectedLinkId: null } : { selection }),
   setHighlighted: (highlighted) => set({ highlighted }),
   setViewport: (drawingId, viewport) =>
     set((state) => ({ viewports: { ...state.viewports, [drawingId]: viewport } })),
@@ -159,5 +169,14 @@ export const useUiStore = create<UiState>()((set) => ({
       pendingFocus: { drawingId, box },
     })),
   clearFocus: () => set({ pendingFocus: null }),
+  setSelectedLink: (selectedLinkId) =>
+    set(selectedLinkId ? { selectedLinkId, selection: [] } : { selectedLinkId }),
+  pushNav: (entry) => set((state) => ({ navHistory: [...state.navHistory, entry].slice(-50) })),
+  popNav: () => {
+    const history = get().navHistory;
+    const last = history[history.length - 1] ?? null;
+    if (last) set({ navHistory: history.slice(0, -1) });
+    return last;
+  },
   reset: () => set({ ...initial }),
 }));

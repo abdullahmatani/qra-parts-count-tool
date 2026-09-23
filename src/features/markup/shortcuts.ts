@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { TOOLS } from '@/app/tools';
 import { itemForMarker } from '@/domain/actions/items';
 import { updateItemCommand } from '@/features/count/item-commands';
+import { deleteLinkCommand, goBack } from '@/features/links/link-commands';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -37,7 +38,8 @@ export type ShortcutAction =
   | { kind: 'paste' }
   | { kind: 'selectAll' }
   | { kind: 'clearSelection' }
-  | { kind: 'equipmentType'; typeId: string };
+  | { kind: 'equipmentType'; typeId: string }
+  | { kind: 'back' };
 
 /**
  * Maps a key press to a workspace action. `typeKeys` maps equipment type
@@ -49,7 +51,7 @@ export function shortcutFor(
 ): ShortcutAction | null {
   const mod = event.ctrlKey || event.metaKey;
   const key = event.key.toLowerCase();
-  if (event.altKey) return null;
+  if (event.altKey) return key === 'arrowleft' && !mod ? { kind: 'back' } : null;
   if (mod) {
     if (key === 'z') return event.shiftKey ? { kind: 'redo' } : { kind: 'undo' };
     if (key === 'y') return { kind: 'redo' };
@@ -84,7 +86,11 @@ export function runShortcut(action: ShortcutAction): boolean {
     case 'redo':
       return !project.readOnly && project.redo() !== null;
     case 'delete':
-      return !project.readOnly && deleteMarkerIds(selectedMarkerIds());
+      if (project.readOnly) return false;
+      if (ui.selectedLinkId) return deleteLinkCommand(ui.selectedLinkId);
+      return deleteMarkerIds(selectedMarkerIds());
+    case 'back':
+      return goBack();
     case 'copy': {
       const count = copySelection();
       if (count) toast(t('markup.copied', { count }), { duration: 1500 });

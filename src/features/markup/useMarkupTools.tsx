@@ -35,6 +35,10 @@ import { useUiStore } from '@/store/ui-store';
 import { MarkerCanvas, MarkerList, type MarkerPreview } from './MarkerLayer';
 import { useMarkerEntries } from './useMarkerEntries';
 import { MarkerTooltip } from './MarkerTooltip';
+import { linkAt } from '@/domain/actions/links';
+import { LinkLayer } from '@/features/links/LinkLayer';
+import { BackButton } from '@/features/links/BackButton';
+import { createLinkCommand, followLink } from '@/features/links/link-commands';
 import { Draft, SelectionBox, type DraftShape } from './MarkupDrafts';
 import { moveMarkerIds, placeEsdv, placeMarker, resizeMarker } from './marker-commands';
 
@@ -67,7 +71,9 @@ type Gesture =
       original: MarkerGeometry;
       geometry: MarkerGeometry;
     }
-  | { kind: 'box'; start: XY; startScreen: XY; current: XY; dragging: boolean; additive: boolean };
+  | { kind: 'box'; start: XY; startScreen: XY; current: XY; dragging: boolean; additive: boolean }
+  | { kind: 'link'; start: XY; startScreen: XY; current: XY; dragging: boolean }
+  | { kind: 'follow'; linkId: string; startScreen: XY };
 
 const NONE: Gesture = { kind: 'none' };
 
@@ -101,6 +107,10 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const markers = useProjectStore((s) => s.doc?.markers);
   const items = useProjectStore((s) => s.doc?.items);
   const drawingSize = useProjectStore((s) => s.doc?.drawings[drawingId]?.size ?? null);
+  const links = useProjectStore((s) => s.doc?.links);
+  const showLinks = useUiStore((s) => s.showLinks);
+  const selectedLinkId = useUiStore((s) => s.selectedLinkId);
+  const canGoBack = useUiStore((s) => s.navHistory.length > 0);
 
   const [gesture, setGestureState] = useState<Gesture>(NONE);
   const gestureRef = useRef<Gesture>(NONE);
@@ -114,11 +124,20 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     polylineRef.current = next;
     setPolylineState(next);
   }, []);
-  const [hover, setHover] = useState<{ id: string | null; handle: HandleId | null; screen: XY }>({
+  const [hover, setHover] = useState<{
+    id: string | null;
+    handle: HandleId | null;
+    linkId?: string | null;
+    screen: XY;
+  }>({
     id: null,
     handle: null,
     screen: { x: 0, y: 0 },
   });
+  const linksHere = useMemo(
+    () => Object.values(links ?? {}).filter((link) => link.sourceDrawingId === drawingId),
+    [links, drawingId],
+  );
 
   // Markers the tools can see and pick: on this drawing and not filtered out.
   const visible = useMemo(() => {
@@ -138,7 +157,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
   // The ESDV tool draws circles like the circle tool (SEG-01).
   const circleLike = tool === 'circle' || tool === 'esdv';
-  const selectLike = !circleLike && tool !== 'dashed';
+  const selectLike = !circleLike && tool !== 'dashed' && tool !== 'link';
   const editable = !readOnly;
 
   const handlesOf = (marker: Marker | null, geometry?: MarkerGeometry): Handle[] =>
@@ -188,7 +207,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
   const interaction: ViewerInteraction = {
     cursor:
-      circleLike || tool === 'dashed'
+      circleLike || tool === 'dashed' || tool === 'link'
         ? 'crosshair'
         : gesture.kind === 'move' && gesture.dragging
           ? 'grabbing'
@@ -198,7 +217,9 @@ export function useMarkupTools(drawingId: string): MarkupTools {
               ? editable
                 ? 'move'
                 : 'pointer'
-              : 'default',
+              : hover.linkId
+                ? 'pointer'
+                : 'default',
 
     onPointerDown(event, context) {
       if (event.native.button !== 0) return;
@@ -220,6 +241,16 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             current: point,
             dragging: false,
           });
+        return;
+      }
+      if (tool === 'link' && editable) {
+        setGesture({
+          kind: 'link',
+          start: point,
+          startScreen: screen,
+          current: point,
+          dragging: false,
+        });
         return;
       }
       if (!selectLike) return;
@@ -259,6 +290,12 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         }
         return;
       }
+      // LNK-02: a click on a link (not on a marker) follows it.
+      const link = showLinks ? linkAt(linksHere, point, 0) : null;
+      if (link && !additive) {
+        setGesture({ kind: 'follow', linkId: link.id, startScreen: screen });
+        return;
+      }
       setGesture({
         kind: 'box',
         start: point,
@@ -296,11 +333,15 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           setGesture({ ...g, geometry: resizeGeometry(g.original, g.handle, point) });
           return;
         case 'box':
+        case 'link':
           setGesture({
             ...g,
             current: point,
             dragging: g.dragging || screenDistance(screen, g.startScreen) > DRAG_THRESHOLD,
           });
+          return;
+        case 'follow':
+          if (screenDistance(screen, g.startScreen) > DRAG_THRESHOLD) setGesture(NONE);
           return;
         default:
           break;
@@ -316,8 +357,15 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       const handle = handleAt(screen, context);
       const hit = handle ? null : pickMarker(visible, point, HIT_TOLERANCE * context.unitsPerPixel);
       const id = hit?.id ?? null;
-      if (id !== hover.id || (handle?.id ?? null) !== hover.handle || id) {
-        setHover({ id, handle: handle?.id ?? null, screen });
+      const linkId = !id && !handle && showLinks ? (linkAt(linksHere, point, 0)?.id ?? null) : null;
+      if (
+        id !== hover.id ||
+        (handle?.id ?? null) !== hover.handle ||
+        linkId !== (hover.linkId ?? null) ||
+        id ||
+        linkId
+      ) {
+        setHover({ id, handle: handle?.id ?? null, linkId, screen });
       }
     },
 
@@ -360,10 +408,26 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         case 'resize':
           if (g.geometry !== g.original) resizeMarker(g.id, g.geometry);
           return;
+        case 'link': {
+          if (g.dragging) {
+            const box = boxFromPoints(g.start, point);
+            if (box.maxX > box.minX && box.maxY > box.minY) createLinkCommand(drawingId, box);
+          } else {
+            // A click with the link tool selects a link for editing.
+            useUiStore.getState().setSelectedLink(linkAt(linksHere, point, 0)?.id ?? null);
+          }
+          return;
+        }
+        case 'follow':
+          followLink(g.linkId);
+          return;
         case 'box': {
           const ui = useUiStore.getState();
           if (!g.dragging) {
-            if (!g.additive) ui.setSelection([]);
+            if (!g.additive) {
+              ui.setSelection([]);
+              ui.setSelectedLink(null);
+            }
             return;
           }
           const ids = markersInBox(visible, boxFromPoints(g.start, point)).map((m) => m.id);
@@ -413,7 +477,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         ArrowUp: { x: 0, y: -1 },
         ArrowDown: { x: 0, y: 1 },
       };
-      const arrow = arrows[event.key];
+      const arrow = event.altKey || event.ctrlKey || event.metaKey ? undefined : arrows[event.key];
       if (arrow && selectLike && editable && selectedHere.length > 0) {
         const step = event.shiftKey ? 10 : 1;
         const origin = context.toDrawing({ x: 0, y: 0 });
@@ -450,7 +514,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   if (gesture.kind === 'circle') {
     const r = gesture.radius ?? useUiStore.getState().circleRadiusFraction * longSide;
     draft = { type: 'circle', cx: gesture.centre.x, cy: gesture.centre.y, r };
-  } else if (gesture.kind === 'rect' && gesture.dragging) {
+  } else if ((gesture.kind === 'rect' || gesture.kind === 'link') && gesture.dragging) {
     draft = rectGeometry(gesture.start, gesture.current);
   } else if (polyline) {
     const points = polyline.hover ? [...polyline.points, polyline.hover] : polyline.points;
@@ -463,6 +527,14 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       className="markup-layer"
       style={{ '--upp': String(context.unitsPerPixel) } as React.CSSProperties}
     >
+      {showLinks && (
+        <LinkLayer
+          links={linksHere}
+          unitsPerPixel={context.unitsPerPixel}
+          selectedId={selectedLinkId}
+          hoveredId={gesture.kind === 'none' ? (hover.linkId ?? null) : null}
+        />
+      )}
       <Draft shape={draft} />
     </g>
   );
@@ -490,6 +562,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         {gesture.kind === 'box' && gesture.dragging && (
           <SelectionBox a={context.toScreen(gesture.start)} b={context.toScreen(gesture.current)} />
         )}
+        {canGoBack && <BackButton />}
         {polyline && (
           <div
             role="status"

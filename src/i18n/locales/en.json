@@ -485,7 +485,8 @@
     "drag": "Drag",
     "middleDrag": "Middle-button drag",
     "space": "Space",
-    "types": "Equipment types (sets the selected item and the next one)"
+    "types": "Equipment types (sets the selected item and the next one)",
+    "back": "Back after following a drawing link"
   },
   "count": {
     "history": {
@@ -638,5 +639,59 @@
       "description": "Notes",
       "hint": "No dataset is built in. Name the one the equipment types and bins follow, and set each type's dataset category."
     }
+  },
+  "notes": {
+    "history": {
+      "add": "add note",
+      "edit": "edit note",
+      "delete": "delete note"
+    },
+    "placeholder": "Assumptions, open points, reviewer comments…",
+    "add": "Add note",
+    "addHint": "Ctrl+Enter adds the note.",
+    "bold": "Bold",
+    "bullets": "Bullet list",
+    "reference": "Refer to the selected marker",
+    "referenceShort": "Selected marker",
+    "noInitials": "Set your initials in Settings to sign your notes.",
+    "empty": "No notes yet.",
+    "edit": "Edit note",
+    "delete": "Delete note",
+    "save": "Save",
+    "cancel": "Cancel",
+    "refersTo": "Refers to {{marker}}",
+    "missingMarker": "the deleted marker",
+    "anonymous": "—"
+  },
+  "links": {
+    "history": {
+      "add": "add drawing link",
+      "edit": "edit drawing link",
+      "delete": "delete drawing link"
+    },
+    "status": {
+      "ok": "Opens {{drawing}}",
+      "noTarget": "This link has no target drawing yet.",
+      "broken": "The target drawing of this link was removed."
+    },
+    "editor": {
+      "title": "Drawing link",
+      "target": "Target drawing",
+      "chooseTarget": "Choose a drawing",
+      "label": "Label",
+      "labelPlaceholder": "e.g. Continued on PEFS-002",
+      "view": "Opens at",
+      "wholeDrawing": "The target's last view",
+      "savedView": "Saved view ({{zoom}}%)",
+      "useLastView": "Save the target's current view",
+      "noLastView": "Open the target drawing once and set the view you want, then save it here.",
+      "clearView": "Forget the saved view",
+      "open": "Open target",
+      "delete": "Delete link",
+      "hint": "Links help you navigate. They are never exported."
+    },
+    "back": "Back to {{drawing}}",
+    "goTo": "Go to {{drawing}}",
+    "hint": "Drag a rectangle over an off-page connector to link it to another drawing."
   }
 }

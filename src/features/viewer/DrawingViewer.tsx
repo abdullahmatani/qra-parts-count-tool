@@ -391,6 +391,8 @@ function ViewerSurface({
       return;
     }
     if (interaction?.onKeyDown?.(event, context)) return;
+    // Modified keys belong to the workspace shortcuts (e.g. Alt+← for Back).
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     const step = 80;
     const handled = (() => {
       switch (event.key) {
