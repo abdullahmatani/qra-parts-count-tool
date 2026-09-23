@@ -1,0 +1,23 @@
+import type { Page } from '@playwright/test';
+import { expect } from './fixtures';
+
+export async function createProject(
+  page: Page,
+  options: { name: string; client?: string; rule?: RegExp; flange?: RegExp },
+) {
+  await page.getByRole('button', { name: /New project/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'New project' });
+  await dialog.getByRole('button', { name: 'Choose folder…' }).click();
+  await dialog.getByLabel('Project name').fill(options.name);
+  if (options.client) await dialog.getByLabel('Client').fill(options.client);
+  await dialog.getByRole('radio', { name: options.rule ?? /Upstream segment/ }).click();
+  await dialog.getByRole('radio', { name: options.flange ?? /Per flanged joint/ }).click();
+  await dialog.getByRole('button', { name: 'Create project' }).click();
+  await expect(page.getByTestId('workspace')).toBeVisible();
+}
+
+export async function closeProject(page: Page) {
+  await page.getByRole('button', { name: 'Project', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Close project' }).click();
+  await expect(page.getByTestId('start-screen')).toBeVisible();
+}

@@ -22,7 +22,7 @@ export type Migration = (data: Record<string, unknown>) => Record<string, unknow
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
 
 export type ProjectFileErrorKind =
-  'invalidJson' | 'notAProject' | 'tooNew' | 'noMigration' | 'invalid';
+  'missing' | 'invalidJson' | 'notAProject' | 'tooNew' | 'noMigration' | 'invalid';
 
 export class ProjectFileError extends Error {
   readonly kind: ProjectFileErrorKind;

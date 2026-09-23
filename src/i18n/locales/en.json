@@ -147,6 +147,79 @@
     "recent": "Recent projects",
     "noRecent": "No recent projects.",
     "unsupported": "This browser cannot write to local folders. Use a current version of Microsoft Edge or Google Chrome.",
-    "privacyNote": "Your drawings and counts stay on this computer."
+    "privacyNote": "Your drawings and counts stay on this computer.",
+    "forget": "Remove {{name}} from recent projects"
+  },
+  "project": {
+    "form": {
+      "name": "Project name",
+      "client": "Client",
+      "facility": "Facility",
+      "studyRef": "Study reference",
+      "countRevision": "Count revision",
+      "description": "Description",
+      "boundaryRule": "ESDV boundary rule",
+      "boundaryRuleHint": "Which segment an ESDV on a segment boundary is counted in. There is no default; each ESDV can override it.",
+      "flangeConvention": "Flange counting convention",
+      "flangeConventionHint": "Flange markers are placed per flanged joint. Choose whether the count reports joints or flange faces (two per joint).",
+      "pipeLength": "Pipe length counting",
+      "pipeLengthHint": "Enter lengths (m) on dashed-highlight line runs; totals are summed per segment and size bin.",
+      "sizeUnit": "Default size unit",
+      "pressureUnit": "Pressure unit",
+      "temperatureUnit": "Temperature unit",
+      "exportFilenamePattern": "Annotated PDF file name pattern",
+      "errors": {
+        "nameRequired": "Enter a project name.",
+        "boundaryRuleRequired": "Choose where ESDVs on a boundary are counted.",
+        "flangeConventionRequired": "Choose the flange counting convention."
+      }
+    },
+    "boundaryRules": {
+      "upstream": "Upstream segment",
+      "downstream": "Downstream segment",
+      "both": "Both segments",
+      "neither": "Neither segment"
+    },
+    "flangeConventions": {
+      "perJoint": "Per flanged joint",
+      "perFace": "Per flange face"
+    },
+    "sizeUnits": {
+      "in": "Inches",
+      "DN": "DN"
+    },
+    "new": {
+      "title": "New project",
+      "description": "Choose a working folder and set the counting rules for this study.",
+      "folder": "Working folder",
+      "chooseFolder": "Choose folder…",
+      "noFolder": "No folder chosen",
+      "folderRequired": "Choose a working folder.",
+      "folderHasProject": "This folder already contains a project.",
+      "openInstead": "Open it instead",
+      "create": "Create project"
+    },
+    "settings": {
+      "apply": "Apply changes",
+      "saved": "Project settings updated.",
+      "historyLabel": "Edit project settings"
+    },
+    "toast": {
+      "created": "Project \"{{name}}\" created.",
+      "recovered": "Unsaved changes from an interrupted session were recovered.",
+      "migrated": "The project file was upgraded from schema version {{version}}. A backup of the original is in .backup/.",
+      "integrity_one": "The project file has {{count}} consistency warning.",
+      "integrity_other": "The project file has {{count}} consistency warnings."
+    },
+    "openErrors": {
+      "missing": "No project file was found in this folder.",
+      "invalidJson": "The project file is damaged (not valid JSON).",
+      "notAProject": "This file is not a QRA Parts Count project.",
+      "tooNew": "This project was saved by a newer version of the app.",
+      "noMigration": "This project uses a schema version the app cannot upgrade.",
+      "invalid": "The project file failed validation.",
+      "permission": "Access to the folder \"{{name}}\" was not granted.",
+      "unexpected": "The project could not be opened."
+    }
   }
 }
