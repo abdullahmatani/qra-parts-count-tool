@@ -1,0 +1,152 @@
+{
+  "app": {
+    "name": "QRA Parts Count Tool",
+    "shortName": "QRA Parts Count",
+    "tagline": "Mark up PEFS/P&IDs, define isolatable segments and count leak sources, entirely offline.",
+    "version": "Version {{version}}"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "create": "Create",
+    "delete": "Delete",
+    "edit": "Edit",
+    "apply": "Apply",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "loading": "Loading…",
+    "reload": "Reload",
+    "notSet": "Not set"
+  },
+  "header": {
+    "export": "Export",
+    "settings": "Settings",
+    "readOnly": "Read-only",
+    "projectMenu": "Project",
+    "closeProject": "Close project",
+    "drawingRegister": "Drawing register",
+    "library": "Equipment library",
+    "templateMapper": "Template mapper",
+    "backups": "Backups",
+    "shortcuts": "Keyboard shortcuts"
+  },
+  "save": {
+    "idle": "Not saved yet",
+    "pending": "Unsaved changes",
+    "saving": "Saving…",
+    "saved": "Saved {{time}}",
+    "error": "Save failed",
+    "errorDetail": "Your changes are kept in memory and will be retried. {{error}}"
+  },
+  "offline": {
+    "ready": "Offline ready",
+    "readyDetail": "All app files are cached. The app works with no network connection.",
+    "caching": "Caching for offline use",
+    "cachingDetail": "The app is still caching its files for offline use.",
+    "updateAvailable": "A new version of the app is available.",
+    "offlineReadyToast": "The app is now available offline."
+  },
+  "toolbar": {
+    "label": "Markup tools",
+    "select": "Select",
+    "circle": "Circle",
+    "dashed": "Dashed highlight",
+    "link": "Drawing link",
+    "esdv": "ESDV",
+    "stamp": "Stamp",
+    "undo": "Undo",
+    "redo": "Redo",
+    "undoLabel": "Undo {{label}}",
+    "redoLabel": "Redo {{label}}",
+    "nothingToUndo": "Nothing to undo",
+    "nothingToRedo": "Nothing to redo",
+    "labels": "Show marker labels",
+    "links": "Show drawing links",
+    "activeSegment": "New markers go to {{segment}}",
+    "noActiveSegment": "No active segment: new markers are unassigned"
+  },
+  "drawings": {
+    "title": "Drawings",
+    "searchPlaceholder": "Search drawings",
+    "empty": "No drawings yet.",
+    "import": "Import drawings",
+    "noMatch": "No drawings match."
+  },
+  "segments": {
+    "title": "Segments",
+    "empty": "No segments yet.",
+    "add": "Segment",
+    "addTitle": "Add segment",
+    "select": "Choose a segment",
+    "noneActive": "No active segment",
+    "status": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "counted": "Counted",
+      "checked": "Checked"
+    }
+  },
+  "canvas": {
+    "noDrawing": "Open a drawing from the list on the left.",
+    "noDrawings": "Import PDF or DWG drawings to begin.",
+    "closeTab": "Close {{name}}"
+  },
+  "panels": {
+    "segment": "Segment",
+    "count": "Count table",
+    "item": "Item editor",
+    "notes": "Notes",
+    "selectSegment": "Select or create a segment to see its details.",
+    "noItem": "Place or select a marker to edit its item."
+  },
+  "status": {
+    "zoom": "Zoom {{zoom}}%",
+    "cursor": "x {{x}}, y {{y}}",
+    "warnings_one": "{{count}} warning",
+    "warnings_other": "{{count}} warnings",
+    "noWarnings": "No warnings",
+    "filters": "Filters",
+    "clearFilters": "Clear filters"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Preferences for this browser and settings for the open project.",
+    "tabs": {
+      "general": "General",
+      "project": "Project",
+      "about": "About"
+    },
+    "theme": "Theme",
+    "themes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "density": "Table density",
+    "densities": {
+      "compact": "Compact",
+      "comfortable": "Comfortable"
+    },
+    "initials": "Your initials",
+    "initialsHint": "Stamped on the notes you write, so checkers' comments stay separate.",
+    "noProject": "Open a project to change its settings.",
+    "privacyTitle": "Privacy",
+    "privacy": "No project data leaves this browser. The app sends no telemetry, analytics or error reports, and after loading makes no network requests other than fetching its own files.",
+    "offlineTitle": "Offline operation",
+    "storageTitle": "Browser storage",
+    "storage": "Only interface preferences and the list of recent project folders are stored in the browser. Project data lives in the working directory."
+  },
+  "start": {
+    "newProject": "New project",
+    "newProjectDetail": "Choose an empty folder as the working directory.",
+    "openProject": "Open project",
+    "openProjectDetail": "Choose a folder that holds project.qrapc.json.",
+    "recent": "Recent projects",
+    "noRecent": "No recent projects.",
+    "unsupported": "This browser cannot write to local folders. Use a current version of Microsoft Edge or Google Chrome.",
+    "privacyNote": "Your drawings and counts stay on this computer."
+  }
+}

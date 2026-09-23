@@ -1,13 +1,23 @@
-import { Button } from '@/components/ui/button';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { SettingsDialog } from '@/app/SettingsDialog';
+import { StartScreen } from '@/app/StartScreen';
+import { Workspace } from '@/app/Workspace';
+import { useServiceWorker } from '@/app/useServiceWorker';
+import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
+import { useProjectStore } from '@/store/project-store';
 
 export function App() {
-  useApplyPreferences();
+  const theme = useApplyPreferences();
+  useServiceWorker();
+  const hasProject = useProjectStore((s) => s.doc !== null);
+
   return (
-    <main className="p-6 font-sans">
-      <h1 className="text-xl font-semibold">QRA Parts Count Tool</h1>
-      <p className="font-mono text-sm text-muted-foreground">Version {__APP_VERSION__}</p>
-      <Button className="mt-4">Start</Button>
-    </main>
+    <TooltipProvider delayDuration={400}>
+      {hasProject ? <Workspace /> : <StartScreen supported={isFileSystemAccessSupported()} />}
+      <SettingsDialog />
+      <Toaster theme={theme} position="bottom-right" richColors closeButton />
+    </TooltipProvider>
   );
 }
