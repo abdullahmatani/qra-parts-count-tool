@@ -4,6 +4,9 @@ import '@/styles/index.css';
 import '@/lib/zod-config';
 import '@/i18n';
 import { App } from './App';
+import { ErrorBoundary } from './app/ErrorBoundary';
+import { installAutosave } from './services/autosave';
+import { registerSessionHook } from './services/session';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');
@@ -13,8 +16,12 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('demo')) {
   loadDemoProject();
 }
 
+installAutosave(registerSessionHook);
+
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );

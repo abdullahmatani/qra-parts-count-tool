@@ -21,3 +21,14 @@ export async function closeProject(page: Page) {
   await page.getByRole('menuitem', { name: 'Close project' }).click();
   await expect(page.getByTestId('start-screen')).toBeVisible();
 }
+
+/** Opens Settings › Project and applies a change to the client field. */
+export async function setClient(page: Page, client: string) {
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Settings' });
+  await dialog.getByRole('tab', { name: 'Project' }).click();
+  await dialog.getByLabel('Client').fill(client);
+  await dialog.getByRole('button', { name: 'Apply changes' }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+}

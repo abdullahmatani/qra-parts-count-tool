@@ -156,7 +156,11 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
   setReadOnly: (readOnly) => set({ readOnly }),
 }));
 
-/** Non-null document accessor for components rendered only when a project is open. */
+/**
+ * Non-null document accessor for components rendered only when a project is open.
+ * The selector must return a stable value (a field or entity, not a new object),
+ * or Zustand will re-render forever; derive new objects with useMemo instead.
+ */
 export function useDoc<T>(selector: (doc: ProjectDoc) => T): T {
   return useProjectStore((state) => {
     if (!state.doc) throw new Error('No project is open');

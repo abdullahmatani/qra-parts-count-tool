@@ -62,12 +62,12 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => openDialog(next ? 'settings' : null)}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t('settings.title')}</DialogTitle>
           <DialogDescription>{t('settings.description')}</DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="general" className="min-h-80">
+        <Tabs defaultValue="general" className="min-h-80 overflow-y-auto pe-1">
           <TabsList>
             <TabsTrigger value="general">{t('settings.tabs.general')}</TabsTrigger>
             <TabsTrigger value="project">{t('settings.tabs.project')}</TabsTrigger>

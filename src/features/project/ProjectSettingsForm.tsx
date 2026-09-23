@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
-import { useDoc, useProjectStore } from '@/store/project-store';
+import { useProjectStore } from '@/store/project-store';
 import {
   ProjectFormSchema,
   applyFormValuesToDoc,
@@ -18,11 +19,13 @@ import { ProjectMetadataFields, ProjectRulesFields } from './ProjectFormFields';
 /** Edits project metadata and counting rules as one undoable step. */
 export function ProjectSettingsForm() {
   const { t } = useTranslation();
-  const initial = useDoc(formValuesFromDoc);
+  const doc = useProjectStore((s) => s.doc);
+  // Only the initial values: later edits by undo/redo reset the form below.
+  const initial = useMemo(() => (doc ? formValuesFromDoc(doc) : null), [doc]);
   const readOnly = useProjectStore((s) => s.readOnly);
   const form = useForm<ProjectFormInput, unknown, ProjectFormValues>({
     resolver: zodResolver(ProjectFormSchema),
-    defaultValues: initial,
+    defaultValues: initial ?? undefined,
   });
 
   const onSubmit = (values: ProjectFormValues) => {
@@ -46,7 +49,7 @@ export function ProjectSettingsForm() {
             type="button"
             variant="ghost"
             disabled={!form.formState.isDirty}
-            onClick={() => form.reset(initial)}
+            onClick={() => initial && form.reset(initial)}
           >
             {t('common.cancel')}
           </Button>

@@ -221,5 +221,20 @@
       "permission": "Access to the folder \"{{name}}\" was not granted.",
       "unexpected": "The project could not be opened."
     }
+  },
+  "backups": {
+    "title": "Backups",
+    "description": "The last {{count}} autosave snapshots are kept in the .backup folder of the working directory.",
+    "empty": "No snapshots yet. A snapshot is taken when the project opens and at most once a minute while you work.",
+    "revision": "rev {{revision}}",
+    "restore": "Restore",
+    "confirmTitle": "Restore this snapshot?",
+    "confirmBody": "The project will be replaced by the snapshot from {{time}}. The current state is kept as a new snapshot, so you can go back.",
+    "restored": "Restored the snapshot from {{time}}.",
+    "restoreFailed": "The snapshot could not be restored."
+  },
+  "errors": {
+    "crashTitle": "Something went wrong",
+    "crashBody": "The app hit an unexpected error. Your work up to the last autosave is in the project folder; reload to continue."
   }
 }

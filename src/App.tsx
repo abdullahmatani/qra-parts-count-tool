@@ -4,6 +4,7 @@ import { SettingsDialog } from '@/app/SettingsDialog';
 import { StartScreen } from '@/app/StartScreen';
 import { Workspace } from '@/app/Workspace';
 import { useServiceWorker } from '@/app/useServiceWorker';
+import { BackupsDialog } from '@/features/project/BackupsDialog';
 import { NewProjectDialog } from '@/features/project/NewProjectDialog';
 import { ProjectSettingsForm } from '@/features/project/ProjectSettingsForm';
 import { RecentProjects } from '@/features/project/RecentProjects';
@@ -33,6 +34,7 @@ export function App() {
         />
       )}
       <NewProjectDialog />
+      {hasProject && <BackupsDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>
