@@ -158,8 +158,9 @@ pnpm test:e2e
 The Playwright suite in `e2e/` runs against the production build served by `vite preview` on
 Chromium. It includes:
 
-- **Offline run (NFR-01)**: the app loads once, the browser context goes offline, and the app must
-  reload and work from the service-worker cache.
+- **Offline run (NFR-01)**: `e2e/offline.spec.ts` loads the app once, takes the browser context
+  offline, and checks that the app reloads from the service-worker cache. The `chromium-offline`
+  project then re-runs every other test with the network disabled after the first load.
 - **No data egress**: every request is recorded and must go to the app's own origin, and the
   Content Security Policy must be present.
 - **Workflow tests** that drive the UI against a working directory backed by the browser's Origin

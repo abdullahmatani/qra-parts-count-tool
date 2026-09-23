@@ -2,7 +2,13 @@
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
-    "types": ["vite/client", "vite-plugin-pwa/client", "node", "@testing-library/jest-dom/vitest"]
+    "types": [
+      "vite/client",
+      "vite-plugin-pwa/client",
+      "wicg-file-system-access",
+      "node",
+      "@testing-library/jest-dom/vitest"
+    ]
   },
   "include": ["src"],
   "exclude": []

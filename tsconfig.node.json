@@ -4,7 +4,7 @@
     "target": "ES2023",
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",
-    "types": ["node"],
+    "types": ["node", "wicg-file-system-access"],
     "skipLibCheck": true,
 
     "moduleResolution": "bundler",
@@ -24,5 +24,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "scripts/**/*.ts", "e2e/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "playwright.config.ts",
+    "scripts/**/*.ts",
+    "scripts/**/*.d.mts",
+    "e2e/**/*.ts"
+  ]
 }

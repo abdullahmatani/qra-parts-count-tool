@@ -65,7 +65,8 @@ export default tseslint.config(
   {
     files: ['scripts/**/*.{ts,mjs,js}', '*.config.{ts,js}', 'e2e/**/*.ts'],
     languageOptions: { globals: { ...globals.node } },
-    rules: { 'no-restricted-globals': 'off' },
+    // Playwright fixtures call a `use` function that is not a React hook.
+    rules: { 'no-restricted-globals': 'off', 'react-hooks/rules-of-hooks': 'off' },
   },
   prettier,
 );

@@ -11,7 +11,7 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 3 | 0.1.0 | Foundation: project scaffold and offline shell | Define project file Zod schemas v1 (with generated JSON Schema) and TypeScript types for all entities (section 5) | Done — `src/domain/schema`, `docs/schema/project.schema.v1.json` |
 | 4 | 0.1.0 | Foundation: project scaffold and offline shell | Build app shell: header, three-pane layout, status bar, settings dialog | Done — `src/app` (built after #5, which it depends on) |
 | 5 | 0.1.0 | Foundation: project scaffold and offline shell | Set up Tailwind CSS 4 and shadcn/ui, design tokens (segment palette, light/dark), bundled fonts and icons (section 9) | Done — `src/styles/index.css`, `src/components/ui`, `src/domain/palette.ts` |
-| 6 | 0.1.0 | Foundation: project scaffold and offline shell | Set up Vitest, Playwright E2E harness with an offline test run, and CI bundle-size budget (section 9.1) | Planned |
+| 6 | 0.1.0 | Foundation: project scaffold and offline shell | Set up Vitest, Playwright E2E harness with an offline test run, and CI bundle-size budget (section 9.1) | Done — `e2e/fixtures.ts`, `chromium-offline` project, `pnpm size` |
 | 7 | 0.1.0 | Foundation: project scaffold and offline shell | Configure strict Content Security Policy (connect-src 'self', no third-party origins) and verify with network inspection that no project data leaves the browser | Planned |
 | 8 | 0.2.0 | Working directory, project file and PDF viewing | Implement create/open project via File System Access API and folder structure creation (PRJ-01..03) | Planned |
 | 9 | 0.2.0 | Working directory, project file and PDF viewing | Implement autosave with temp-file-then-rename and 20 snapshot backups (PRJ-04, PRJ-05) | Planned |

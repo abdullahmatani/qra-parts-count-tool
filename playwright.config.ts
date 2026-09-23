@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import type { AppFixture } from './e2e/fixtures';
 
 const PORT = 4173;
 
@@ -6,7 +7,10 @@ const PORT = 4173;
 // browser is not installed (e.g. PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome).
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined;
 
-export default defineConfig({
+type WorkerOptions = { offlineMode: boolean };
+void (null as unknown as AppFixture);
+
+export default defineConfig<object, WorkerOptions>({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -25,6 +29,17 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 900 },
         launchOptions: { executablePath },
+      },
+    },
+    {
+      // NFR-01: the same workflow tests with the network disabled after first load.
+      name: 'chromium-offline',
+      testIgnore: /offline\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+        launchOptions: { executablePath },
+        offlineMode: true,
       },
     },
   ],
