@@ -3,12 +3,10 @@ import { ESDV_COLOUR, SEGMENT_PALETTE, UNASSIGNED_COLOUR } from '../palette';
 import { makeCircleMarker, makeItem, makeSegment } from '@/test/fixtures';
 import {
   NO_FILTERS,
-  countMarkerWarnings,
   isMarkerVisible,
   itemsByMarker,
   markerLabel,
   markerPaint,
-  markerWarnings,
 } from './presentation';
 
 const segment = makeSegment({ id: 'seg_a', colour: 2 });
@@ -92,17 +90,7 @@ describe('filters (ANN-06)', () => {
   });
 });
 
-describe('warnings', () => {
-  it('flags unassigned markers', () => {
-    const unassigned = makeCircleMarker('d');
-    const assigned = makeCircleMarker('d', { segmentId: 'seg_a' });
-    expect(markerWarnings(unassigned)).toEqual(['unassigned']);
-    expect(markerWarnings(assigned)).toEqual([]);
-    expect(
-      countMarkerWarnings({ markers: { [unassigned.id]: unassigned, [assigned.id]: assigned } }),
-    ).toBe(1);
-  });
-
+describe('items by marker', () => {
   it('indexes items by marker', () => {
     const marker = makeCircleMarker('d');
     const item = makeItem(marker, 1);

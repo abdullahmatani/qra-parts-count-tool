@@ -18,6 +18,8 @@ export interface MarkerEntry {
   dash: readonly number[];
   label: string;
   selected: boolean;
+  /** Highlighted from the count table (CNT-06). */
+  highlighted: boolean;
   warning: boolean;
   esdv: boolean;
   segmentId: string | null;
@@ -146,7 +148,15 @@ export function drawMarkers(
   const rects = drawn.filter(([, g]) => g.type === 'rect');
   const runs = drawn.filter(([, g]) => g.type === 'polyline');
 
-  // Halos behind the markers: selection, hover and warnings (amber outline).
+  // Halos behind the markers: count-table highlight, selection, hover and
+  // warnings (amber outline).
+  ctx.globalAlpha = 0.35;
+  strokeAll(
+    ctx,
+    drawn.filter(([e]) => e.highlighted).map(([, g]) => g),
+    MARKER_SELECTION,
+    16 * upp,
+  );
   ctx.globalAlpha = 0.45;
   strokeAll(
     ctx,

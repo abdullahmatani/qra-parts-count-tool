@@ -3,7 +3,6 @@
  * (ANN-06) and inline warnings (FDS section 6). Shared by the canvas and the
  * annotated PDF export.
  */
-import type { ProjectDoc } from '../model';
 import { ESDV_COLOUR, UNASSIGNED_COLOUR, segmentAppearance } from '../palette';
 import type { CountItem, Marker, Segment } from '../schema/types';
 
@@ -89,26 +88,9 @@ export function markerPaint(
   return { colour: appearance.hex, dash: appearance.dash };
 }
 
-export type MarkerWarning = 'unassigned';
-
-/**
- * Problems shown as an amber outline on the marker and counted in the status
- * bar. The pre-export check (roadmap #43) adds item-level checks.
- */
-export function markerWarnings(marker: Marker): MarkerWarning[] {
-  return isUnassigned(marker) ? ['unassigned'] : [];
-}
-
 /** Count items keyed by their marker id. */
 export function itemsByMarker(items: Readonly<Record<string, CountItem>>): Map<string, CountItem> {
   const out = new Map<string, CountItem>();
   for (const item of Object.values(items)) out.set(item.markerId, item);
   return out;
-}
-
-/** Total number of marker warnings in the project (status bar). */
-export function countMarkerWarnings(doc: Pick<ProjectDoc, 'markers'>): number {
-  let count = 0;
-  for (const marker of Object.values(doc.markers)) count += markerWarnings(marker).length;
-  return count;
 }

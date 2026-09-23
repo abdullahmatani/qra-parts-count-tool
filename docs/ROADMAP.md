@@ -30,13 +30,13 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 22 | 0.5.0 | Isolatable segments | Many-to-many segment-drawing linking and linked-drawing navigation (SEG-04, SEG-05) | Done — markers link their drawing automatically; link/unlink by hand; linked drawings open zoomed to the segment's markers |
 | 23 | 0.5.0 | Isolatable segments | Active segment selection and colour-coded markers (SEG-06, ANN-03) | Done — active segment from the left list or the right-pane selector; toolbar tint; markers in segment colours, ESDVs red, unassigned grey with a warning |
 | 24 | 0.5.0 | Isolatable segments | User-configurable ESDV boundary rule at project setup (upstream / downstream / both / neither) with per-ESDV override; no hard-coded default (SEG-08) | Done — rule required at project setup with no default (v0.2.0); per-ESDV override and "counted in" preview in the ESDV panel; `src/domain/esdv.ts` |
-| 25 | 0.6.0 | Parts count | User-defined equipment types and leak frequency dataset format per project, with a starter library only (CNT-02) | Planned |
-| 26 | 0.6.0 | Parts count | Bin set editor: user creates bins for automated valves, manual valves, flanges, small-bore connections and any added type, with explicit edge rules (CNT-04) | Planned |
-| 27 | 0.6.0 | Parts count | Item editor on marker placement: type, size parser (in, DN, fractions), actuation, tag, quantity (CNT-01, CNT-03) | Planned |
-| 28 | 0.6.0 | Parts count | Automatic binning, incomplete-item flags, flange counting convention (CNT-05, CNT-09) | Planned |
-| 29 | 0.6.0 | Parts count | Live segment count table and project summary with click-to-highlight (CNT-06, CNT-07) | Planned |
-| 30 | 0.6.0 | Parts count | Cross-drawing duplicate tag check (CNT-08) | Planned |
-| 31 | 0.6.0 | Parts count | Pipe length counting as a per-project user setting: manual length entry on dashed-highlight line runs, summed per segment and size bin (CNT-12) | Planned |
+| 25 | 0.6.0 | Parts count | User-defined equipment types and leak frequency dataset format per project, with a starter library only (CNT-02) | Done — new projects start from a generic starter library (`src/domain/count/starter-library.ts`); no dataset is built in; the library editor names the dataset and edits types, categories, dataset categories, Excel keys and key shortcuts |
+| 26 | 0.6.0 | Parts count | Bin set editor: user creates bins for automated valves, manual valves, flanges, small-bore connections and any added type, with explicit edge rules (CNT-04) | Done — bin set editor with explicit < / ≤ edge rules per bin, separate manual/automated valve bin sets, and a gap/overlap check (`src/domain/count/bins.ts`) |
+| 27 | 0.6.0 | Parts count | Item editor on marker placement: type, size parser (in, DN, fractions), actuation, tag, quantity (CNT-01, CNT-03) | Done — placing a circle creates its item with the last-used type and focuses size (`2`, `2"`, `3/4`, `1-1/2`, `DN50`); Enter returns to the drawing; type, actuation, quantity, tag, remarks; type keys 1–4 |
+| 28 | 0.6.0 | Parts count | Automatic binning, incomplete-item flags, flange counting convention (CNT-05, CNT-09) | Done — bins derived on every read, never stored; incomplete items (no type, size, actuation, bin) flagged amber and excluded from totals; flange faces count two per joint (`src/domain/count/count.ts`) |
+| 29 | 0.6.0 | Parts count | Live segment count table and project summary with click-to-highlight (CNT-06, CNT-07) | Done — count table per segment and for all segments, grouped by bin set; clicking a cell or the incomplete line highlights the markers (and opens their drawing) |
+| 30 | 0.6.0 | Parts count | Cross-drawing duplicate tag check (CNT-08) | Done — normalised tags compared across markers; duplicates warn until accepted (stored in `acceptedDuplicates`) |
+| 31 | 0.6.0 | Parts count | Pipe length counting as a per-project user setting: manual length entry on dashed-highlight line runs, summed per segment and size bin (CNT-12) | Done — with pipe length counting on, line runs carry a pipe item with size and length; lengths summed per size bin in the count table |
 | 32 | 0.7.0 | Segment notes and drawing links | Segment notes editor with basic formatting (NTE-01) | Planned |
 | 33 | 0.7.0 | Segment notes and drawing links | Drawing link hotspot tool with target drawing and saved view (LNK-01) | Planned |
 | 34 | 0.7.0 | Segment notes and drawing links | Link navigation with Back history; link overlay show/hide (LNK-02, LNK-03) | Planned |
@@ -53,7 +53,7 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 45 | 1.0.0 | First production release | Crash-recovery and data-loss testing (NFR-05); Excel export timing (NFR-06) | Planned |
 | 46 | 1.0.0 | First production release | User guide, keyboard shortcut sheet and sample project | Planned |
 | 47 | 1.0.0 | First production release | Publish to public URL and package the same build as a zipped static site; release notes | Planned |
-| 48 | 1.1.0 | Productivity features | Stamp mode and keyboard shortcuts for equipment types (ANN-08, ANN-09) | Planned |
+| 48 | 1.1.0 | Productivity features | Stamp mode and keyboard shortcuts for equipment types (ANN-08, ANN-09) | Partial — equipment type key shortcuts done in v0.6.0; stamp mode (ANN-09) not yet built |
 | 49 | 1.1.0 | Productivity features | Bulk edit of items; split/merge/reorder segments; segment status (CNT-10, SEG-07, SEG-09) | Planned |
 | 50 | 1.1.0 | Productivity features | Timestamped notes with author initials for checker review (NTE-02) | Planned |
 | 51 | 1.1.0 | Productivity features | Import/export equipment library and bin sets as JSON (CNT-11) | Planned |

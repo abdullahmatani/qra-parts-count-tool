@@ -4,11 +4,11 @@ import {
   itemsByMarker,
   markerLabel,
   markerPaint,
-  markerWarnings,
 } from '@/domain/markup/presentation';
 import type { Marker } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { useMarkerWarnings } from '@/features/count/useCount';
 import type { MarkerEntry } from './marker-canvas';
 
 /**
@@ -21,12 +21,15 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const items = useProjectStore((s) => s.doc?.items);
   const segments = useProjectStore((s) => s.doc?.segments);
   const selection = useUiStore((s) => s.selection);
+  const highlight = useUiStore((s) => s.highlighted);
   const filters = useUiStore((s) => s.filters);
   const showLabels = useUiStore((s) => s.showLabels);
+  const warnings = useMarkerWarnings();
 
   return useMemo(() => {
     const index = itemsByMarker(items ?? {});
     const selected = new Set(selection);
+    const highlighted = new Set(highlight);
     const areas: MarkerEntry[] = [];
     const circles: MarkerEntry[] = [];
     for (const marker of Object.values(markers ?? {}) as Marker[]) {
@@ -41,12 +44,13 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         dash: paint.dash,
         label: showLabels ? markerLabel(marker, item) : '',
         selected: selected.has(marker.id),
-        warning: markerWarnings(marker).length > 0,
+        highlighted: highlighted.has(marker.id),
+        warning: warnings.has(marker.id),
         esdv: marker.esdv !== null,
         segmentId: marker.segmentId,
       };
       (marker.geometry.type === 'circle' ? circles : areas).push(entry);
     }
     return [...areas, ...circles];
-  }, [markers, items, segments, selection, filters, showLabels, drawingId]);
+  }, [markers, items, segments, selection, highlight, filters, showLabels, drawingId, warnings]);
 }

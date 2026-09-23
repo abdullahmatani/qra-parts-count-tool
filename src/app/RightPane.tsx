@@ -78,7 +78,7 @@ export function RightPane({ segmentDetails, countTable, itemEditor, notes }: Rig
           {active ? (segmentDetails ?? placeholder) : placeholder}
         </PanelSection>
         <PanelSection title={t('panels.count')}>
-          {active ? (countTable ?? placeholder) : placeholder}
+          {countTable ?? (active ? null : placeholder)}
         </PanelSection>
         <PanelSection title={t('panels.item')}>
           {itemEditor ?? <p className="text-sm text-muted-foreground">{t('panels.noItem')}</p>}

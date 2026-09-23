@@ -168,8 +168,8 @@
   "status": {
     "zoom": "Zoom {{zoom}}%",
     "cursor": "x {{x}}, y {{y}}",
-    "warnings_one": "{{count}} warning",
-    "warnings_other": "{{count}} warnings",
+    "warnings_one": "{{count}} marker with warnings",
+    "warnings_other": "{{count}} markers with warnings",
     "noWarnings": "No warnings",
     "filters": "Filters",
     "clearFilters": "Clear filters"
@@ -401,7 +401,9 @@
     "unassigned": "Unassigned",
     "noSegment": "No segment",
     "warnings": {
-      "unassigned": "Not in a segment"
+      "unassigned": "Not in a segment",
+      "incomplete": "Incomplete item: see the item editor",
+      "duplicate": "Tag also counted on another marker"
     },
     "tooltip": {
       "segment": "Segment",
@@ -482,6 +484,159 @@
     "click": "Click",
     "drag": "Drag",
     "middleDrag": "Middle-button drag",
-    "space": "Space"
+    "space": "Space",
+    "types": "Equipment types (sets the selected item and the next one)"
+  },
+  "count": {
+    "history": {
+      "editItem": "edit item #{{seq}}",
+      "addItem": "add count item",
+      "acceptDuplicate": "accept duplicate tag {{tag}}",
+      "unacceptDuplicate": "withdraw acceptance of {{tag}}"
+    },
+    "item": {
+      "title": "Item #{{seq}}",
+      "type": "Equipment type",
+      "typePlaceholder": "Choose a type",
+      "size": "Size",
+      "sizePlaceholder": "2, 2\", 3/4, DN50",
+      "sizeInvalid": "Enter a size such as 2, 2\", 3/4, 1-1/2 or DN50.",
+      "bin": "Bin: {{bin}}",
+      "actuation": "Actuation",
+      "quantity": "Quantity",
+      "tag": "Tag",
+      "remarks": "Remarks",
+      "pipeLength": "Pipe length (m)",
+      "noItem": "This marker has no count item.",
+      "addItem": "Add count item",
+      "shortcut": "Shortcut {{key}}",
+      "enterHint": "Enter saves and returns to the drawing."
+    },
+    "actuation": {
+      "manual": "Manual",
+      "automated": "Automated"
+    },
+    "issues": {
+      "noType": "Choose an equipment type.",
+      "noSize": "Enter a size.",
+      "noActuation": "Choose manual or automated.",
+      "outOfBins": "The size is outside every bin of this type's bin set.",
+      "noBinSet": "This type has no bin set. Set one in the equipment library.",
+      "noLength": "Enter the pipe length."
+    },
+    "table": {
+      "segment": "This segment",
+      "project": "All segments",
+      "type": "Type",
+      "total": "Total",
+      "empty": "Nothing counted yet.",
+      "incomplete_one": "{{count}} incomplete item",
+      "incomplete_other": "{{count}} incomplete items",
+      "showIncomplete": "Highlight incomplete items",
+      "highlight": "Highlight the {{count}} marker(s) in this cell",
+      "clearHighlight": "Clear highlight",
+      "pipeLengths": "Pipe length (m)",
+      "summary": "Project summary"
+    },
+    "duplicates": {
+      "title": "Duplicate tags",
+      "description": "The same tag is counted on more than one marker, often at a match line. Accept it if both are correct, or delete one.",
+      "drawings_one": "on {{count}} drawing",
+      "drawings_other": "on {{count}} drawings",
+      "show": "Show",
+      "accept": "Accept",
+      "accepted": "Accepted",
+      "undo": "Withdraw"
+    }
+  },
+  "library": {
+    "title": "Equipment library",
+    "description": "Equipment types, their size bins and the leak frequency dataset they map to (CNT-02, CNT-04). Changes apply to this project and can be undone.",
+    "tabs": {
+      "types": "Equipment types",
+      "bins": "Size bins",
+      "dataset": "Dataset"
+    },
+    "history": {
+      "edit": "edit equipment library",
+      "addType": "add equipment type",
+      "deleteType": "delete equipment type {{name}}",
+      "addBinSet": "add bin set",
+      "deleteBinSet": "delete bin set {{name}}",
+      "starter": "add starter library"
+    },
+    "types": {
+      "name": "Name",
+      "category": "Category",
+      "actuation": "Manual / automated",
+      "binSet": "Bin set",
+      "manualBins": "Manual valves",
+      "automatedBins": "Automated valves",
+      "sizeRequired": "Size required",
+      "excelKey": "Excel key",
+      "datasetCategory": "Dataset category",
+      "shortcut": "Key",
+      "add": "Add type",
+      "delete": "Delete {{name}}",
+      "moveUp": "Move {{name}} up",
+      "esdvType": "ESDVs are counted as",
+      "esdvTypeHint": "Under the ESDV boundary rule, each ESDV adds one automated item of this type.",
+      "none": "None",
+      "inUse_one": "{{count}} item uses this type; it will need a new type.",
+      "inUse_other": "{{count}} items use this type; they will need a new type.",
+      "empty": "No equipment types yet.",
+      "starter": "Add starter library",
+      "starterHint": "Adds the generic starter types and bin sets that are missing (valves, flanges, small-bore connections, pumps, compressors, vessels, heat exchangers, filters, pig traps, other equipment and pipe)."
+    },
+    "categories": {
+      "valve": "Valve",
+      "flange": "Flange",
+      "smallBore": "Small-bore connection",
+      "pump": "Pump",
+      "compressor": "Compressor",
+      "vessel": "Vessel",
+      "heatExchanger": "Heat exchanger",
+      "filter": "Filter",
+      "pigTrap": "Pig trap",
+      "instrument": "Instrument",
+      "pipe": "Pipe (lengths)",
+      "other": "Other"
+    },
+    "bins": {
+      "sets": "Bin sets",
+      "name": "Name",
+      "add": "New bin set",
+      "copy": "Copy {{name}}",
+      "newName": "New bin set",
+      "delete": "Delete bin set",
+      "usedBy": "Used by: {{types}}",
+      "unused": "Not used by any type.",
+      "lower": "From (in)",
+      "upper": "To (in)",
+      "lowerEdge": "Lower edge rule",
+      "upperEdge": "Upper edge rule",
+      "label": "Label",
+      "addBin": "Add bin",
+      "deleteBin": "Delete bin {{label}}",
+      "open": "none",
+      "exclusiveLower": "<",
+      "inclusiveLower": "≤",
+      "exclusiveUpper": "<",
+      "inclusiveUpper": "≤",
+      "hint": "Edges are in inches (DN sizes are converted). Leave an edge empty for no limit. Choose whether each edge value belongs to the bin.",
+      "ok": "Every size falls in exactly one bin.",
+      "problems": {
+        "overlap": "{{a}} and {{b}} overlap: a size can fall in both.",
+        "gap": "No bin covers sizes between {{a}} and {{b}}.",
+        "emptyBin": "{{a}} can hold no size."
+      },
+      "noSets": "No bin sets yet."
+    },
+    "dataset": {
+      "name": "Leak frequency dataset",
+      "namePlaceholder": "e.g. IOGP 434-01, UK HSE HCRD or a client scheme",
+      "description": "Notes",
+      "hint": "No dataset is built in. Name the one the equipment types and bins follow, and set each type's dataset category."
+    }
   }
 }

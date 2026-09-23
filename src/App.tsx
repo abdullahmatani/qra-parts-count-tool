@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SettingsDialog } from '@/app/SettingsDialog';
@@ -13,6 +12,7 @@ import { closeProject, openProjectFromPicker } from '@/features/project/project-
 import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
 import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
 import { SpacePickerDialog } from '@/features/drawings/SpacePickerDialog';
+import { LibraryDialog } from '@/features/library/LibraryDialog';
 import { MarkerFilterChips } from '@/features/markup/MarkerFilters';
 import { MarkerInspector } from '@/features/markup/MarkerInspector';
 import { MarkupViewer } from '@/features/markup/MarkupViewer';
@@ -20,7 +20,8 @@ import { ShortcutsDialog } from '@/features/markup/ShortcutsDialog';
 import { NewSegmentDialog } from '@/features/segments/NewSegmentDialog';
 import { SegmentDetails } from '@/features/segments/SegmentDetails';
 import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
-import { countMarkerWarnings } from '@/domain/markup/presentation';
+import { CountTablePanel } from '@/features/count/CountTablePanel';
+import { useMarkerWarnings } from '@/features/count/useCount';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
@@ -30,8 +31,7 @@ export function App() {
   const theme = useApplyPreferences();
   useServiceWorker();
   const hasProject = useProjectStore((s) => s.doc !== null);
-  const markers = useProjectStore((s) => s.doc?.markers);
-  const warningCount = useMemo(() => (markers ? countMarkerWarnings({ markers }) : 0), [markers]);
+  const warningCount = useMarkerWarnings().size;
   useWorkspaceShortcuts(hasProject);
   const openDialog = useUiStore((s) => s.openDialog);
   const supported = isFileSystemAccessSupported();
@@ -45,7 +45,11 @@ export function App() {
           onDropFiles={(files) => void importWithFeedback(files)}
           renderDrawing={(drawingId) => <MarkupViewer drawingId={drawingId} />}
           onAddSegment={() => openDialog('newSegment')}
-          rightPane={{ segmentDetails: <SegmentDetails />, itemEditor: <MarkerInspector /> }}
+          rightPane={{
+            segmentDetails: <SegmentDetails />,
+            countTable: <CountTablePanel />,
+            itemEditor: <MarkerInspector />,
+          }}
           statusBar={{ warningCount, filterChips: <MarkerFilterChips /> }}
         />
       ) : (
@@ -62,6 +66,7 @@ export function App() {
       {hasProject && <SpacePickerDialog />}
       <ShortcutsDialog />
       {hasProject && <NewSegmentDialog />}
+      {hasProject && <LibraryDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

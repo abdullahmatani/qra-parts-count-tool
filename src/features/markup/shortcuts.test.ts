@@ -30,6 +30,16 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
     expect(shortcutFor(key('a', { ctrlKey: true }))).toEqual({ kind: 'selectAll' });
   });
 
+  it('maps equipment type keys before tool letters (ANN-08)', () => {
+    const keys = new Map([
+      ['1', 'eqt_valve'],
+      ['c', 'eqt_custom'],
+    ]);
+    expect(shortcutFor(key('1'), keys)).toEqual({ kind: 'equipmentType', typeId: 'eqt_valve' });
+    expect(shortcutFor(key('C'), keys)).toEqual({ kind: 'equipmentType', typeId: 'eqt_custom' });
+    expect(shortcutFor(key('1', { ctrlKey: true }), keys)).toBeNull();
+  });
+
   it('maps delete and escape, and ignores Alt combinations', () => {
     expect(shortcutFor(key('Delete'))).toEqual({ kind: 'delete' });
     expect(shortcutFor(key('Backspace'))).toEqual({ kind: 'delete' });

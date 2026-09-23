@@ -1,6 +1,7 @@
 /**
  * Interactive project flows: pick a folder, create, open, reopen, close.
  */
+import { starterLibrary } from '@/domain/count/starter-library';
 import { toast } from 'sonner';
 import i18n from '@/i18n';
 import { createProject, ProjectFileError, type NewProjectInput } from '@/domain/schema';
@@ -35,7 +36,12 @@ export async function createNewProject(
   dir: FsDirHandle,
   input: NewProjectInput,
 ): Promise<'created' | 'exists'> {
-  const project = createProject({ ...input, appVersion: __APP_VERSION__ });
+  // CNT-02: a new project starts from the starter library, edited to suit.
+  const project = createProject({
+    ...input,
+    library: input.library ?? starterLibrary(),
+    appVersion: __APP_VERSION__,
+  });
   try {
     await createProjectInDirectory(dir, project);
   } catch (error) {

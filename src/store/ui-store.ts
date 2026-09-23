@@ -3,6 +3,7 @@
  * part of the project file, and none of it is undoable.
  */
 import { create } from 'zustand';
+import type { ItemDefaults } from '@/domain/actions/items';
 import type { Box } from '@/domain/markup/geometry';
 import type { MarkerFilterState } from '@/domain/markup/presentation';
 
@@ -22,6 +23,9 @@ export type MarkerFilters = MarkerFilterState;
 
 /** Default circle radius as a fraction of the drawing's longer side. */
 export const DEFAULT_CIRCLE_RADIUS_FRACTION = 1 / 200;
+
+/** Which field of the edit panel gets the focus: `auto` picks the first one to fill in. */
+export type EditField = 'auto' | 'type' | 'size' | 'tag';
 
 export type RightPanelSection = 'segment' | 'count' | 'item' | 'notes';
 
@@ -56,8 +60,10 @@ export interface UiState {
   offlineReady: boolean;
   /** Size of the last circle drawn, as a fraction of the drawing's longer side. */
   circleRadiusFraction: number;
-  /** Set by double-clicking a marker: the edit panel shows and focuses it (ANN-07). */
-  editRequest: { markerId: string; at: number } | null;
+  /** Set by double-clicking or placing a marker: the edit panel shows and focuses it (ANN-07). */
+  editRequest: { markerId: string; field: EditField; at: number } | null;
+  /** The last type and actuation used, for the next item (FDS section 6). */
+  itemDefaults: ItemDefaults;
   /** SEG-05: an area of a drawing to bring into view once its viewer is ready. */
   pendingFocus: { drawingId: string; box: Box | null } | null;
 
@@ -75,7 +81,8 @@ export interface UiState {
   openDialog: (dialog: DialogName) => void;
   setOfflineReady: (ready: boolean) => void;
   setCircleRadiusFraction: (fraction: number) => void;
-  requestEdit: (markerId: string) => void;
+  requestEdit: (markerId: string, field?: EditField) => void;
+  setItemDefaults: (defaults: Partial<ItemDefaults>) => void;
   /** Opens a drawing and zooms to an area of it (the whole sheet when `box` is null). */
   focusDrawing: (drawingId: string, box: Box | null) => void;
   clearFocus: () => void;
@@ -97,6 +104,7 @@ const initial = {
   dialog: null,
   circleRadiusFraction: DEFAULT_CIRCLE_RADIUS_FRACTION,
   editRequest: null,
+  itemDefaults: { equipmentTypeId: null, actuation: null },
   pendingFocus: null,
 } satisfies Partial<UiState>;
 
@@ -137,8 +145,10 @@ export const useUiStore = create<UiState>()((set) => ({
   openDialog: (dialog) => set({ dialog }),
   setOfflineReady: (offlineReady) => set({ offlineReady }),
   setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
-  requestEdit: (markerId) =>
-    set({ selection: [markerId], editRequest: { markerId, at: Date.now() } }),
+  requestEdit: (markerId, field = 'auto') =>
+    set({ selection: [markerId], editRequest: { markerId, field, at: Date.now() } }),
+  setItemDefaults: (defaults) =>
+    set((state) => ({ itemDefaults: { ...state.itemDefaults, ...defaults } })),
   focusDrawing: (drawingId, box) =>
     set((state) => ({
       activeDrawingId: drawingId,

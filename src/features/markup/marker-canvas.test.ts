@@ -10,6 +10,7 @@ function entry(id: string, cx: number, cy: number): MarkerEntry {
     dash: [],
     label: '',
     selected: false,
+    highlighted: false,
     warning: false,
     esdv: false,
     segmentId: null,

@@ -1,7 +1,8 @@
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { XY } from '@/domain/markup/geometry';
-import { markerPaint, markerSegmentIds, markerWarnings } from '@/domain/markup/presentation';
+import { markerPaint, markerSegmentIds } from '@/domain/markup/presentation';
+import { useMarkerWarnings } from '@/features/count/useCount';
 import type { Marker } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
 
@@ -33,7 +34,7 @@ export function MarkerTooltip({
     .filter(Boolean)
     .join(' / ');
   const shape = marker.esdv ? 'esdv' : marker.geometry.type;
-  const warnings = markerWarnings(marker);
+  const warnings = useMarkerWarnings().get(marker.id) ?? [];
   const left = position.x + 16 + WIDTH > bounds.width ? position.x - 16 - WIDTH : position.x + 16;
   const top = Math.min(position.y + 16, Math.max(0, bounds.height - 140));
 

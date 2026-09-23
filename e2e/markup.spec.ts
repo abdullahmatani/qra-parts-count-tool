@@ -103,9 +103,12 @@ test.describe('markup engine', () => {
     await expect(markers(page).first()).toHaveAttribute('data-shape', 'circle');
     // No active segment: the markers are unassigned and flagged (amber outline).
     await expect(markers(page).first()).toHaveAttribute('data-warning', 'true');
-    await expect(page.getByTestId('status-warnings')).toHaveText('2 warnings');
+    // No active segment and no equipment type yet: both markers carry warnings.
+    await expect(page.getByTestId('status-warnings')).toHaveText('2 markers with warnings');
 
     // Dashed highlight: drag a rectangle, then click a line run.
+    // Placing a circle puts the focus in its size field.
+    await page.getByRole('application').focus();
     await page.keyboard.press('d');
     await drag(page, [0.1, 0.1], [0.2, 0.2]);
     await click(page, 0.6, 0.2);
@@ -155,6 +158,8 @@ test.describe('markup engine', () => {
     await page.keyboard.press('c');
     await click(page, 0.3, 0.3);
     await click(page, 0.4, 0.3);
+    // Placing a circle puts the focus in its size field.
+    await page.getByRole('application').focus();
     await page.keyboard.press('v');
     await expect(markers(page)).toHaveCount(2);
 
@@ -214,6 +219,8 @@ test.describe('markup engine', () => {
       await click(page, 0.1 + (i % 17) * 0.05, 0.15 + Math.floor(i / 17) * 0.12);
     }
     await expect(markers(page)).toHaveCount(steps);
+    // Placing a circle puts the focus in its size field; undo belongs to the canvas.
+    await page.getByRole('application').focus();
     for (let i = 0; i < steps - 1; i += 1) await page.keyboard.press('Control+z');
     await expect(markers(page)).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
@@ -279,7 +286,8 @@ test.describe('markup engine', () => {
     await expect(page.getByTestId('marker-tooltip')).toContainText('2"');
     await page.mouse.dblclick(centre.x, centre.y);
     await expect(page.getByTestId('marker-inspector')).toBeVisible();
-    await expect(page.getByRole('combobox', { name: 'Segment', exact: true })).toBeFocused();
+    // The valve has no type yet, so the item editor focuses the type.
+    await expect(page.getByRole('combobox', { name: 'Equipment type' })).toBeFocused();
 
     // New markers go to the active segment (SEG-06).
     await page.getByRole('combobox', { name: 'Choose a segment' }).click();
@@ -288,6 +296,8 @@ test.describe('markup engine', () => {
     await page.keyboard.press('c');
     await click(page, 0.6, 0.6);
     await expect(page.locator('[data-segment-id="seg_is01"]')).toHaveCount(2);
+    // Placing a circle puts the focus in its size field.
+    await page.getByRole('application').focus();
     await page.keyboard.press('v');
 
     // Filters: hide the segment; the chip in the status bar shows it again.

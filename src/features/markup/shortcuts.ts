@@ -6,6 +6,8 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { TOOLS } from '@/app/tools';
+import { itemForMarker } from '@/domain/actions/items';
+import { updateItemCommand } from '@/features/count/item-commands';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -34,11 +36,16 @@ export type ShortcutAction =
   | { kind: 'copy' }
   | { kind: 'paste' }
   | { kind: 'selectAll' }
-  | { kind: 'clearSelection' };
+  | { kind: 'clearSelection' }
+  | { kind: 'equipmentType'; typeId: string };
 
-/** Maps a key press to a workspace action. */
+/**
+ * Maps a key press to a workspace action. `typeKeys` maps equipment type
+ * shortcut keys (e.g. "1" for valves) to type ids (ANN-08).
+ */
 export function shortcutFor(
   event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'altKey'>,
+  typeKeys: ReadonlyMap<string, string> = new Map(),
 ): ShortcutAction | null {
   const mod = event.ctrlKey || event.metaKey;
   const key = event.key.toLowerCase();
@@ -54,6 +61,8 @@ export function shortcutFor(
   if (event.key === 'Delete' || event.key === 'Backspace') return { kind: 'delete' };
   if (event.key === 'Escape') return { kind: 'clearSelection' };
   if (event.shiftKey) return null;
+  const typeId = typeKeys.get(key);
+  if (typeId) return { kind: 'equipmentType', typeId };
   const tool = TOOLS.find((def) => def.shortcut.toLowerCase() === key);
   return tool ? { kind: 'tool', tool: tool.tool } : null;
 }
@@ -89,9 +98,28 @@ export function runShortcut(action: ShortcutAction): boolean {
     }
     case 'selectAll':
       return selectAllOnDrawing() > 0 || ui.activeDrawingId !== null;
+    case 'equipmentType': {
+      // Sets the type of the selected item and of the next circle placed.
+      if (project.readOnly) return false;
+      ui.setItemDefaults({ equipmentTypeId: action.typeId });
+      const ids = selectedMarkerIds();
+      const item = ids.length === 1 ? itemForMarker(project.doc, ids[0]!) : undefined;
+      if (item) {
+        const type = project.doc.library.equipmentTypes.find((e) => e.id === action.typeId);
+        updateItemCommand(item.id, {
+          equipmentTypeId: action.typeId,
+          ...(type?.hasActuation && !item.actuation
+            ? { actuation: ui.itemDefaults.actuation }
+            : {}),
+        });
+        ui.requestEdit(item.markerId, 'size');
+      }
+      return true;
+    }
     case 'clearSelection':
-      if (ui.selection.length === 0) return false;
+      if (ui.selection.length === 0 && ui.highlighted.length === 0) return false;
       ui.setSelection([]);
+      ui.setHighlighted([]);
       return true;
   }
 }
@@ -103,7 +131,13 @@ export function useWorkspaceShortcuts(enabled: boolean): void {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || isTypingTarget(event.target)) return;
       if (useUiStore.getState().dialog) return;
-      const action = shortcutFor(event);
+      const library = useProjectStore.getState().doc?.library;
+      const typeKeys = new Map(
+        (library?.equipmentTypes ?? [])
+          .filter((type) => type.shortcut)
+          .map((type) => [type.shortcut!.toLowerCase(), type.id] as const),
+      );
+      const action = shortcutFor(event, typeKeys);
       if (!action) return;
       // Ctrl+A and Backspace have browser defaults that must not fire on the canvas.
       if (runShortcut(action) || action.kind === 'selectAll') event.preventDefault();

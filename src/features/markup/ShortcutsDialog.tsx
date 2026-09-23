@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Kbd } from '@/components/ui/kbd';
 import { TOOLS } from '@/app/tools';
+import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 
 function Keys({ keys }: { keys: string[] }) {
@@ -49,6 +50,10 @@ export function ShortcutsDialog() {
   const { t } = useTranslation();
   const open = useUiStore((s) => s.dialog === 'shortcuts');
   const openDialog = useUiStore((s) => s.openDialog);
+  const types = useProjectStore((s) => s.doc?.library.equipmentTypes);
+  const typeRows: [ReactNode, string[]][] = (types ?? [])
+    .filter((type) => type.shortcut)
+    .map((type) => [type.name, [type.shortcut!]]);
 
   return (
     <Dialog open={open} onOpenChange={(next) => openDialog(next ? 'shortcuts' : null)}>
@@ -62,6 +67,7 @@ export function ShortcutsDialog() {
             title={t('shortcuts.tools')}
             rows={TOOLS.map((tool) => [t(tool.labelKey), [tool.shortcut]])}
           />
+          {typeRows.length > 0 && <Section title={t('shortcuts.types')} rows={typeRows} />}
           <Section
             title={t('shortcuts.editing')}
             rows={[

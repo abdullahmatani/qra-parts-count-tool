@@ -13,6 +13,7 @@ import {
   type MarkerClip,
 } from '@/domain/actions/markers';
 import type { Draft } from 'immer';
+import { addItem } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
 import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
@@ -84,10 +85,25 @@ export function placeMarker(drawingId: string, geometry: MarkerGeometry): string
     style: { labelOffset: null },
     esdv: null,
   };
+  // Circles carry a count item with the last-used type (FDS section 6); line runs
+  // carry a pipe item when the project counts pipe lengths (CNT-12).
+  const pipeType = doc.library.equipmentTypes.find((type) => type.category === 'pipe');
+  const withItem =
+    geometry.type === 'circle' ||
+    (geometry.type === 'polyline' && doc.settings.pipeLengthCounting && !!pipeType);
+  const defaults =
+    geometry.type === 'circle'
+      ? useUiStore.getState().itemDefaults
+      : { equipmentTypeId: pipeType?.id ?? null, actuation: null };
   const label =
     geometry.type === 'circle' ? t('markup.history.addCircle') : t('markup.history.addHighlight');
-  if (!apply(label, (draft) => addMarker(draft, marker))) return null;
-  useUiStore.getState().setSelection([marker.id]);
+  const done = apply(label, (draft) => {
+    addMarker(draft, marker);
+    if (withItem) addItem(draft, marker.id, defaults);
+  });
+  if (!done) return null;
+  if (withItem) useUiStore.getState().requestEdit(marker.id);
+  else useUiStore.getState().setSelection([marker.id]);
   return marker.id;
 }
 

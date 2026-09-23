@@ -110,6 +110,7 @@ export const MarkerList = memo(function MarkerList({
             data-segment-id={entry.segmentId ?? ''}
             data-colour={entry.colour}
             data-selected={entry.selected ? 'true' : 'false'}
+            data-highlighted={entry.highlighted ? 'true' : 'false'}
             data-warning={entry.warning ? 'true' : 'false'}
           >
             {entry.label || t(`markup.shapes.${shape}`)}

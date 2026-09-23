@@ -1,4 +1,4 @@
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
@@ -10,12 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { markerWarnings } from '@/domain/markup/presentation';
+import { useMarkerWarnings } from '@/features/count/useCount';
 import { segmentAppearance } from '@/domain/palette';
 import type { Marker, MarkerGeometry } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
 import { useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
+import { itemForMarker } from '@/domain/actions/items';
+import { itemsByMarker as indexItems } from '@/domain/markup/presentation';
+import { ItemEditor } from '@/features/count/ItemEditor';
+import { addItemCommand } from '@/features/count/item-commands';
 import { EsdvEditor } from '@/features/segments/EsdvEditor';
 import { assignMarkerIds, deleteMarkerIds } from './marker-commands';
 
@@ -61,6 +65,9 @@ export function MarkerInspector() {
   const markersRecord = useProjectStore((s) => s.doc?.markers);
   const readOnly = useProjectStore((s) => s.readOnly);
   const segments = useOrderedSegments();
+  const warningMap = useMarkerWarnings();
+  const items = useProjectStore((s) => s.doc?.items);
+  const itemsByMarker = useMemo(() => indexItems(items ?? {}), [items]);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -75,9 +82,12 @@ export function MarkerInspector() {
   useEffect(() => {
     if (!editRequest) return;
     rootRef.current?.scrollIntoView({ block: 'nearest' });
-    // An ESDV's editor focuses its tag field instead.
+    // ESDV and item editors focus their own fields.
     const marker = markersRecord?.[editRequest.markerId];
-    if (!marker?.esdv) triggerRef.current?.focus();
+    const doc = useProjectStore.getState().doc;
+    if (!marker?.esdv && !(doc && itemForMarker(doc, editRequest.markerId))) {
+      triggerRef.current?.focus();
+    }
     // Only a new request moves the focus, not later marker edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRequest]);
@@ -90,8 +100,9 @@ export function MarkerInspector() {
   const assignable = markers.filter((m) => !m.esdv);
   const segmentIds = new Set(assignable.map((m) => m.segmentId ?? NO_SEGMENT));
   const segmentValue = segmentIds.size === 1 ? [...segmentIds][0]! : '';
-  const warnings = [...new Set(markers.flatMap((m) => markerWarnings(m)))];
+  const warnings = [...new Set(markers.flatMap((m) => warningMap.get(m.id) ?? []))];
   const shape = first.esdv ? 'esdv' : first.geometry.type;
+  const item = markers.length === 1 ? itemsByMarker.get(first.id) : undefined;
 
   return (
     <div ref={rootRef} className="space-y-3 text-sm" data-testid="marker-inspector">
@@ -100,6 +111,21 @@ export function MarkerInspector() {
           ? t(`markup.shapes.${shape}`)
           : t('markup.inspector.selected', { count: markers.length })}
       </p>
+      {markers.length === 1 && first.esdv && <EsdvEditor key={first.id} marker={first} />}
+      {markers.length === 1 && !first.esdv && item && <ItemEditor key={item.id} item={item} />}
+      {markers.length === 1 && !first.esdv && !item && first.geometry.type === 'circle' && (
+        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          {t('count.item.noItem')}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => addItemCommand(first.id)}
+            disabled={readOnly}
+          >
+            <Plus /> {t('count.item.addItem')}
+          </Button>
+        </div>
+      )}
       {markers.length === 1 && (
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {geometrySummary(first.geometry, t).map(([label, value]) => (
@@ -110,7 +136,6 @@ export function MarkerInspector() {
           ))}
         </dl>
       )}
-      {markers.length === 1 && first.esdv && <EsdvEditor key={first.id} marker={first} />}
       {assignable.length > 0 && (
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground" htmlFor="marker-segment">
