@@ -1,0 +1,163 @@
+/*
+ * Tailwind CSS 4 entry point and design tokens (FDS section 9.3).
+ * Every font and asset is bundled; nothing loads from a CDN.
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.5rem;
+
+  /* shadcn/ui base tokens (slate) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.208 0.042 265.755);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.208 0.042 265.755);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.279 0.041 260.031);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.279 0.041 260.031);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.279 0.041 260.031);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+
+  /* Workspace surfaces */
+  --canvas: oklch(0.93 0.01 255);
+  --panel: oklch(0.985 0.003 247);
+
+  /*
+   * Segment palette (--segment-1 … --segment-12). Colour-blind-aware hues based on
+   * Paul Tol's muted and vibrant schemes. Segment colours are drawn on the drawing
+   * itself (a white sheet in both themes), so they do not change with the theme.
+   * After 12 the palette cycles with a dash-pattern variant (see src/domain/palette.ts,
+   * which holds the same values for PDF export).
+   */
+  --segment-1: #332288;
+  --segment-2: #117733;
+  --segment-3: #44aa99;
+  --segment-4: #882255;
+  --segment-5: #aa4499;
+  --segment-6: #999933;
+  --segment-7: #cc6677;
+  --segment-8: #33bbee;
+  --segment-9: #ee3377;
+  --segment-10: #8c564b;
+  --segment-11: #4477aa;
+  --segment-12: #225555;
+
+  /* Reserved marker colours: never used as a segment colour. */
+  --marker-warning: #f59e0b; /* incomplete or duplicate items: amber outline */
+  --link-overlay: #2563eb; /* drawing link hotspots: blue hatch */
+  --esdv: #dc2626; /* ESDV markers: red */
+
+  /* Density: compact by default (28 px table rows), comfortable option in settings. */
+  --row-height: 28px;
+}
+
+:root.density-comfortable {
+  --row-height: 36px;
+}
+
+.dark {
+  --background: oklch(0.208 0.042 265.755);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.279 0.041 260.031);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.279 0.041 260.031);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.279 0.041 260.031);
+  --secondary: oklch(0.372 0.044 257.287);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.372 0.044 257.287);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.372 0.044 257.287);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+
+  --canvas: oklch(0.17 0.03 265);
+  --panel: oklch(0.235 0.04 263);
+}
+
+@theme inline {
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+
+  --color-segment-1: var(--segment-1);
+  --color-segment-2: var(--segment-2);
+  --color-segment-3: var(--segment-3);
+  --color-segment-4: var(--segment-4);
+  --color-segment-5: var(--segment-5);
+  --color-segment-6: var(--segment-6);
+  --color-segment-7: var(--segment-7);
+  --color-segment-8: var(--segment-8);
+  --color-segment-9: var(--segment-9);
+  --color-segment-10: var(--segment-10);
+  --color-segment-11: var(--segment-11);
+  --color-segment-12: var(--segment-12);
+  --color-marker-warning: var(--marker-warning);
+  --color-link-overlay: var(--link-overlay);
+  --color-esdv: var(--esdv);
+
+  --spacing-row: var(--row-height);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    /* Desktop only: minimum supported screen is 1366 x 768 (FDS section 2). */
+    min-width: 1280px;
+    min-height: 720px;
+    overflow: hidden;
+  }
+}
