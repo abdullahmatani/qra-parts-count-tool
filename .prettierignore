@@ -1,0 +1,12 @@
+node_modules
+dist
+dev-dist
+release
+coverage
+test-results
+playwright-report
+pnpm-lock.yaml
+docs/FDS.md
+docs/ROADMAP.md
+docs/schema/*.json
+e2e/fixtures/**
