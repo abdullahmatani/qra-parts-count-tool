@@ -5,7 +5,14 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json' with { type: 'json' };
-import { CSP_META, SECURITY_HEADERS } from './scripts/csp.mjs';
+import {
+  COMMON_HEADERS,
+  CSP_META,
+  SECURITY_HEADERS,
+  WORKER_CSP,
+  WORKERS_DIR,
+  headersForPath,
+} from './scripts/csp.mjs';
 import { pdfjsAssets } from './scripts/vite-plugin-pdfjs-assets.ts';
 
 /**
@@ -29,13 +36,43 @@ function contentSecurityPolicy(): Plugin {
       ],
     },
     generateBundle() {
-      const headers = Object.entries(SECURITY_HEADERS)
-        .map(([name, value]) => `  ${name}: ${value}`)
-        .join('\n');
-      this.emitFile({ type: 'asset', fileName: '_headers', source: `/*\n${headers}\n` });
+      // Netlify / Cloudflare Pages format. The page CSP is sent only for the
+      // document, and the worker CSP only for worker scripts, so no response
+      // ever carries two policies.
+      const block = (path: string, headers: Record<string, string>) =>
+        `${path}\n${Object.entries(headers)
+          .map(([name, value]) => `  ${name}: ${value}`)
+          .join('\n')}\n`;
+      const source = [
+        block('/*', COMMON_HEADERS),
+        block('/', { 'Content-Security-Policy': SECURITY_HEADERS['Content-Security-Policy']! }),
+        block('/index.html', {
+          'Content-Security-Policy': SECURITY_HEADERS['Content-Security-Policy']!,
+        }),
+        block(`/${WORKERS_DIR}/*`, { 'Content-Security-Policy': WORKER_CSP }),
+      ].join('\n');
+      this.emitFile({ type: 'asset', fileName: '_headers', source });
     },
   };
 }
+
+/** `vite preview` sends the same per-path security headers as the static host. */
+function previewSecurityHeaders(): Plugin {
+  return {
+    name: 'qrapc-preview-security-headers',
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        for (const [name, value] of Object.entries(headersForPath(req.url ?? '/'))) {
+          res.setHeader(name, value);
+        }
+        next();
+      });
+    },
+  };
+}
+
+/** VITE_DWG_READER=none builds without the GPL-3.0 LibreDWG reader (see README). */
+const dwgReader = process.env.VITE_DWG_READER === 'none' ? 'none' : 'libredwg';
 
 export default defineConfig({
   // Relative base so the same build works from a public URL, a sub-path on an
@@ -48,6 +85,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     contentSecurityPolicy(),
+    previewSecurityHeaders(),
     pdfjsAssets(),
     VitePWA({
       // A new version waits for the user to accept it, so an update never reloads
@@ -96,8 +134,34 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    alias: [
+      ...(dwgReader === 'none'
+        ? [
+            {
+              find: /^\.\/workers\/dwg-reader$/,
+              replacement: fileURLToPath(
+                new URL('./src/features/cad/workers/dwg-reader.none.ts', import.meta.url),
+              ),
+            },
+          ]
+        : []),
+      {
+        // The WASM file is not listed in the package's "exports", so it is resolved by path.
+        find: /^libredwg-wasm(?=\?|$)/,
+        replacement: fileURLToPath(
+          new URL('./node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm', import.meta.url),
+        ),
+      },
+      { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+    ],
+  },
+  worker: {
+    format: 'es',
+    rollupOptions: {
+      output: {
+        entryFileNames: `${WORKERS_DIR}/[name]-[hash].js`,
+        chunkFileNames: `${WORKERS_DIR}/[name]-[hash].js`,
+      },
     },
   },
   build: {
@@ -120,7 +184,6 @@ export default defineConfig({
   preview: {
     port: 4173,
     strictPort: true,
-    headers: SECURITY_HEADERS,
   },
   test: {
     environment: 'jsdom',

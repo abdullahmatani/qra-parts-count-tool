@@ -5,7 +5,12 @@ import { resolveTheme, useApplyPreferences, usePreferences } from './preferences
 describe('preferences', () => {
   beforeEach(() => {
     localStorage.clear();
-    usePreferences.setState({ theme: 'system', density: 'compact', initials: '' });
+    usePreferences.setState({
+      theme: 'system',
+      density: 'compact',
+      initials: '',
+      cadColorMode: 'monochrome',
+    });
     document.documentElement.className = '';
   });
 
@@ -23,7 +28,12 @@ describe('preferences', () => {
   it('persists preferences to localStorage, not project data', () => {
     usePreferences.getState().setInitials('  abm ');
     const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
-    expect(stored.state).toEqual({ theme: 'system', density: 'compact', initials: 'abm' });
+    expect(stored.state).toEqual({
+      theme: 'system',
+      density: 'compact',
+      initials: 'abm',
+      cadColorMode: 'monochrome',
+    });
   });
 
   it('resolves explicit themes directly', () => {

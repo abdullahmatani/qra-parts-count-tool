@@ -17,10 +17,10 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 9 | 0.2.0 | Working directory, project file and PDF viewing | Implement autosave with temp-file-then-rename and 20 snapshot backups (PRJ-04, PRJ-05) | Done — `src/services/autosave.ts`, `src/services/backups.ts`, Backups dialog |
 | 10 | 0.2.0 | Working directory, project file and PDF viewing | Integrate PDF.js viewer with pan, zoom, fit, rotate and minimap (DRW-05) | Done — `src/features/viewer`, `e2e/viewer.spec.ts` |
 | 11 | 0.2.0 | Working directory, project file and PDF viewing | Import PDFs into drawings/, split multi-page PDFs, build drawing register with editable metadata (DRW-01, DRW-03, DRW-04) | Done — `src/features/drawings`, `e2e/import.spec.ts` |
-| 12 | 0.3.0 | DWG support | Technical spike: compare LibreDWG-WASM, ODA SDK and DXF parser on 10 sample PEFS/P&IDs for fidelity, speed and licence (risk R1) | Planned |
-| 13 | 0.3.0 | DWG support | Implement chosen DWG-to-vector renderer with layout selection and render cache (DRW-02) | Planned |
-| 14 | 0.3.0 | DWG support | Implement DXF import and PDF-plot import alongside native .dwg; native .dwg stays mandatory (DRW-02, DRW-10) | Planned |
-| 15 | 0.3.0 | DWG support | Performance test with A1 drawings against NFR-02 | Planned |
+| 12 | 0.3.0 | DWG support | Technical spike: compare LibreDWG-WASM, ODA SDK and DXF parser on 10 sample PEFS/P&IDs for fidelity, speed and licence (risk R1) | Partial — `docs/spikes/dwg-renderer.md`, harness `pnpm spike:dwg`; run on public DWG samples (ODA not available hands-on). **Blocked on inputs:** the client's 10 PEFS/P&IDs, and a product-owner decision on LibreDWG's GPL-3.0 licence |
+| 13 | 0.3.0 | DWG support | Implement chosen DWG-to-vector renderer with layout selection and render cache (DRW-02) | Done — LibreDWG-WASM in an isolated worker (`src/features/cad`), layout/space picker on import, display-list cache in `cache/cad/`; `VITE_DWG_READER=none` builds without it |
+| 14 | 0.3.0 | DWG support | Implement DXF import and PDF-plot import alongside native .dwg; native .dwg stays mandatory (DRW-02, DRW-10) | Done — own DXF parser (`src/features/cad/dxf`), PDF plots flagged as CAD plots in the register; `e2e/cad.spec.ts` |
+| 15 | 0.3.0 | DWG support | Performance test with A1 drawings against NFR-02 | Done — `e2e/perf.spec.ts`, results in `docs/performance.md` (A1 PDF opens in 2.1 s; cached reopen 0.2 s) |
 | 16 | 0.4.0 | Markup engine | Build SVG overlay in drawing coordinates with circle and dashed-highlight tools (ANN-01, ANN-02) | Planned |
 | 17 | 0.4.0 | Markup engine | Select, move, resize, copy/paste, delete, box multi-select (ANN-04) | Planned |
 | 18 | 0.4.0 | Markup engine | Command-pattern undo/redo, 100+ steps (PRJ-09) | Planned |

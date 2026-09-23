@@ -25,6 +25,7 @@ export default defineConfig<object, WorkerOptions>({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /perf\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 900 },
@@ -34,12 +35,25 @@ export default defineConfig<object, WorkerOptions>({
     {
       // NFR-01: the same workflow tests with the network disabled after first load.
       name: 'chromium-offline',
-      testIgnore: /offline\.spec\.ts/,
+      testIgnore: [/offline\.spec\.ts/, /perf\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 900 },
         launchOptions: { executablePath },
         offlineMode: true,
+      },
+    },
+    {
+      // NFR-02 timings: run after the functional tests, one at a time, so that
+      // parallel tests do not compete for the CPU. `--no-deps` runs it alone.
+      name: 'perf',
+      testMatch: /perf\.spec\.ts/,
+      dependencies: ['chromium', 'chromium-offline'],
+      fullyParallel: false,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+        launchOptions: { executablePath },
       },
     },
   ],

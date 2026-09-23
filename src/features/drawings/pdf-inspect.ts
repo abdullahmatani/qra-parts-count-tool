@@ -14,6 +14,15 @@ export interface InspectedPage {
 
 export interface InspectedPdf {
   pages: InspectedPage[];
+  /** PDF producer / creator, e.g. "AutoCAD 2024 - DWG To PDF". */
+  producer: string;
+}
+
+/** DRW-10: PDFs written by CAD plot drivers are marked as plots of DWG drawings. */
+export function isCadPlotProducer(producer: string): boolean {
+  return /autocad|autodesk|dwg to pdf|microstation|bentley|smartplant|plant ?3d|aveva|intergraph/i.test(
+    producer,
+  );
 }
 
 interface PdfTextItem {
@@ -78,7 +87,10 @@ export async function inspectPdf(bytes: ArrayBuffer): Promise<InspectedPdf> {
       });
       page.cleanup();
     }
-    return { pages };
+    const metadata = await doc.getMetadata().catch(() => null);
+    const info = (metadata?.info ?? {}) as { Producer?: string; Creator?: string };
+    const producer = [info.Creator, info.Producer].filter(Boolean).join(' / ');
+    return { pages, producer };
   } finally {
     await doc.loadingTask.destroy();
   }

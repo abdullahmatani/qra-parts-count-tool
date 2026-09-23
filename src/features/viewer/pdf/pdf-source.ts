@@ -62,6 +62,11 @@ export class PdfPageSource implements DrawingSource {
     return { promise: task.promise, cancel: () => task.cancel() };
   }
 
+  prepare(): void {
+    // A tiny render makes PDF.js parse the page and keep its operator list.
+    this.renderPreview(64).catch(() => {});
+  }
+
   dispose(): void {
     this.page.cleanup();
     this.release();

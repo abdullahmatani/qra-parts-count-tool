@@ -6,12 +6,17 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { AppFixture } from './fixtures';
 
-export function fixture(name: string): Uint8Array {
-  return readFileSync(new URL(`./fixtures/${name}`, import.meta.url));
+/** Reads a committed fixture by name, or any file by absolute file URL. */
+export function fixture(name: string | URL): Uint8Array {
+  return readFileSync(
+    typeof name === 'string' ? new URL(`./fixtures/${name}`, import.meta.url) : name,
+  );
 }
 
 export interface SeedDrawing {
   file: string;
+  /** Read the bytes from here instead of e2e/fixtures/<file>. */
+  source?: URL;
   page?: number;
   drawingNo: string;
   title?: string;
@@ -28,10 +33,10 @@ export async function seedProject(
 ): Promise<{ drawingIds: string[] }> {
   await app.removeDirectory(directory);
   const now = '2026-09-23T10:00:00.000Z';
-  const written = new Set<string>();
+  const written = new Map<string, Uint8Array>();
   const entries = drawings.map((d, i) => {
-    const bytes = fixture(d.file);
-    if (!written.has(d.file)) written.add(d.file);
+    const bytes = fixture(d.source ?? d.file);
+    written.set(d.file, bytes);
     return {
       id: `drw_seed${i}`,
       fileName: d.file,
@@ -46,7 +51,7 @@ export async function seedProject(
       importedAt: now,
     };
   });
-  for (const file of written) await app.writeBytes(directory, `drawings/${file}`, fixture(file));
+  for (const [file, bytes] of written) await app.writeBytes(directory, `drawings/${file}`, bytes);
   for (const folder of ['cache', 'templates', 'exports', '.backup']) {
     await app.writeText(directory, `${folder}/.keep`, '');
   }

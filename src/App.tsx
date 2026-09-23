@@ -11,6 +11,7 @@ import { RecentProjects } from '@/features/project/RecentProjects';
 import { closeProject, openProjectFromPicker } from '@/features/project/project-actions';
 import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
 import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
+import { SpacePickerDialog } from '@/features/drawings/SpacePickerDialog';
 import { DrawingViewer } from '@/features/viewer/DrawingViewer';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
@@ -44,6 +45,7 @@ export function App() {
       <NewProjectDialog />
       {hasProject && <BackupsDialog />}
       {hasProject && <DrawingRegisterDialog />}
+      {hasProject && <SpacePickerDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

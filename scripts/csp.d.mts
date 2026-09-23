@@ -4,3 +4,8 @@ export declare function serializeCsp(directives: Record<string, string[]>): stri
 export declare const CSP_META: string;
 export declare const CSP_HEADER: string;
 export declare const SECURITY_HEADERS: Record<string, string>;
+export declare const WORKER_CSP_DIRECTIVES: Record<string, string[]>;
+export declare const WORKER_CSP: string;
+export declare const WORKERS_DIR: string;
+export declare const COMMON_HEADERS: Record<string, string>;
+export declare function headersForPath(path: string): Record<string, string>;

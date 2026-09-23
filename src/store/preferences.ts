@@ -4,6 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type Density = 'compact' | 'comfortable';
+/** How DWG/DXF drawings are coloured: like a monochrome plot, or with their CAD colours. */
+export type CadColorMode = 'monochrome' | 'color';
 
 /**
  * Per-user interface preferences. These are stored in the browser (localStorage)
@@ -15,7 +17,9 @@ export interface PreferencesState {
   density: Density;
   /** Author initials stamped on notes (NTE-02). */
   initials: string;
+  cadColorMode: CadColorMode;
   setTheme: (theme: ThemePreference) => void;
+  setCadColorMode: (mode: CadColorMode) => void;
   setDensity: (density: Density) => void;
   setInitials: (initials: string) => void;
 }
@@ -26,7 +30,9 @@ export const usePreferences = create<PreferencesState>()(
       theme: 'system',
       density: 'compact',
       initials: '',
+      cadColorMode: 'monochrome',
       setTheme: (theme) => set({ theme }),
+      setCadColorMode: (cadColorMode) => set({ cadColorMode }),
       setDensity: (density) => set({ density }),
       setInitials: (initials) => set({ initials: initials.trim().slice(0, 8) }),
     }),
@@ -34,7 +40,12 @@ export const usePreferences = create<PreferencesState>()(
       name: 'qrapc.preferences',
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ theme, density, initials }) => ({ theme, density, initials }),
+      partialize: ({ theme, density, initials, cadColorMode }) => ({
+        theme,
+        density,
+        initials,
+        cadColorMode,
+      }),
     },
   ),
 );

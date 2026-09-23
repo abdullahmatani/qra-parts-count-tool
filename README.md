@@ -83,6 +83,7 @@ autosaves:
 | Validation   | Zod schemas for the project file; JSON Schema generated from them                             |
 | File access  | File System Access API; IndexedDB for remembered folder handles                               |
 | PDF viewing  | PDF.js (code-split, loaded on first use)                                                      |
+| CAD viewing  | Own DXF parser; LibreDWG (WebAssembly) for native DWG, in an isolated worker; canvas renderer |
 | Excel        | ExcelJS (writes into the client template, keeping its formatting and formulas)                |
 | PDF export   | pdf-lib (draws markers as vector content onto copies of the originals)                        |
 | i18n         | i18next; English in v1, with strings externalised for later Arabic (RTL) support              |
@@ -129,6 +130,7 @@ pnpm preview        # serves dist/ on http://localhost:4173 (service worker enab
 | `pnpm test:e2e`                     | Playwright end-to-end tests against the production build, including an offline run                |
 | `pnpm schema`                       | Regenerate the project file JSON Schema in `docs/schema/` from the Zod schemas                    |
 | `pnpm size`                         | Check the bundle-size budget (initial JavaScript under 1.5 MB gzipped)                            |
+| `pnpm spike:dwg <folder> [out.md]`  | Run the DWG/DXF readers on every drawing in a folder and report fidelity and speed (roadmap #12)  |
 | `pnpm verify`                       | Run the whole local quality gate: lint, format, typecheck, unit tests, build, size budget, e2e    |
 | `pnpm package:site`                 | Zip `dist/` with a one-line local server script, as the static site for intranet or local hosting |
 
@@ -166,6 +168,14 @@ Chromium. It includes:
 - **Workflow tests** that drive the UI against a working directory backed by the browser's Origin
   Private File System. The native folder picker is replaced by a test hook, because Playwright
   cannot drive native dialogs.
+- **Performance (NFR-02)**: the `perf` project opens dense A1 PDF and DXF sheets and checks they
+  display in under 3 s. It runs after the other projects, one test at a time. Run it alone with
+  `pnpm test:e2e --project perf --no-deps`. Results and method are in
+  [`docs/performance.md`](docs/performance.md).
+
+Test drawings are generated, not hand-made: `node scripts/generate-fixtures.mjs` (PDF) and
+`node scripts/generate-cad-fixtures.mjs` (DXF) write `e2e/fixtures/`; the heavy performance
+sheets are generated on demand into `.cache/perf/`.
 
 Playwright is pinned to the version whose Chromium build is installed. On a new machine, run
 `pnpm exec playwright install chromium` once. To use a different Chromium binary, set
@@ -180,6 +190,7 @@ Playwright is pinned to the version whose Chromium build is installed. On a new 
 │   ├── ROADMAP.md              Development roadmap with per-task status
 │   ├── schema/                 Generated JSON Schema for project.qrapc.json
 │   ├── spikes/                 Technical spike reports (e.g. DWG renderer selection)
+│   ├── performance.md          Performance method and results (NFR-02, NFR-03)
 │   └── user-guide.md           User guide and keyboard shortcuts
 ├── e2e/                        Playwright end-to-end tests
 ├── public/                     Static assets copied verbatim (icons, headers)
@@ -204,8 +215,8 @@ folder copies the whole study.
 ```
 <working directory>/
 ├── project.qrapc.json        project file (autosaved)
-├── drawings/                 imported PDF and DWG files, unmodified
-├── cache/                    rendered DWG views and thumbnails (rebuildable)
+├── drawings/                 imported PDF, DWG and DXF files, unmodified
+├── cache/                    CAD display lists and drawing previews (rebuildable)
 ├── templates/                copy of the client Excel template + mapping
 ├── exports/                  Excel and annotated PDF outputs, timestamped
 └── .backup/                  last 20 autosave snapshots
@@ -232,13 +243,34 @@ folder copies the whole study.
   policy is defined once in [`scripts/csp.mjs`](scripts/csp.mjs) and is also emitted as a
   `_headers` file for static hosts and sent by the packaged local server. The only additions are
   `'wasm-unsafe-eval'` (bundled WebAssembly decoders) and inline styles (injected by UI libraries);
-  neither allows another origin. ESLint rules forbid `XMLHttpRequest`, `WebSocket`, `EventSource`
-  and `navigator.sendBeacon`.
+  neither allows another origin. Scripts under `workers/` get their own policy that also allows
+  `'unsafe-eval'`, which the WebAssembly DWG reader's generated bindings need; it still allows
+  no other origin. ESLint rules forbid `XMLHttpRequest`, `WebSocket`, `EventSource` and
+  `navigator.sendBeacon`.
 - **Verified by tests.** Every Playwright test fails if the page requests anything outside the
   app's origin, and `e2e/privacy.spec.ts` checks that the browser blocks third-party requests.
 - **Everything is bundled.** Fonts (Inter and JetBrains Mono via `@fontsource`), icons and all
   libraries are in the build. Nothing loads from a CDN.
 - **Offline.** The service worker precaches the full app, including web workers, WASM and fonts.
+
+## CAD drawings (DWG and DXF)
+
+- **DXF** is read by the app's own parser (no third-party code).
+- **Native DWG** (R13 to 2018) is read by [LibreDWG](https://www.gnu.org/software/libredwg/)
+  compiled to WebAssembly (`@mlightcad/libredwg-web`). It runs in a separate web worker, with a
+  fresh instance for each file, and is loaded only when a `.dwg` is imported.
+- Both produce one neutral model. Each model space or layout can be imported as a drawing; its
+  display list is cached gzipped in `cache/cad/`, so a DWG is parsed once.
+- Entities the readers cannot show (for example MULTILEADER and tables) are listed in the spike
+  report. For such drawings, import the PDF plot instead; it is flagged as a CAD plot.
+
+The selection is documented in [`docs/spikes/dwg-renderer.md`](docs/spikes/dwg-renderer.md).
+
+> **Licence note.** LibreDWG and `@mlightcad/libredwg-web` are licensed under **GPL-3.0**.
+> Distributing a build that includes them has licence obligations; whether the worker boundary
+> is sufficient is a decision for the product owner. `VITE_DWG_READER=none pnpm build` produces a
+> build without any GPL code: native `.dwg` import then reports that the reader is not included,
+> and DXF and PDF plots still work.
 
 ## Browser support
 
@@ -266,19 +298,22 @@ served over `https://` or `http://localhost`. Opening `index.html` as `file://` 
 
 Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is kept in that file.
 
-| Version       | Theme                                                       | Status      |
-| ------------- | ----------------------------------------------------------- | ----------- |
-| 0.1.0         | Foundation: project scaffold and offline shell              | In progress |
-| 0.2.0         | Working directory, project file and PDF viewing             | Planned     |
-| 0.3.0         | DWG support                                                 | Planned     |
-| 0.4.0         | Markup engine                                               | Planned     |
-| 0.5.0         | Isolatable segments                                         | Planned     |
-| 0.6.0         | Parts count                                                 | Planned     |
-| 0.7.0         | Segment notes and drawing links                             | Planned     |
-| 0.8.0         | Excel template mapping and export                           | Planned     |
-| 0.9.0         | Annotated PDF export and pre-export checks                  | Planned     |
-| 1.0.0         | First production release                                    | Planned     |
-| 1.1.0 – 2.0.0 | Productivity, revisions, navigation aids, assisted counting | Planned     |
+| Version       | Theme                                                       | Status  |
+| ------------- | ----------------------------------------------------------- | ------- |
+| 0.1.0         | Foundation: project scaffold and offline shell              | Done    |
+| 0.2.0         | Working directory, project file and PDF viewing             | Done    |
+| 0.3.0         | DWG support                                                 | Done ¹  |
+| 0.4.0         | Markup engine                                               | Planned |
+| 0.5.0         | Isolatable segments                                         | Planned |
+| 0.6.0         | Parts count                                                 | Planned |
+| 0.7.0         | Segment notes and drawing links                             | Planned |
+| 0.8.0         | Excel template mapping and export                           | Planned |
+| 0.9.0         | Annotated PDF export and pre-export checks                  | Planned |
+| 1.0.0         | First production release                                    | Planned |
+| 1.1.0 – 2.0.0 | Productivity, revisions, navigation aids, assisted counting | Planned |
+
+¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
+GPL question is decided (see the licence note above).
 
 ## Contributing
 

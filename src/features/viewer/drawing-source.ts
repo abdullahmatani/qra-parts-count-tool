@@ -26,6 +26,11 @@ export interface DrawingSource {
   renderPreview(maxDimension: number): Promise<HTMLCanvasElement>;
   /** Renders the visible part of the drawing at full resolution for the view. */
   render(request: RenderRequest): RenderTask;
+  /**
+   * Parses the drawing in the background when the preview came from the cache,
+   * so the first full-resolution render is quick.
+   */
+  prepare?(): void;
   dispose(): void;
 }
 

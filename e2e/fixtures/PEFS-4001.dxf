@@ -1,0 +1,7106 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$HANDSEED
+  5
+FFFF
+  9
+$INSUNITS
+ 70
+4
+  9
+$LTSCALE
+ 40
+1
+  9
+$EXTMIN
+ 10
+0
+ 20
+0
+ 30
+0
+  9
+$EXTMAX
+ 10
+841
+ 20
+594
+ 30
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LTYPE
+  5
+5
+100
+AcDbSymbolTable
+ 70
+2
+  0
+LTYPE
+  5
+14
+100
+AcDbSymbolTableRecord
+100
+AcDbLinetypeTableRecord
+  2
+CONTINUOUS
+ 70
+0
+  3
+Solid line
+ 72
+65
+ 73
+0
+ 40
+0
+  0
+LTYPE
+  5
+15
+100
+AcDbSymbolTableRecord
+100
+AcDbLinetypeTableRecord
+  2
+DASHED
+ 70
+0
+  3
+__ __ __
+ 72
+65
+ 73
+2
+ 40
+9
+ 49
+6
+ 74
+0
+ 49
+-3
+ 74
+0
+  0
+ENDTAB
+  0
+TABLE
+  2
+LAYER
+  5
+2
+100
+AcDbSymbolTable
+ 70
+5
+  0
+LAYER
+  5
+10
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+370
+-3
+  0
+LAYER
+  5
+11
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+PIPE
+ 70
+0
+ 62
+1
+  6
+CONTINUOUS
+370
+50
+  0
+LAYER
+  5
+12
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+INSTR
+ 70
+0
+ 62
+5
+  6
+DASHED
+370
+-3
+  0
+LAYER
+  5
+13
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+TEXT
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+370
+-3
+  0
+LAYER
+  5
+16
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+TITLE
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+370
+-3
+  0
+ENDTAB
+  0
+TABLE
+  2
+STYLE
+  5
+3
+100
+AcDbSymbolTable
+ 70
+1
+  0
+STYLE
+  5
+17
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+STANDARD
+ 70
+0
+ 40
+0
+ 41
+1
+ 50
+0
+ 71
+0
+ 42
+2.5
+  3
+txt
+  4
+
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  5
+1
+100
+AcDbSymbolTable
+ 70
+5
+  0
+BLOCK_RECORD
+  5
+1F
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+*Model_Space
+  0
+BLOCK_RECORD
+  5
+1E
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+*Paper_Space
+  0
+BLOCK_RECORD
+  5
+20
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+VALVE
+  0
+BLOCK_RECORD
+  5
+21
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+INSTR
+  0
+BLOCK_RECORD
+  5
+22
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+FLANGE
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  5
+100
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockBegin
+  2
+*Model_Space
+ 70
+0
+ 10
+0
+ 20
+0
+ 30
+0
+  3
+*Model_Space
+  1
+
+  0
+ENDBLK
+  5
+101
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockEnd
+  0
+BLOCK
+  5
+102
+330
+1E
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockBegin
+  2
+*Paper_Space
+ 70
+0
+ 10
+0
+ 20
+0
+ 30
+0
+  3
+*Paper_Space
+  1
+
+  0
+ENDBLK
+  5
+103
+330
+1E
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockEnd
+  0
+BLOCK
+  5
+104
+330
+20
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockBegin
+  2
+VALVE
+ 70
+0
+ 10
+0
+ 20
+0
+ 30
+0
+  3
+VALVE
+  1
+
+  0
+LWPOLYLINE
+  5
+105
+330
+20
+100
+AcDbEntity
+  8
+0
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 43
+0
+ 10
+-4
+ 20
+-2
+ 10
+-4
+ 20
+2
+ 10
+4
+ 20
+-2
+ 10
+4
+ 20
+2
+  0
+ENDBLK
+  5
+106
+330
+20
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockEnd
+  0
+BLOCK
+  5
+107
+330
+21
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockBegin
+  2
+INSTR
+ 70
+0
+ 10
+0
+ 20
+0
+ 30
+0
+  3
+INSTR
+  1
+
+  0
+CIRCLE
+  5
+108
+330
+21
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+0
+ 20
+0
+ 30
+0
+ 40
+5
+  0
+LINE
+  5
+109
+330
+21
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+-5
+ 20
+0
+ 30
+0
+ 11
+5
+ 21
+0
+ 31
+0
+  0
+ENDBLK
+  5
+10A
+330
+21
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockEnd
+  0
+BLOCK
+  5
+10B
+330
+22
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockBegin
+  2
+FLANGE
+ 70
+0
+ 10
+0
+ 20
+0
+ 30
+0
+  3
+FLANGE
+  1
+
+  0
+LINE
+  5
+10C
+330
+22
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+-0.75
+ 20
+-3
+ 30
+0
+ 11
+-0.75
+ 21
+3
+ 31
+0
+  0
+LINE
+  5
+10D
+330
+22
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+0.75
+ 20
+-3
+ 30
+0
+ 11
+0.75
+ 21
+3
+ 31
+0
+  0
+ENDBLK
+  5
+10E
+330
+22
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockEnd
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LWPOLYLINE
+  5
+10F
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 43
+0
+ 10
+10
+ 20
+10
+ 10
+831
+ 20
+10
+ 10
+831
+ 20
+584
+ 10
+10
+ 20
+584
+  0
+LWPOLYLINE
+  5
+110
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 43
+0
+ 10
+651
+ 20
+10
+ 10
+831
+ 20
+10
+ 10
+831
+ 20
+60
+ 10
+651
+ 20
+60
+  0
+LINE
+  5
+111
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbLine
+ 10
+651
+ 20
+40
+ 30
+0
+ 11
+831
+ 21
+40
+ 31
+0
+  0
+LINE
+  5
+112
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbLine
+ 10
+791
+ 20
+10
+ 30
+0
+ 11
+791
+ 21
+40
+ 31
+0
+  0
+TEXT
+  5
+113
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+654
+ 20
+55
+ 30
+0
+ 40
+2
+  1
+TITLE
+100
+AcDbText
+  0
+TEXT
+  5
+114
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+654
+ 20
+45
+ 30
+0
+ 40
+4
+  1
+GAS COMPRESSOR SUCTION DRUM
+100
+AcDbText
+  0
+TEXT
+  5
+115
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+654
+ 20
+35
+ 30
+0
+ 40
+2
+  1
+DRAWING NO.
+100
+AcDbText
+  0
+TEXT
+  5
+116
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+654
+ 20
+22
+ 30
+0
+ 40
+7
+  1
+PEFS-4001
+100
+AcDbText
+  0
+TEXT
+  5
+117
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+654
+ 20
+13
+ 30
+0
+ 40
+2
+  1
+SHEET
+100
+AcDbText
+  0
+TEXT
+  5
+118
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+671
+ 20
+13
+ 30
+0
+ 40
+3
+  1
+1
+100
+AcDbText
+  0
+TEXT
+  5
+119
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+794
+ 20
+35
+ 30
+0
+ 40
+2
+  1
+REV
+100
+AcDbText
+  0
+TEXT
+  5
+11A
+330
+1F
+100
+AcDbEntity
+  8
+TITLE
+100
+AcDbText
+ 10
+801
+ 20
+20
+ 30
+0
+ 40
+8
+  1
+B
+100
+AcDbText
+  0
+LINE
+  5
+11B
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+110
+ 30
+0
+ 11
+761
+ 21
+110
+ 31
+0
+  0
+TEXT
+  5
+11C
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+112
+ 30
+0
+ 40
+2.5
+  1
+2"-P-4100-A1
+100
+AcDbText
+  0
+INSERT
+  5
+11D
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+110
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+11E
+330
+11D
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+102
+ 30
+0
+ 40
+2.5
+  1
+HV-4001
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+11F
+330
+11D
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+120
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+110
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+121
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+110
+ 30
+0
+ 11
+340
+ 21
+128
+ 31
+0
+  0
+INSERT
+  5
+122
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+133
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+123
+330
+122
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+132
+ 30
+0
+ 40
+2.5
+  1
+PT-4002
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+124
+330
+122
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+125
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+110
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+126
+330
+125
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+102
+ 30
+0
+ 40
+2.5
+  1
+HV-4003
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+127
+330
+125
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+128
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+110
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+129
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+110
+ 30
+0
+ 11
+670
+ 21
+128
+ 31
+0
+  0
+INSERT
+  5
+12A
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+133
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+12B
+330
+12A
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+132
+ 30
+0
+ 40
+2.5
+  1
+PT-4004
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+12C
+330
+12A
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+12D
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+108
+ 10
+749
+ 20
+110
+ 10
+741
+ 20
+112
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+12E
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+148
+ 30
+0
+ 11
+761
+ 21
+148
+ 31
+0
+  0
+TEXT
+  5
+12F
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+150
+ 30
+0
+ 40
+2.5
+  1
+3"-P-4101-A1
+100
+AcDbText
+  0
+INSERT
+  5
+130
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+148
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+131
+330
+130
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+140
+ 30
+0
+ 40
+2.5
+  1
+HV-4005
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+132
+330
+130
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+133
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+148
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+134
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+148
+ 30
+0
+ 11
+340
+ 21
+166
+ 31
+0
+  0
+INSERT
+  5
+135
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+171
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+136
+330
+135
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+170
+ 30
+0
+ 40
+2.5
+  1
+PT-4006
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+137
+330
+135
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+138
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+148
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+139
+330
+138
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+140
+ 30
+0
+ 40
+2.5
+  1
+HV-4007
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+13A
+330
+138
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+13B
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+148
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+13C
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+148
+ 30
+0
+ 11
+670
+ 21
+166
+ 31
+0
+  0
+INSERT
+  5
+13D
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+171
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+13E
+330
+13D
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+170
+ 30
+0
+ 40
+2.5
+  1
+PT-4008
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+13F
+330
+13D
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+140
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+146
+ 10
+749
+ 20
+148
+ 10
+741
+ 20
+150
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+141
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+186
+ 30
+0
+ 11
+761
+ 21
+186
+ 31
+0
+  0
+TEXT
+  5
+142
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+188
+ 30
+0
+ 40
+2.5
+  1
+4"-P-4102-A1
+100
+AcDbText
+  0
+INSERT
+  5
+143
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+186
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+144
+330
+143
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+178
+ 30
+0
+ 40
+2.5
+  1
+HV-4009
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+145
+330
+143
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+146
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+186
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+147
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+186
+ 30
+0
+ 11
+340
+ 21
+204
+ 31
+0
+  0
+INSERT
+  5
+148
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+209
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+149
+330
+148
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+208
+ 30
+0
+ 40
+2.5
+  1
+PT-4010
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+14A
+330
+148
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+14B
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+186
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+14C
+330
+14B
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+178
+ 30
+0
+ 40
+2.5
+  1
+HV-4011
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+14D
+330
+14B
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+14E
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+186
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+14F
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+186
+ 30
+0
+ 11
+670
+ 21
+204
+ 31
+0
+  0
+INSERT
+  5
+150
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+209
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+151
+330
+150
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+208
+ 30
+0
+ 40
+2.5
+  1
+PT-4012
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+152
+330
+150
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+153
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+184
+ 10
+749
+ 20
+186
+ 10
+741
+ 20
+188
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+154
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+224
+ 30
+0
+ 11
+761
+ 21
+224
+ 31
+0
+  0
+TEXT
+  5
+155
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+226
+ 30
+0
+ 40
+2.5
+  1
+5"-P-4103-A1
+100
+AcDbText
+  0
+INSERT
+  5
+156
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+224
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+157
+330
+156
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+216
+ 30
+0
+ 40
+2.5
+  1
+HV-4013
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+158
+330
+156
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+159
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+224
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+15A
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+224
+ 30
+0
+ 11
+340
+ 21
+242
+ 31
+0
+  0
+INSERT
+  5
+15B
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+247
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+15C
+330
+15B
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+246
+ 30
+0
+ 40
+2.5
+  1
+PT-4014
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+15D
+330
+15B
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+15E
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+224
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+15F
+330
+15E
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+216
+ 30
+0
+ 40
+2.5
+  1
+HV-4015
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+160
+330
+15E
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+161
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+224
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+162
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+224
+ 30
+0
+ 11
+670
+ 21
+242
+ 31
+0
+  0
+INSERT
+  5
+163
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+247
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+164
+330
+163
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+246
+ 30
+0
+ 40
+2.5
+  1
+PT-4016
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+165
+330
+163
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+166
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+222
+ 10
+749
+ 20
+224
+ 10
+741
+ 20
+226
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+167
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+262
+ 30
+0
+ 11
+761
+ 21
+262
+ 31
+0
+  0
+TEXT
+  5
+168
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+264
+ 30
+0
+ 40
+2.5
+  1
+6"-P-4104-A1
+100
+AcDbText
+  0
+INSERT
+  5
+169
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+262
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+16A
+330
+169
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+254
+ 30
+0
+ 40
+2.5
+  1
+HV-4017
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+16B
+330
+169
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+16C
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+262
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+16D
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+262
+ 30
+0
+ 11
+340
+ 21
+280
+ 31
+0
+  0
+INSERT
+  5
+16E
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+285
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+16F
+330
+16E
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+284
+ 30
+0
+ 40
+2.5
+  1
+PT-4018
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+170
+330
+16E
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+171
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+262
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+172
+330
+171
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+254
+ 30
+0
+ 40
+2.5
+  1
+HV-4019
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+173
+330
+171
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+174
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+262
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+175
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+262
+ 30
+0
+ 11
+670
+ 21
+280
+ 31
+0
+  0
+INSERT
+  5
+176
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+285
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+177
+330
+176
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+284
+ 30
+0
+ 40
+2.5
+  1
+PT-4020
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+178
+330
+176
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+179
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+260
+ 10
+749
+ 20
+262
+ 10
+741
+ 20
+264
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+17A
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+300
+ 30
+0
+ 11
+761
+ 21
+300
+ 31
+0
+  0
+TEXT
+  5
+17B
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+302
+ 30
+0
+ 40
+2.5
+  1
+7"-P-4105-A1
+100
+AcDbText
+  0
+INSERT
+  5
+17C
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+300
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+17D
+330
+17C
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+292
+ 30
+0
+ 40
+2.5
+  1
+HV-4021
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+17E
+330
+17C
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+17F
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+300
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+180
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+300
+ 30
+0
+ 11
+340
+ 21
+318
+ 31
+0
+  0
+INSERT
+  5
+181
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+323
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+182
+330
+181
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+322
+ 30
+0
+ 40
+2.5
+  1
+PT-4022
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+183
+330
+181
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+184
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+300
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+185
+330
+184
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+292
+ 30
+0
+ 40
+2.5
+  1
+HV-4023
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+186
+330
+184
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+187
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+300
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+188
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+300
+ 30
+0
+ 11
+670
+ 21
+318
+ 31
+0
+  0
+INSERT
+  5
+189
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+323
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+18A
+330
+189
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+322
+ 30
+0
+ 40
+2.5
+  1
+PT-4024
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+18B
+330
+189
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+18C
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+298
+ 10
+749
+ 20
+300
+ 10
+741
+ 20
+302
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+18D
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+338
+ 30
+0
+ 11
+761
+ 21
+338
+ 31
+0
+  0
+TEXT
+  5
+18E
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+340
+ 30
+0
+ 40
+2.5
+  1
+2"-P-4106-A1
+100
+AcDbText
+  0
+INSERT
+  5
+18F
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+338
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+190
+330
+18F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+330
+ 30
+0
+ 40
+2.5
+  1
+HV-4025
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+191
+330
+18F
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+192
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+338
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+193
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+338
+ 30
+0
+ 11
+340
+ 21
+356
+ 31
+0
+  0
+INSERT
+  5
+194
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+361
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+195
+330
+194
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+360
+ 30
+0
+ 40
+2.5
+  1
+PT-4026
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+196
+330
+194
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+197
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+338
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+198
+330
+197
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+330
+ 30
+0
+ 40
+2.5
+  1
+HV-4027
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+199
+330
+197
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+19A
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+338
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+19B
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+338
+ 30
+0
+ 11
+670
+ 21
+356
+ 31
+0
+  0
+INSERT
+  5
+19C
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+361
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+19D
+330
+19C
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+360
+ 30
+0
+ 40
+2.5
+  1
+PT-4028
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+19E
+330
+19C
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+19F
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+336
+ 10
+749
+ 20
+338
+ 10
+741
+ 20
+340
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+1A0
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+376
+ 30
+0
+ 11
+761
+ 21
+376
+ 31
+0
+  0
+TEXT
+  5
+1A1
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+378
+ 30
+0
+ 40
+2.5
+  1
+3"-P-4107-A1
+100
+AcDbText
+  0
+INSERT
+  5
+1A2
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+376
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1A3
+330
+1A2
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+368
+ 30
+0
+ 40
+2.5
+  1
+HV-4029
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1A4
+330
+1A2
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1A5
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+376
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1A6
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+376
+ 30
+0
+ 11
+340
+ 21
+394
+ 31
+0
+  0
+INSERT
+  5
+1A7
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+399
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1A8
+330
+1A7
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+398
+ 30
+0
+ 40
+2.5
+  1
+PT-4030
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1A9
+330
+1A7
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1AA
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+376
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1AB
+330
+1AA
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+368
+ 30
+0
+ 40
+2.5
+  1
+HV-4031
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1AC
+330
+1AA
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1AD
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+376
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1AE
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+376
+ 30
+0
+ 11
+670
+ 21
+394
+ 31
+0
+  0
+INSERT
+  5
+1AF
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+399
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1B0
+330
+1AF
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+398
+ 30
+0
+ 40
+2.5
+  1
+PT-4032
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1B1
+330
+1AF
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+1B2
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+374
+ 10
+749
+ 20
+376
+ 10
+741
+ 20
+378
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+1B3
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+414
+ 30
+0
+ 11
+761
+ 21
+414
+ 31
+0
+  0
+TEXT
+  5
+1B4
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+416
+ 30
+0
+ 40
+2.5
+  1
+4"-P-4108-A1
+100
+AcDbText
+  0
+INSERT
+  5
+1B5
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+414
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1B6
+330
+1B5
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+406
+ 30
+0
+ 40
+2.5
+  1
+HV-4033
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1B7
+330
+1B5
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1B8
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+414
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1B9
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+414
+ 30
+0
+ 11
+340
+ 21
+432
+ 31
+0
+  0
+INSERT
+  5
+1BA
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+437
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1BB
+330
+1BA
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+436
+ 30
+0
+ 40
+2.5
+  1
+PT-4034
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1BC
+330
+1BA
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1BD
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+414
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1BE
+330
+1BD
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+406
+ 30
+0
+ 40
+2.5
+  1
+HV-4035
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1BF
+330
+1BD
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1C0
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+414
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1C1
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+414
+ 30
+0
+ 11
+670
+ 21
+432
+ 31
+0
+  0
+INSERT
+  5
+1C2
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+437
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1C3
+330
+1C2
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+436
+ 30
+0
+ 40
+2.5
+  1
+PT-4036
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1C4
+330
+1C2
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+1C5
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+412
+ 10
+749
+ 20
+414
+ 10
+741
+ 20
+416
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+1C6
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+452
+ 30
+0
+ 11
+761
+ 21
+452
+ 31
+0
+  0
+TEXT
+  5
+1C7
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+454
+ 30
+0
+ 40
+2.5
+  1
+5"-P-4109-A1
+100
+AcDbText
+  0
+INSERT
+  5
+1C8
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+452
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1C9
+330
+1C8
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+444
+ 30
+0
+ 40
+2.5
+  1
+HV-4037
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1CA
+330
+1C8
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1CB
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+452
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1CC
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+452
+ 30
+0
+ 11
+340
+ 21
+470
+ 31
+0
+  0
+INSERT
+  5
+1CD
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+475
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1CE
+330
+1CD
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+474
+ 30
+0
+ 40
+2.5
+  1
+PT-4038
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1CF
+330
+1CD
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1D0
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+452
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1D1
+330
+1D0
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+444
+ 30
+0
+ 40
+2.5
+  1
+HV-4039
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1D2
+330
+1D0
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1D3
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+452
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1D4
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+452
+ 30
+0
+ 11
+670
+ 21
+470
+ 31
+0
+  0
+INSERT
+  5
+1D5
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+475
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1D6
+330
+1D5
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+474
+ 30
+0
+ 40
+2.5
+  1
+PT-4040
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1D7
+330
+1D5
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+1D8
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+450
+ 10
+749
+ 20
+452
+ 10
+741
+ 20
+454
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+1D9
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+490
+ 30
+0
+ 11
+761
+ 21
+490
+ 31
+0
+  0
+TEXT
+  5
+1DA
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+492
+ 30
+0
+ 40
+2.5
+  1
+6"-P-4110-A1
+100
+AcDbText
+  0
+INSERT
+  5
+1DB
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+490
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1DC
+330
+1DB
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+482
+ 30
+0
+ 40
+2.5
+  1
+HV-4041
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1DD
+330
+1DB
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1DE
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+490
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1DF
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+490
+ 30
+0
+ 11
+340
+ 21
+508
+ 31
+0
+  0
+INSERT
+  5
+1E0
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+513
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1E1
+330
+1E0
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+512
+ 30
+0
+ 40
+2.5
+  1
+PT-4042
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1E2
+330
+1E0
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1E3
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+490
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1E4
+330
+1E3
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+482
+ 30
+0
+ 40
+2.5
+  1
+HV-4043
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1E5
+330
+1E3
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1E6
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+490
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1E7
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+490
+ 30
+0
+ 11
+670
+ 21
+508
+ 31
+0
+  0
+INSERT
+  5
+1E8
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+513
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1E9
+330
+1E8
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+512
+ 30
+0
+ 40
+2.5
+  1
+PT-4044
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1EA
+330
+1E8
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+1EB
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+488
+ 10
+749
+ 20
+490
+ 10
+741
+ 20
+492
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+LINE
+  5
+1EC
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbLine
+ 10
+60
+ 20
+528
+ 30
+0
+ 11
+761
+ 21
+528
+ 31
+0
+  0
+TEXT
+  5
+1ED
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+64
+ 20
+530
+ 30
+0
+ 40
+2.5
+  1
+7"-P-4111-A1
+100
+AcDbText
+  0
+INSERT
+  5
+1EE
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+120
+ 20
+528
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1EF
+330
+1EE
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+114
+ 20
+520
+ 30
+0
+ 40
+2.5
+  1
+HV-4045
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1F0
+330
+1EE
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1F1
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+230
+ 20
+528
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1F2
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+340
+ 20
+528
+ 30
+0
+ 11
+340
+ 21
+546
+ 31
+0
+  0
+INSERT
+  5
+1F3
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+340
+ 20
+551
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1F4
+330
+1F3
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+336
+ 20
+550
+ 30
+0
+ 40
+2.5
+  1
+PT-4046
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1F5
+330
+1F3
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1F6
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+VALVE
+ 10
+450
+ 20
+528
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1F7
+330
+1F6
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+444
+ 20
+520
+ 30
+0
+ 40
+2.5
+  1
+HV-4047
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1F8
+330
+1F6
+100
+AcDbEntity
+  8
+PIPE
+  0
+INSERT
+  5
+1F9
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+  2
+FLANGE
+ 10
+560
+ 20
+528
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+LINE
+  5
+1FA
+330
+1F
+100
+AcDbEntity
+  8
+INSTR
+100
+AcDbLine
+ 10
+670
+ 20
+528
+ 30
+0
+ 11
+670
+ 21
+546
+ 31
+0
+  0
+INSERT
+  5
+1FB
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbBlockReference
+ 66
+1
+  2
+INSTR
+ 10
+670
+ 20
+551
+ 30
+0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ATTRIB
+  5
+1FC
+330
+1FB
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+666
+ 20
+550
+ 30
+0
+ 40
+2.5
+  1
+PT-4048
+100
+AcDbAttribute
+  2
+TAG
+ 70
+0
+  0
+SEQEND
+  5
+1FD
+330
+1FB
+100
+AcDbEntity
+  8
+PIPE
+  0
+HATCH
+  5
+1FE
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbHatch
+ 10
+0
+ 20
+0
+ 30
+0
+210
+0
+220
+0
+230
+1
+  2
+SOLID
+ 70
+1
+ 71
+0
+ 91
+1
+ 92
+2
+ 72
+0
+ 73
+1
+ 93
+3
+ 10
+741
+ 20
+526
+ 10
+749
+ 20
+528
+ 10
+741
+ 20
+530
+ 97
+0
+ 75
+0
+ 76
+1
+ 98
+0
+  0
+ARC
+  5
+1FF
+330
+1F
+100
+AcDbEntity
+  8
+PIPE
+100
+AcDbCircle
+ 10
+420
+ 20
+70
+ 30
+0
+ 40
+25
+100
+AcDbArc
+ 50
+0
+ 51
+180
+  0
+MTEXT
+  5
+200
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbMText
+ 10
+40
+ 20
+80
+ 30
+0
+ 40
+2.5
+ 41
+120
+ 71
+1
+  1
+NOTES:\P1. ALL VALVES TO BE LOCKED OPEN.\P2. {\fArial|b1;SEE} PEFS-4002.
+  0
+TEXT
+  5
+201
+330
+1F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+691
+ 20
+564
+ 30
+0
+ 40
+3
+  1
+TO PEFS-4002
+100
+AcDbText
+  0
+ENDSEC
+  0
+SECTION
+  2
+OBJECTS
+  0
+DICTIONARY
+  5
+C
+330
+0
+100
+AcDbDictionary
+281
+1
+  3
+ACAD_LAYOUT
+350
+1A
+  0
+DICTIONARY
+  5
+1A
+330
+C
+100
+AcDbDictionary
+281
+1
+  3
+Model
+350
+22A
+  3
+Layout1
+350
+1B
+  0
+LAYOUT
+  5
+22A
+330
+1A
+100
+AcDbPlotSettings
+  1
+
+  2
+none_device
+  4
+
+  6
+
+ 40
+0
+ 41
+0
+ 42
+0
+ 43
+0
+ 44
+0
+ 45
+0
+ 46
+0
+ 47
+0
+ 48
+0
+ 49
+0
+140
+0
+141
+0
+142
+1
+143
+1
+ 70
+688
+ 72
+1
+ 73
+0
+ 74
+5
+  7
+
+ 75
+16
+147
+1
+148
+0
+149
+0
+100
+AcDbLayout
+  1
+Model
+ 70
+1
+ 71
+0
+ 10
+0
+ 20
+0
+ 11
+420
+ 21
+297
+ 12
+0
+ 22
+0
+ 32
+0
+ 14
+0
+ 24
+0
+ 34
+0
+ 15
+0
+ 25
+0
+ 35
+0
+146
+0
+ 13
+0
+ 23
+0
+ 33
+0
+ 16
+1
+ 26
+0
+ 36
+0
+ 17
+0
+ 27
+1
+ 37
+0
+ 76
+0
+330
+1F
+  0
+LAYOUT
+  5
+1B
+330
+1A
+100
+AcDbPlotSettings
+  1
+
+  2
+none_device
+  4
+
+  6
+
+ 40
+0
+ 41
+0
+ 42
+0
+ 43
+0
+ 44
+0
+ 45
+0
+ 46
+0
+ 47
+0
+ 48
+0
+ 49
+0
+140
+0
+141
+0
+142
+1
+143
+1
+ 70
+688
+ 72
+1
+ 73
+0
+ 74
+5
+  7
+
+ 75
+16
+147
+1
+148
+0
+149
+0
+100
+AcDbLayout
+  1
+Layout1
+ 70
+1
+ 71
+1
+ 10
+0
+ 20
+0
+ 11
+420
+ 21
+297
+ 12
+0
+ 22
+0
+ 32
+0
+ 14
+0
+ 24
+0
+ 34
+0
+ 15
+0
+ 25
+0
+ 35
+0
+146
+0
+ 13
+0
+ 23
+0
+ 33
+0
+ 16
+1
+ 26
+0
+ 36
+0
+ 17
+0
+ 27
+1
+ 37
+0
+ 76
+0
+330
+1E
+  0
+ENDSEC
+  0
+EOF

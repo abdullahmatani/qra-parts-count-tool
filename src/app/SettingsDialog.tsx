@@ -11,7 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePreferences, type Density, type ThemePreference } from '@/store/preferences';
+import {
+  usePreferences,
+  type CadColorMode,
+  type Density,
+  type ThemePreference,
+} from '@/store/preferences';
 import { useUiStore } from '@/store/ui-store';
 
 export interface SettingsDialogProps {
@@ -59,6 +64,8 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
   const setTheme = usePreferences((s) => s.setTheme);
   const setDensity = usePreferences((s) => s.setDensity);
   const setInitials = usePreferences((s) => s.setInitials);
+  const cadColorMode = usePreferences((s) => s.cadColorMode);
+  const setCadColorMode = usePreferences((s) => s.setCadColorMode);
 
   return (
     <Dialog open={open} onOpenChange={(next) => openDialog(next ? 'settings' : null)}>
@@ -92,6 +99,15 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
               options={[
                 { value: 'compact', label: t('settings.densities.compact') },
                 { value: 'comfortable', label: t('settings.densities.comfortable') },
+              ]}
+            />
+            <Choice<CadColorMode>
+              label={t('settings.cadColors')}
+              value={cadColorMode}
+              onChange={setCadColorMode}
+              options={[
+                { value: 'monochrome', label: t('settings.cadColorModes.monochrome') },
+                { value: 'color', label: t('settings.cadColorModes.color') },
               ]}
             />
             <div className="grid max-w-xs gap-2">

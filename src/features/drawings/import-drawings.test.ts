@@ -5,12 +5,26 @@ import { beginSession, endSession } from '@/services/session';
 import { useProjectStore } from '@/store/project-store';
 import { createMemoryFs, type MemoryDirectoryHandle } from '@/test/memory-fs';
 import { makeProject } from '@/test/fixtures';
-import { importDrawingFiles, type ImportDeps } from './import-drawings';
+import { buildDisplayList, listSpaces } from '@/features/cad/display-list';
+import { emptyCadDocument, type CadDocument } from '@/features/cad/model';
+import type { CadHandle } from '@/features/cad/cad-client';
+import { defaultSpaces, importDrawingFiles, type ImportDeps } from './import-drawings';
 
 const A3 = { width: 1191, height: 842 };
-const deps = (pages: number): ImportDeps => ({
+const noCad: ImportDeps['cad'] = {
+  available: () => false,
+  open: () => Promise.reject(new Error('no CAD in this test')),
+  build: () => Promise.reject(new Error('no CAD in this test')),
+  close: async () => {},
+  writeCache: async () => {},
+};
+
+const deps = (pages: number, producer = 'pdf-lib'): ImportDeps => ({
   now: () => new Date('2026-09-23T10:00:00Z'),
+  cad: noCad,
+  chooseSpaces: async () => null,
   inspect: async () => ({
+    producer,
     pages: Array.from({ length: pages }, (_, i) => ({
       pageNumber: i + 1,
       size: A3,
@@ -89,5 +103,137 @@ describe('drawing import (DRW-01, DRW-03, DRW-04)', () => {
       { fileName: 'broken.pdf', reason: 'failed', detail: 'bad PDF' },
     ]);
     expect(dir.tree()).not.toContain('drawings/broken.pdf');
+  });
+});
+
+function cadDoc(): CadDocument {
+  const doc = emptyCadDocument('test');
+  doc.units = 4;
+  const text = (value: string, x: number, y: number, height: number) => ({
+    layer: '0',
+    color: { kind: 'byLayer' as const },
+    type: 'text' as const,
+    position: [x, y] as [number, number],
+    height,
+    rotation: 0,
+    widthFactor: 1,
+    hAlign: 0,
+    vAlign: 0,
+    text: value,
+  });
+  doc.modelSpace.push(
+    { layer: '0', color: { kind: 'byLayer' }, type: 'line', start: [0, 0], end: [841, 594] },
+    text('DRAWING NO.', 660, 35, 2),
+    text('PEFS-9001', 660, 22, 7),
+    text('REV', 800, 35, 2),
+    text('C', 805, 20, 8),
+  );
+  doc.layouts.push({ name: 'Sheet A', tabOrder: 1, entities: [] });
+  return doc;
+}
+
+describe('CAD import (DRW-02, DRW-10)', () => {
+  const opened: string[] = [];
+  const closed: number[] = [];
+  const cached: string[] = [];
+  const cad = (available = true): ImportDeps['cad'] => ({
+    available: () => available,
+    open: async (_bytes, fileType) => {
+      opened.push(fileType);
+      const doc = cadDoc();
+      return {
+        docId: 7,
+        fileType,
+        spaces: listSpaces(doc),
+        source: 'test',
+        unsupported: {},
+      } as CadHandle;
+    },
+    build: async (_handle, space) => buildDisplayList(cadDoc(), space),
+    close: async (handle) => void closed.push(handle.docId),
+    writeCache: async (_dir, _hash, list) => void cached.push(list.space),
+  });
+
+  beforeEach(async () => {
+    opened.length = 0;
+    closed.length = 0;
+    cached.length = 0;
+    dir = createMemoryFs('study');
+    await beginSession(dir, projectToDoc(makeProject()), { remember: false });
+  });
+  afterEach(async () => {
+    await endSession();
+  });
+
+  it('preselects paper layouts with content, otherwise model space', () => {
+    expect(defaultSpaces([{ name: 'Model', entities: 10, viewports: 0 }])).toEqual(['Model']);
+    expect(
+      defaultSpaces([
+        { name: 'Model', entities: 10, viewports: 0 },
+        { name: 'A1', entities: 12, viewports: 1 },
+        { name: 'Empty', entities: 1, viewports: 0 },
+      ]),
+    ).toEqual(['A1']);
+  });
+
+  it('imports the chosen spaces as drawings with title-block metadata and a cached display list', async () => {
+    const chosen: string[][] = [];
+    const report = await importDrawingFiles([file('PEFS-9001.dxf', 'dxf content')], undefined, {
+      ...deps(1),
+      cad: cad(),
+      chooseSpaces: async (candidates) => {
+        expect(candidates[0]).toMatchObject({
+          fileName: 'PEFS-9001.dxf',
+          fileType: 'dxf',
+          defaultSpaces: ['Model'],
+        });
+        chosen.push(candidates[0]!.defaultSpaces);
+        return [['Model']];
+      },
+    });
+    expect(report.imported).toEqual([{ fileName: 'PEFS-9001.dxf', pages: 1 }]);
+    const doc = useProjectStore.getState().doc!;
+    const drawing = doc.drawings[doc.drawingOrder[0]!]!;
+    expect(drawing).toMatchObject({
+      fileType: 'dxf',
+      layout: 'Model',
+      page: null,
+      drawingNo: 'PEFS-9001',
+      revision: 'C',
+    });
+    expect(drawing.size.width).toBeGreaterThan(2384);
+    expect(cached).toEqual(['Model']);
+    expect(closed).toEqual([7]);
+    expect(dir.tree()).toContain('drawings/PEFS-9001.dxf');
+  });
+
+  it('skips a CAD file when no space is chosen, without copying it', async () => {
+    const report = await importDrawingFiles([file('x.dxf', 'x')], undefined, {
+      ...deps(1),
+      cad: cad(),
+      chooseSpaces: async () => null,
+    });
+    expect(report.skipped).toEqual([{ fileName: 'x.dxf', reason: 'noSpaces' }]);
+    expect(dir.tree()).not.toContain('drawings/x.dxf');
+    expect(closed).toEqual([7]);
+  });
+
+  it('reports DWG files when the build has no DWG reader', async () => {
+    const report = await importDrawingFiles([file('x.dwg', 'x')], undefined, {
+      ...deps(1),
+      cad: cad(false),
+    });
+    expect(report.skipped).toEqual([{ fileName: 'x.dwg', reason: 'dwgUnavailable' }]);
+    expect(opened).toEqual([]);
+  });
+
+  it('flags PDFs written by CAD plot drivers as CAD plots (DRW-10)', async () => {
+    await importDrawingFiles(
+      [file('plot.pdf', 'plot')],
+      undefined,
+      deps(1, 'AutoCAD 2024 - DWG To PDF.pc3'),
+    );
+    const doc = useProjectStore.getState().doc!;
+    expect(doc.drawings[doc.drawingOrder[0]!]!.isCadPlot).toBe(true);
   });
 });

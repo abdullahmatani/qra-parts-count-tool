@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { VirtualTable } from '@/components/data/VirtualTable';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -167,7 +168,7 @@ export function DrawingRegisterDialog() {
       {
         id: 'file',
         header: t('register.columns.file'),
-        accessorFn: (r) => `${r.drawing.fileName} ${r.drawing.page ?? ''}`,
+        accessorFn: (r) => `${r.drawing.fileName} ${r.drawing.page ?? r.drawing.layout ?? ''}`,
         cell: ({ row }) => (
           <span
             className="truncate text-xs text-muted-foreground"
@@ -176,10 +177,41 @@ export function DrawingRegisterDialog() {
             {row.original.drawing.fileName}
             {row.original.drawing.page
               ? ` · ${t('register.page', { page: row.original.drawing.page })}`
-              : ''}
+              : row.original.drawing.layout
+                ? ` · ${row.original.drawing.layout}`
+                : ''}
           </span>
         ),
         size: 200,
+      },
+      {
+        id: 'cadPlot',
+        header: t('register.columns.cadPlot'),
+        accessorFn: (r) => (r.drawing.fileType === 'pdf' ? Number(r.drawing.isCadPlot) : -1),
+        cell: ({ row }) => {
+          const drawing = row.original.drawing;
+          if (drawing.fileType !== 'pdf') {
+            return (
+              <span className="text-xs text-muted-foreground uppercase">{drawing.fileType}</span>
+            );
+          }
+          return (
+            <Checkbox
+              checked={drawing.isCadPlot}
+              disabled={readOnly}
+              title={t('register.cadPlotHint')}
+              aria-label={`${t('register.columns.cadPlot')} ${drawingDisplayName(drawing)}`}
+              onCheckedChange={(checked) =>
+                useProjectStore
+                  .getState()
+                  .apply(t('register.historyEdit'), (doc) =>
+                    updateDrawing(doc, drawing.id, { isCadPlot: checked === true }),
+                  )
+              }
+            />
+          );
+        },
+        size: 76,
       },
       {
         id: 'size',

@@ -91,7 +91,7 @@
   },
   "canvas": {
     "noDrawing": "Open a drawing from the list on the left.",
-    "noDrawings": "Import PDF or DWG drawings to begin.",
+    "noDrawings": "Import PDF, DWG or DXF drawings to begin.",
     "closeTab": "Close {{name}}"
   },
   "panels": {
@@ -137,7 +137,12 @@
     "privacy": "No project data leaves this browser. The app sends no telemetry, analytics or error reports, and after loading makes no network requests other than fetching its own files.",
     "offlineTitle": "Offline operation",
     "storageTitle": "Browser storage",
-    "storage": "Only interface preferences and the list of recent project folders are stored in the browser. Project data lives in the working directory."
+    "storage": "Only interface preferences and the list of recent project folders are stored in the browser. Project data lives in the working directory.",
+    "cadColors": "DWG and DXF drawings",
+    "cadColorModes": {
+      "monochrome": "Monochrome, like a plot",
+      "color": "CAD colours"
+    }
   },
   "start": {
     "newProject": "New project",
@@ -259,11 +264,13 @@
     "done_other": "Imported {{count}} drawings from {{files}} file(s).",
     "nothing": "No drawings were imported.",
     "failed": "Import failed.",
-    "dropHint": "Drop PDF drawings to import them",
+    "dropHint": "Drop PDF, DWG or DXF drawings to import them",
     "skipped": {
       "duplicate": "{{name}}: already in the project.",
       "unsupported": "{{name}}: not a supported drawing file.",
-      "failed": "{{name}}: could not be read ({{detail}})."
+      "failed": "{{name}}: could not be read ({{detail}}).",
+      "dwgUnavailable": "{{name}}: this build has no native DWG reader. Import the DXF or a PDF plot instead.",
+      "noSpaces": "{{name}}: no layout was chosen."
     }
   },
   "register": {
@@ -280,7 +287,8 @@
       "size": "Size",
       "segments": "Segments",
       "markers": "Markers",
-      "hash": "File hash"
+      "hash": "File hash",
+      "cadPlot": "CAD plot"
     },
     "page": "p. {{page}}",
     "open": "Open",
@@ -291,6 +299,18 @@
     "count_one": "{{count}} drawing",
     "count_other": "{{count}} drawings",
     "historyEdit": "Edit drawing",
-    "historyRemove": "Remove drawing"
+    "historyRemove": "Remove drawing",
+    "cadPlotHint": "PDF plot of a DWG drawing (DRW-10)"
+  },
+  "spaces": {
+    "title": "Choose drawings to import",
+    "description": "A DWG or DXF file can hold model space and several paper-space layouts. Each one you choose becomes a drawing, shown at its layout's paper size.",
+    "model": "Model space",
+    "entities_one": "{{count}} entity",
+    "entities_other": "{{count}} entities",
+    "viewports_one": "{{count}} viewport",
+    "viewports_other": "{{count}} viewports",
+    "import_one": "Import {{count}} drawing",
+    "import_other": "Import {{count}} drawings"
   }
 }
