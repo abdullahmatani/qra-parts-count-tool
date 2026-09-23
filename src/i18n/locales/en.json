@@ -252,5 +252,45 @@
       "unsupported": "This drawing type cannot be displayed yet.",
       "failed": "The drawing could not be displayed."
     }
+  },
+  "import": {
+    "progress": "Importing {{done}} of {{total}} {{name}}",
+    "done_one": "Imported {{count}} drawing from {{files}} file.",
+    "done_other": "Imported {{count}} drawings from {{files}} file(s).",
+    "nothing": "No drawings were imported.",
+    "failed": "Import failed.",
+    "dropHint": "Drop PDF drawings to import them",
+    "skipped": {
+      "duplicate": "{{name}}: already in the project.",
+      "unsupported": "{{name}}: not a supported drawing file.",
+      "failed": "{{name}}: could not be read ({{detail}})."
+    }
+  },
+  "register": {
+    "title": "Drawing register",
+    "description": "Metadata is pre-filled from each title block where possible. Check and correct it here; changes are saved automatically.",
+    "search": "Filter drawings",
+    "columns": {
+      "order": "#",
+      "drawingNo": "Drawing no.",
+      "sheet": "Sheet",
+      "title": "Title",
+      "revision": "Rev",
+      "file": "File",
+      "size": "Size",
+      "segments": "Segments",
+      "markers": "Markers",
+      "hash": "File hash"
+    },
+    "page": "p. {{page}}",
+    "open": "Open",
+    "remove": "Remove",
+    "removeTitle": "Remove {{name}} from the project?",
+    "removeBody": "Its markers, count items and drawing links are removed too. The file stays in the drawings folder. You can undo this.",
+    "empty": "No drawings. Import PDF drawings to start the register.",
+    "count_one": "{{count}} drawing",
+    "count_other": "{{count}} drawings",
+    "historyEdit": "Edit drawing",
+    "historyRemove": "Remove drawing"
   }
 }

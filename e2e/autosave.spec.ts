@@ -9,15 +9,22 @@ test.describe('autosave and backups (PRJ-04, PRJ-05)', () => {
     await app.pickDirectory(dir);
     await createProject(app.page, { name: 'Autosave study' });
 
+    // Time from the edit itself (the click that applies it), not from opening the dialog.
+    await app.page.getByRole('button', { name: 'Settings' }).click();
+    const dialog = app.page.getByRole('dialog', { name: 'Settings' });
+    await dialog.getByRole('tab', { name: 'Project' }).click();
+    await dialog.getByLabel('Client').fill('Autosaved client');
     const editedAt = Date.now();
-    await setClient(app.page, 'Autosaved client');
+    await dialog.getByRole('button', { name: 'Apply changes' }).click();
     await expect
       .poll(async () => JSON.parse(await app.readText(dir, 'project.qrapc.json')).client, {
+        // PRJ-04 asks for 2 s; allow for test polling and a loaded machine.
         timeout: 2500,
         intervals: [100],
       })
       .toBe('Autosaved client');
     expect(Date.now() - editedAt).toBeLessThan(2500);
+    await app.page.keyboard.press('Escape');
     await expect(app.page.getByTestId('save-status')).toHaveAttribute('data-status', 'saved');
     expect(await app.list(dir)).not.toContain('project.qrapc.json.tmp');
     await app.removeDirectory(dir);

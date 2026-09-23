@@ -16,7 +16,7 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 8 | 0.2.0 | Working directory, project file and PDF viewing | Implement create/open project via File System Access API and folder structure creation (PRJ-01..03) | Done — also PRJ-06 recent projects; `src/services/project-io.ts`, `e2e/project.spec.ts` |
 | 9 | 0.2.0 | Working directory, project file and PDF viewing | Implement autosave with temp-file-then-rename and 20 snapshot backups (PRJ-04, PRJ-05) | Done — `src/services/autosave.ts`, `src/services/backups.ts`, Backups dialog |
 | 10 | 0.2.0 | Working directory, project file and PDF viewing | Integrate PDF.js viewer with pan, zoom, fit, rotate and minimap (DRW-05) | Done — `src/features/viewer`, `e2e/viewer.spec.ts` |
-| 11 | 0.2.0 | Working directory, project file and PDF viewing | Import PDFs into drawings/, split multi-page PDFs, build drawing register with editable metadata (DRW-01, DRW-03, DRW-04) | Planned |
+| 11 | 0.2.0 | Working directory, project file and PDF viewing | Import PDFs into drawings/, split multi-page PDFs, build drawing register with editable metadata (DRW-01, DRW-03, DRW-04) | Done — `src/features/drawings`, `e2e/import.spec.ts` |
 | 12 | 0.3.0 | DWG support | Technical spike: compare LibreDWG-WASM, ODA SDK and DXF parser on 10 sample PEFS/P&IDs for fidelity, speed and licence (risk R1) | Planned |
 | 13 | 0.3.0 | DWG support | Implement chosen DWG-to-vector renderer with layout selection and render cache (DRW-02) | Planned |
 | 14 | 0.3.0 | DWG support | Implement DXF import and PDF-plot import alongside native .dwg; native .dwg stays mandatory (DRW-02, DRW-10) | Planned |

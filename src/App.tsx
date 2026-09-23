@@ -9,6 +9,8 @@ import { NewProjectDialog } from '@/features/project/NewProjectDialog';
 import { ProjectSettingsForm } from '@/features/project/ProjectSettingsForm';
 import { RecentProjects } from '@/features/project/RecentProjects';
 import { closeProject, openProjectFromPicker } from '@/features/project/project-actions';
+import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
+import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
 import { DrawingViewer } from '@/features/viewer/DrawingViewer';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
@@ -27,6 +29,8 @@ export function App() {
       {hasProject ? (
         <Workspace
           onCloseProject={() => void closeProject()}
+          onImportDrawings={openDrawingImport}
+          onDropFiles={(files) => void importWithFeedback(files)}
           renderDrawing={(drawingId) => <DrawingViewer drawingId={drawingId} />}
         />
       ) : (
@@ -39,6 +43,7 @@ export function App() {
       )}
       <NewProjectDialog />
       {hasProject && <BackupsDialog />}
+      {hasProject && <DrawingRegisterDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type DragEvent, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDefaultLayout } from 'react-resizable-panels';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { DrawingList } from '@/features/drawings/DrawingList';
@@ -11,6 +12,8 @@ import { StatusBar, type StatusBarProps } from './StatusBar';
 export interface WorkspaceProps {
   onCloseProject?: () => void;
   onImportDrawings?: () => void;
+  /** Files dropped anywhere on the workspace (drawing import). */
+  onDropFiles?: (files: File[]) => void;
   onAddSegment?: () => void;
   renderDrawing?: CanvasAreaProps['renderDrawing'];
   rightPane?: RightPaneProps;
@@ -26,16 +29,43 @@ export interface WorkspaceProps {
 export function Workspace({
   onCloseProject,
   onImportDrawings,
+  onDropFiles,
   onAddSegment,
   renderDrawing,
   rightPane,
   statusBar,
   children,
 }: WorkspaceProps) {
+  const { t } = useTranslation();
   const layout = useDefaultLayout({ id: 'qrapc.workspace', storage: localStorage });
+  const [dragging, setDragging] = useState(false);
+  const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes('Files');
 
   return (
-    <div className="flex h-full flex-col" data-testid="workspace">
+    <div
+      className="relative flex h-full flex-col"
+      data-testid="workspace"
+      onDragOver={(event) => {
+        if (!onDropFiles || !hasFiles(event)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+        setDragging(true);
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget === event.target) setDragging(false);
+      }}
+      onDrop={(event) => {
+        if (!onDropFiles || !hasFiles(event)) return;
+        event.preventDefault();
+        setDragging(false);
+        onDropFiles([...event.dataTransfer.files]);
+      }}
+    >
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-4 border-dashed border-sky-500 bg-sky-500/10 text-lg font-medium">
+          {t('import.dropHint')}
+        </div>
+      )}
       <Header onCloseProject={onCloseProject} />
       <ResizablePanelGroup
         orientation="horizontal"

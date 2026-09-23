@@ -30,6 +30,9 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // The app does not use the React Compiler, so libraries such as TanStack Table
+      // and Virtual that it cannot optimise are fine.
+      'react-hooks/incompatible-library': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': [
         'error',

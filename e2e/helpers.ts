@@ -32,3 +32,18 @@ export async function setClient(page: Page, client: string) {
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 }
+
+/** Imports fixture files through the "Import drawings" button and its file chooser. */
+export async function importDrawings(page: Page, files: string[]) {
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Import drawings' }).first().click();
+  const fileChooser = await chooser;
+  await fileChooser.setFiles(
+    files.map((f) => new URL(`./fixtures/${f}`, import.meta.url).pathname),
+  );
+}
+
+export async function openMenu(page: Page, item: string) {
+  await page.getByRole('button', { name: 'Project', exact: true }).click();
+  await page.getByRole('menuitem', { name: item }).click();
+}
