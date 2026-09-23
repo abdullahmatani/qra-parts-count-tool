@@ -1,4 +1,4 @@
-import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Scissors, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
@@ -18,10 +18,12 @@ import { useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
 import { itemForMarker } from '@/domain/actions/items';
 import { itemsByMarker as indexItems } from '@/domain/markup/presentation';
+import { BulkItemEditor } from '@/features/count/BulkItemEditor';
 import { ItemEditor } from '@/features/count/ItemEditor';
 import { addItemCommand } from '@/features/count/item-commands';
 import { LinkEditor } from '@/features/links/LinkEditor';
 import { EsdvEditor } from '@/features/segments/EsdvEditor';
+import { splitSegmentCommand } from '@/features/segments/segment-commands';
 import { assignMarkerIds, deleteMarkerIds } from './marker-commands';
 
 const NO_SEGMENT = '__none__';
@@ -106,6 +108,14 @@ export function MarkerInspector() {
   const warnings = [...new Set(markers.flatMap((m) => warningMap.get(m.id) ?? []))];
   const shape = first.esdv ? 'esdv' : first.geometry.type;
   const item = markers.length === 1 ? itemsByMarker.get(first.id) : undefined;
+  const bulkItems =
+    markers.length > 1
+      ? markers.map((m) => itemsByMarker.get(m.id)).filter((i) => i !== undefined)
+      : [];
+  const splitFrom =
+    segmentValue && segmentValue !== NO_SEGMENT
+      ? segments.find((segment) => segment.id === segmentValue)
+      : undefined;
 
   return (
     <div ref={rootRef} className="space-y-3 text-sm" data-testid="marker-inspector">
@@ -115,6 +125,14 @@ export function MarkerInspector() {
           : t('markup.inspector.selected', { count: markers.length })}
       </p>
       {markers.length === 1 && first.esdv && <EsdvEditor key={first.id} marker={first} />}
+      {bulkItems.length > 0 && (
+        <div className="space-y-2 rounded-md border p-2">
+          <p className="text-xs font-medium">
+            {t('count.bulk.title', { count: bulkItems.length })}
+          </p>
+          <BulkItemEditor items={bulkItems} />
+        </div>
+      )}
       {markers.length === 1 && !first.esdv && item && <ItemEditor key={item.id} item={item} />}
       {markers.length === 1 && !first.esdv && !item && first.geometry.type === 'circle' && (
         <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -172,6 +190,23 @@ export function MarkerInspector() {
             </SelectContent>
           </Select>
         </div>
+      )}
+      {splitFrom && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start"
+          title={t('markup.inspector.splitHint', { label: splitFrom.label })}
+          onClick={() =>
+            splitSegmentCommand(
+              splitFrom.id,
+              assignable.map((m) => m.id),
+            )
+          }
+          disabled={readOnly}
+        >
+          <Scissors /> {t('markup.inspector.split')}
+        </Button>
       )}
       {warnings.map((warning) => (
         <p key={warning} className="flex items-center gap-1.5 text-xs text-marker-warning">

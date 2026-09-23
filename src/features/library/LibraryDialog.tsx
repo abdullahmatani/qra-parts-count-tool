@@ -1,6 +1,6 @@
 import type { Draft } from 'immer';
-import { ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowUp, Copy, Download, Plus, Trash2, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +47,7 @@ import { CommitInput } from '@/features/segments/fields';
 import { parseOptionalNumber } from '@/features/segments/parse';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { exportLibraryFile, importLibraryFile } from './library-file-actions';
 
 const t = i18n.t.bind(i18n);
 const NONE = '__none__';
@@ -607,6 +608,7 @@ export function LibraryDialog() {
   const openDialog = useUiStore((s) => s.openDialog);
   const readOnly = useProjectStore((s) => s.readOnly);
   const hasDoc = useProjectStore((s) => s.doc !== null);
+  const importRef = useRef<HTMLInputElement>(null);
   return (
     <Dialog open={open && hasDoc} onOpenChange={(next) => openDialog(next ? 'library' : null)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-6xl">
@@ -614,6 +616,32 @@ export function LibraryDialog() {
           <DialogTitle>{tr('library.title')}</DialogTitle>
           <DialogDescription>{tr('library.description')}</DialogDescription>
         </DialogHeader>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportLibraryFile()}>
+            <Download /> {tr('library.file.export')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={readOnly}
+            onClick={() => importRef.current?.click()}
+          >
+            <Upload /> {tr('library.file.import')}
+          </Button>
+          <input
+            ref={importRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            data-testid="library-file-input"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = '';
+              if (file) void importLibraryFile(file);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">{tr('library.file.hint')}</p>
+        </div>
         {open && hasDoc && (
           <Tabs defaultValue="types">
             <TabsList>

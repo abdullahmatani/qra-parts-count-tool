@@ -91,8 +91,21 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
 3. Segments list the drawings they span. Markers link their drawing automatically; you can also link
    a drawing by hand, and open any linked drawing zoomed to the segment.
 
-To change the segment of markers, select them and pick another segment in the inspector. Deleting a
-segment asks whether to move its markers to another segment or delete them with their items.
+To change the segment of markers, select them and pick another segment in the inspector. To reshape
+segments as the study firms up:
+
+- **Split**: select the markers that belong to a new segment and choose **Split into a new
+  segment** in the inspector. The new segment takes the next label, sits after the original in
+  the list and copies its process data.
+- **Merge**: in the segment panel, **Merge into…** moves the segment's markers, items, notes and
+  linked drawings into another segment. An ESDV between the two is no longer a boundary.
+- **Reorder**: the arrow buttons in the segment panel move the segment up or down the list (the
+  Excel output follows this order). Rename a segment by editing its label.
+- **Status**: set **Not started**, **In progress**, **Counted** or **Checked** in the segment panel;
+  the list shows it next to each segment.
+
+Deleting a segment asks whether to move its markers to another segment or delete them with their
+items.
 
 ## 6. The equipment library
 
@@ -106,6 +119,11 @@ segment asks whether to move its markers to another segment or delete them with 
   NPS.
 - **Dataset**: the name of the leak frequency dataset the types and bins follow (for example
   IOGP 434-01). No dataset is built in.
+
+**Export library** saves the types, bins and dataset as a `.library.json` file; **Import library…**
+reads one from another project. Importing adds new types and bin sets and updates the ones with the
+same Excel key (or name); nothing in the project is removed, and existing items and template
+mappings keep working.
 
 ## 7. Counting
 
@@ -135,6 +153,9 @@ Editing:
 - Select with a click, add with `Shift`+click, or drag a box. `Ctrl+A` selects all on the drawing.
 - Drag to move, drag a handle to resize, arrow keys to nudge.
 - `Ctrl+C` / `Ctrl+V` copy and paste markers with their items (to another drawing too).
+- With several markers selected, the inspector edits their items together (**bulk edit**): pick a
+  type, actuation or size once for all of them. Fields that differ show **Mixed**; sizes apply to
+  sized types only.
 - `Delete` removes the selection. `Ctrl+Z` / `Ctrl+Y` undo and redo any change, including edits in
   panels and dialogs.
 

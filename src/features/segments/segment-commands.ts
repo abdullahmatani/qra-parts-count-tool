@@ -6,7 +6,11 @@ import {
   createSegment,
   deleteSegment,
   linkDrawing,
+  mergeSegments,
+  moveSegment,
+  nextSegmentLabel,
   segmentBoundsOnDrawing,
+  splitSegment,
   unlinkDrawing,
   updateSegment,
   type SegmentDeletion,
@@ -59,6 +63,53 @@ export function deleteSegmentCommand(segmentId: string, mode: SegmentDeletion): 
     ui.setSelection(ui.selection.filter((id) => doc?.markers[id]));
   }
   return done;
+}
+
+/** SEG-07: moves a segment up (-1) or down (+1) in the list. */
+export function moveSegmentCommand(segmentId: string, delta: number): boolean {
+  const project = useProjectStore.getState();
+  const doc = project.doc;
+  const index = doc?.segmentOrder.indexOf(segmentId) ?? -1;
+  if (!doc || index < 0) return false;
+  const to = index + delta;
+  if (to < 0 || to >= doc.segmentOrder.length) return false;
+  const label = doc.segments[segmentId]?.label ?? '';
+  return project.apply(t('segments.history.move', { label }), (draft) =>
+    moveSegment(draft, segmentId, to),
+  );
+}
+
+/** SEG-07: merges one segment into another, which becomes the active segment. */
+export function mergeSegmentsCommand(sourceId: string, targetId: string): boolean {
+  const project = useProjectStore.getState();
+  const source = project.doc?.segments[sourceId]?.label ?? '';
+  const target = project.doc?.segments[targetId]?.label ?? '';
+  const done = project.apply(t('segments.history.merge', { source, target }), (draft) =>
+    mergeSegments(draft, sourceId, targetId),
+  );
+  if (done) useUiStore.getState().setActiveSegment(targetId);
+  return done;
+}
+
+/**
+ * SEG-07: moves the given markers of a segment into a new segment with the
+ * next free label, which becomes the active segment. Returns its id.
+ */
+export function splitSegmentCommand(
+  segmentId: string,
+  markerIds: readonly string[],
+): string | null {
+  const project = useProjectStore.getState();
+  if (!project.doc?.segments[segmentId]) return null;
+  const source = project.doc.segments[segmentId].label;
+  const label = nextSegmentLabel(project.doc);
+  let id: string | null = null;
+  const done = project.apply(t('segments.history.split', { source, label }), (draft) => {
+    id = splitSegment(draft, segmentId, markerIds, label);
+  });
+  if (!done || !id) return null;
+  useUiStore.getState().setActiveSegment(id);
+  return id;
 }
 
 export function linkDrawingCommand(segmentId: string, drawingId: string): boolean {

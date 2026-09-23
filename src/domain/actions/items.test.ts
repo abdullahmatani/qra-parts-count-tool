@@ -3,7 +3,8 @@ import { starterLibrary } from '../count/starter-library';
 import { projectToDoc } from '../model';
 import { makeCircleMarker, makeDrawing, makeProject } from '@/test/fixtures';
 import { newEsdvData } from '../esdv';
-import { addItem, itemForMarker, updateItem } from './items';
+import { addItem, itemForMarker, updateItem, updateItems } from './items';
+import { addMarker } from './markers';
 
 function setup() {
   const library = starterLibrary();
@@ -55,5 +56,25 @@ describe('count items (CNT-01, CNT-03)', () => {
     expect(doc.items[id]).toMatchObject({ quantity: 1, nominalSize: 2, pipeLength: null });
     updateItem(doc, id, { equipmentTypeId: pump });
     expect(doc.items[id]?.actuation).toBeNull();
+  });
+});
+
+describe('bulk edit (CNT-10)', () => {
+  it('changes one field on several items and leaves the rest', () => {
+    const { doc, valve, pump } = setup();
+    addMarker(doc, makeCircleMarker('drw_1', { id: 'mkr_2', segmentId: null }));
+    const a = addItem(doc, 'mkr_1', { equipmentTypeId: valve, actuation: 'manual' })!;
+    const b = addItem(doc, 'mkr_2', { equipmentTypeId: pump, actuation: null })!;
+    updateItem(doc, a, { tag: 'HV-1', nominalSize: 2 });
+
+    updateItems(doc, [a, b], { nominalSize: 6, sizeUnit: 'in' });
+    expect(doc.items[a]).toMatchObject({ nominalSize: 6, tag: 'HV-1', actuation: 'manual' });
+    expect(doc.items[b]).toMatchObject({ nominalSize: 6, equipmentTypeId: pump });
+
+    // A type change keeps actuation only where the new type has one.
+    updateItems(doc, [a, b], { equipmentTypeId: valve, actuation: 'automated' });
+    expect(doc.items[b]).toMatchObject({ equipmentTypeId: valve, actuation: 'automated' });
+    updateItems(doc, [a, b], { equipmentTypeId: pump });
+    expect(doc.items[a]!.actuation).toBeNull();
   });
 });

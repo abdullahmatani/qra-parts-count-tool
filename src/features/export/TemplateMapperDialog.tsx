@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import { requireWorkingDirectory } from '@/services/session';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { downloadText } from '@/lib/download';
 import { exportErrorMessage, TEMPLATES_DIR } from './export-actions';
 import { previewTemplate, type SheetPreview } from './excel-writer';
 
@@ -357,12 +358,7 @@ export function TemplateMapperDialog() {
   const saveMappingFile = () => {
     if (!mapping || !library) return;
     const json = JSON.stringify(toPortableMapping(mapping, library), null, 2);
-    const url = URL.createObjectURL(new Blob([`${json}\n`], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${mapping.templateFile.replace(/\.xlsx$/i, '')}.mapping.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadText(`${mapping.templateFile.replace(/\.xlsx$/i, '')}.mapping.json`, `${json}\n`);
   };
 
   const loadMappingFile = async (file: File) => {

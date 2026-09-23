@@ -1,4 +1,4 @@
-import { AlertTriangle, FileText, Trash2, X } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, FileText, Merge, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,12 @@ import type { Segment, SegmentStatus } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
 import { useActiveSegment, useOrderedDrawings } from '@/store/selectors';
 import { DeleteSegmentDialog } from './DeleteSegmentDialog';
+import { MergeSegmentDialog } from './MergeSegmentDialog';
 import { ColourPicker, CommitInput } from './fields';
 import { parseOptionalNumber } from './parse';
 import {
   linkDrawingCommand,
+  moveSegmentCommand,
   showMarker,
   showSegmentOnDrawing,
   unlinkDrawingCommand,
@@ -53,6 +55,10 @@ function SegmentForm({ segment }: { segment: Segment }) {
   const markers = useProjectStore((s) => s.doc?.markers);
   const drawings = useOrderedDrawings();
   const [deleting, setDeleting] = useState(false);
+  const [merging, setMerging] = useState(false);
+  const order = useProjectStore((s) => s.doc?.segmentOrder);
+  const position = order?.indexOf(segment.id) ?? -1;
+  const segmentCount = order?.length ?? 0;
   const update = (patch: Parameters<typeof updateSegmentCommand>[1]) =>
     updateSegmentCommand(segment.id, patch);
 
@@ -291,16 +297,45 @@ function SegmentForm({ segment }: { segment: Segment }) {
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-1 text-destructive"
-        onClick={() => setDeleting(true)}
-        disabled={readOnly}
-      >
-        <Trash2 /> {t('segments.details.delete')}
-      </Button>
+      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={t('segments.details.moveUp', { label: segment.label })}
+          onClick={() => moveSegmentCommand(segment.id, -1)}
+          disabled={readOnly || position <= 0}
+        >
+          <ArrowUp />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={t('segments.details.moveDown', { label: segment.label })}
+          onClick={() => moveSegmentCommand(segment.id, 1)}
+          disabled={readOnly || position >= segmentCount - 1}
+        >
+          <ArrowDown />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setMerging(true)}
+          disabled={readOnly || segmentCount < 2}
+        >
+          <Merge /> {t('segments.details.merge')}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-destructive"
+          onClick={() => setDeleting(true)}
+          disabled={readOnly}
+        >
+          <Trash2 /> {t('segments.details.delete')}
+        </Button>
+      </div>
       {deleting && <DeleteSegmentDialog segment={segment} onClose={() => setDeleting(false)} />}
+      {merging && <MergeSegmentDialog segment={segment} onClose={() => setMerging(false)} />}
     </div>
   );
 }

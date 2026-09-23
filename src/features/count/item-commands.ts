@@ -1,5 +1,5 @@
 /** Count item commands for the item editor (CNT-01, CNT-03, CNT-08, CNT-12). */
-import { addItem, updateItem, type ItemPatch } from '@/domain/actions/items';
+import { addItem, updateItem, updateItems, type ItemPatch } from '@/domain/actions/items';
 import { acceptDuplicate, unacceptDuplicate } from '@/domain/count/count';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
@@ -24,6 +24,23 @@ export function updateItemCommand(itemId: string, patch: ItemPatch): boolean {
     useUiStore.getState().setItemDefaults({
       equipmentTypeId: updated?.equipmentTypeId ?? null,
       ...(updated?.actuation ? { actuation: updated.actuation } : {}),
+    });
+  }
+  return done;
+}
+
+/** CNT-10: the same change to several items, as one undo step. */
+export function updateItemsCommand(itemIds: readonly string[], patch: ItemPatch): boolean {
+  if (itemIds.length === 0) return false;
+  const done = useProjectStore
+    .getState()
+    .apply(t('count.history.editItems', { count: itemIds.length }), (draft) =>
+      updateItems(draft, itemIds, patch),
+    );
+  if (done && patch.equipmentTypeId !== undefined) {
+    useUiStore.getState().setItemDefaults({
+      equipmentTypeId: patch.equipmentTypeId,
+      ...(patch.actuation ? { actuation: patch.actuation } : {}),
     });
   }
   return done;

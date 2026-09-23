@@ -93,7 +93,10 @@
       "edit": "edit segment {{label}}",
       "delete": "delete segment {{label}}",
       "link": "link a drawing to {{label}}",
-      "unlink": "unlink a drawing from {{label}}"
+      "unlink": "unlink a drawing from {{label}}",
+      "move": "move segment {{label}}",
+      "merge": "merge {{source}} into {{target}}",
+      "split": "split {{label}} from {{source}}"
     },
     "new": {
       "title": "New segment",
@@ -136,7 +139,10 @@
       "open": "Open {{drawing}} at this segment",
       "unlink": "Unlink {{drawing}}",
       "linkDrawing": "Link a drawing",
-      "delete": "Delete segment"
+      "delete": "Delete segment",
+      "moveUp": "Move {{label}} up the list",
+      "moveDown": "Move {{label}} down the list",
+      "merge": "Merge into…"
     },
     "delete": {
       "title": "Delete segment {{label}}?",
@@ -150,6 +156,12 @@
       "deleteAll": "Delete the markers, their items and the notes",
       "esdvsKept": "ESDVs on its boundary are kept.",
       "confirm": "Delete segment"
+    },
+    "merge": {
+      "title": "Merge {{label}} into another segment",
+      "description": "Its markers, items, notes and linked drawings move to the segment you choose, and {{label}} is removed. An ESDV between the two is no longer a boundary.",
+      "target": "Merge into",
+      "confirm": "Merge"
     }
   },
   "canvas": {
@@ -431,7 +443,9 @@
       "position": "Position",
       "radius": "Radius",
       "size": "Size",
-      "points": "{{count}} points"
+      "points": "{{count}} points",
+      "split": "Split into a new segment",
+      "splitHint": "Moves the selected markers of {{label}} into a new segment."
     },
     "copied_one": "Copied {{count}} marker.",
     "copied_other": "Copied {{count}} markers.",
@@ -501,7 +515,8 @@
       "editItem": "edit item #{{seq}}",
       "addItem": "add count item",
       "acceptDuplicate": "accept duplicate tag {{tag}}",
-      "unacceptDuplicate": "withdraw acceptance of {{tag}}"
+      "unacceptDuplicate": "withdraw acceptance of {{tag}}",
+      "editItems": "edit {{count}} items"
     },
     "item": {
       "title": "Item #{{seq}}",
@@ -556,6 +571,12 @@
       "accept": "Accept",
       "accepted": "Accepted",
       "undo": "Withdraw"
+    },
+    "bulk": {
+      "title_one": "{{count}} item",
+      "title_other": "{{count}} items",
+      "hint": "Changes apply to every selected item. Fields that differ show “Mixed”.",
+      "mixed": "Mixed"
     }
   },
   "library": {
@@ -572,7 +593,8 @@
       "deleteType": "delete equipment type {{name}}",
       "addBinSet": "add bin set",
       "deleteBinSet": "delete bin set {{name}}",
-      "starter": "add starter library"
+      "starter": "add starter library",
+      "import": "import library from {{file}}"
     },
     "types": {
       "name": "Name",
@@ -646,6 +668,13 @@
       "namePlaceholder": "e.g. IOGP 434-01, UK HSE HCRD or a client scheme",
       "description": "Notes",
       "hint": "No dataset is built in. Name the one the equipment types and bins follow, and set each type's dataset category."
+    },
+    "file": {
+      "export": "Export library",
+      "import": "Import library…",
+      "hint": "Reuse the types, bins and dataset of another project. Importing adds and updates; nothing in this project is removed.",
+      "imported": "Library imported. Types: {{typesAdded}} added, {{typesUpdated}} updated. Bin sets: {{binSetsAdded}} added, {{binSetsUpdated}} updated.",
+      "importFailed": "The library could not be imported."
     }
   },
   "notes": {

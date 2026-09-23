@@ -8,7 +8,7 @@ import { markerSegmentIds } from '../markup/presentation';
 import type { ProjectDoc } from '../model';
 import { nextSegmentColour } from '../palette';
 import type { EsdvData, Segment } from '../schema/types';
-import { deleteMarkers, syncBoundingEsdvs } from './markers';
+import { assignMarkers, deleteMarkers, syncBoundingEsdvs } from './markers';
 
 export { syncBoundingEsdvs };
 
@@ -186,6 +186,51 @@ export function deleteSegment(doc: ProjectDoc, segmentId: string, mode: SegmentD
   delete doc.segments[segmentId];
   doc.segmentOrder = doc.segmentOrder.filter((id) => id !== segmentId);
   syncBoundingEsdvs(doc);
+}
+
+/**
+ * SEG-07: merges one segment into another. Its markers, items, notes and
+ * linked drawings move over; an ESDV between the two stops being a boundary.
+ */
+export function mergeSegments(doc: ProjectDoc, sourceId: string, targetId: string): void {
+  const source = doc.segments[sourceId];
+  const target = doc.segments[targetId];
+  if (!source || !target || sourceId === targetId) return;
+  for (const drawingId of source.drawingIds) {
+    if (!target.drawingIds.includes(drawingId)) target.drawingIds.push(drawingId);
+  }
+  deleteSegment(doc, sourceId, { kind: 'moveTo', segmentId: targetId });
+}
+
+/**
+ * SEG-07: moves some of a segment's markers (with their items) into a new
+ * segment placed right after it, with the same process data. Notes stay.
+ * Returns the new segment's id, or null when no marker of the segment was given.
+ */
+export function splitSegment(
+  doc: ProjectDoc,
+  segmentId: string,
+  markerIds: Iterable<string>,
+  label: string,
+): string | null {
+  const source = doc.segments[segmentId];
+  if (!source) return null;
+  const moving = [...markerIds].filter((id) => {
+    const marker = doc.markers[id];
+    return marker && !marker.esdv && marker.segmentId === segmentId;
+  });
+  if (moving.length === 0) return null;
+  const id = createSegment(doc, {
+    label,
+    fluid: source.fluid,
+    phase: source.phase,
+    pressure: source.pressure,
+    temperature: source.temperature,
+    status: 'inProgress',
+  });
+  moveSegment(doc, id, doc.segmentOrder.indexOf(segmentId) + 1);
+  assignMarkers(doc, moving, id);
+  return id;
 }
 
 /** Moves a segment to a new position in the list (SEG-07). */

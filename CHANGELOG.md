@@ -3,6 +3,17 @@
 Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 [functional design specification](docs/FDS.md).
 
+## 1.1.0 — productivity features
+
+- **Bulk edit** (CNT-10): with several markers selected, set the type, actuation or size of all
+  their items at once, as one undo step. Fields that differ show "Mixed".
+- **Split, merge and reorder segments** (SEG-07): split selected markers into a new segment with
+  the same process data; merge a segment into another (markers, items, notes and drawings move,
+  the ESDV between them stops being a boundary); move segments up and down the list.
+- **Equipment library files** (CNT-11): export the library as `.library.json` and import one from
+  another project. Importing merges by Excel key or name and keeps the ids that items and template
+  mappings use.
+
 ## 1.0.0 — first production release
 
 The complete workflow from an empty folder to the client's Excel workbook and annotated drawings,

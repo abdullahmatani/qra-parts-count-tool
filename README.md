@@ -39,16 +39,16 @@ or exports) ever leaves the browser.
 
 ## Features
 
-| Area          | What the user can do                                                                                                                                                     | FDS ref |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| Project       | Create or open a project in a local folder, or try the sample project; autosave within 2 s; 20 rolling backups; undo/redo; one writable tab per project                  | PRJ     |
-| Drawings      | Import PDF (one drawing per page), DWG, DXF and PDF plots; drawing register with editable metadata; pan, zoom, rotate, minimap                                           | DRW     |
-| Markup        | Circle and dashed-highlight markers stored in drawing coordinates; stamp mode; select, move, resize, copy/paste, box-select; labels, tooltips and filters                | ANN     |
-| Segments      | ESDV markers; isolatable segments with process data, colour and status; many-to-many links to drawings; configurable ESDV boundary rule                                  | SEG     |
-| Parts count   | User-defined equipment library and bin sets; quick item entry; automatic size binning; live segment and project count tables; duplicate-tag check; optional pipe lengths | CNT     |
-| Notes         | Formatted segment notes with timestamps and author initials                                                                                                              | NTE     |
-| Drawing links | Hotspots that jump between drawings, with Back history; never exported                                                                                                   | LNK     |
-| Export        | Pre-export checks; populate the client's Excel template (four layout modes); annotated vector PDFs with legend and stamp; CSV item list; export log                      | EXP     |
+| Area          | What the user can do                                                                                                                                                         | FDS ref |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Project       | Create or open a project in a local folder, or try the sample project; autosave within 2 s; 20 rolling backups; undo/redo; one writable tab per project                      | PRJ     |
+| Drawings      | Import PDF (one drawing per page), DWG, DXF and PDF plots; drawing register with editable metadata; pan, zoom, rotate, minimap                                               | DRW     |
+| Markup        | Circle and dashed-highlight markers stored in drawing coordinates; stamp mode; select, move, resize, copy/paste, box-select; labels, tooltips and filters                    | ANN     |
+| Segments      | ESDV markers; isolatable segments with process data, colour and status; split, merge and reorder; many-to-many links to drawings; configurable ESDV boundary rule            | SEG     |
+| Parts count   | User-defined equipment library and bin sets, reusable as files; quick item entry and bulk edit; automatic size binning; live count tables; duplicate-tag check; pipe lengths | CNT     |
+| Notes         | Formatted segment notes with timestamps and author initials                                                                                                                  | NTE     |
+| Drawing links | Hotspots that jump between drawings, with Back history; never exported                                                                                                       | LNK     |
+| Export        | Pre-export checks; populate the client's Excel template (four layout modes); annotated vector PDFs with legend and stamp; CSV item list; export log                          | EXP     |
 
 ## How it works
 
@@ -313,19 +313,20 @@ served over `https://` or `http://localhost`. Opening `index.html` as `file://` 
 
 Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is kept in that file.
 
-| Version       | Theme                                                       | Status  |
-| ------------- | ----------------------------------------------------------- | ------- |
-| 0.1.0         | Foundation: project scaffold and offline shell              | Done    |
-| 0.2.0         | Working directory, project file and PDF viewing             | Done    |
-| 0.3.0         | DWG support                                                 | Done ¹  |
-| 0.4.0         | Markup engine                                               | Done    |
-| 0.5.0         | Isolatable segments                                         | Done    |
-| 0.6.0         | Parts count                                                 | Done    |
-| 0.7.0         | Segment notes and drawing links                             | Done    |
-| 0.8.0         | Excel template mapping and export                           | Done ²  |
-| 0.9.0         | Annotated PDF export and pre-export checks                  | Done    |
-| 1.0.0         | First production release                                    | Done ³  |
-| 1.1.0 – 2.0.0 | Productivity, revisions, navigation aids, assisted counting | Planned |
+| Version       | Theme                                           | Status  |
+| ------------- | ----------------------------------------------- | ------- |
+| 0.1.0         | Foundation: project scaffold and offline shell  | Done    |
+| 0.2.0         | Working directory, project file and PDF viewing | Done    |
+| 0.3.0         | DWG support                                     | Done ¹  |
+| 0.4.0         | Markup engine                                   | Done    |
+| 0.5.0         | Isolatable segments                             | Done    |
+| 0.6.0         | Parts count                                     | Done    |
+| 0.7.0         | Segment notes and drawing links                 | Done    |
+| 0.8.0         | Excel template mapping and export               | Done ²  |
+| 0.9.0         | Annotated PDF export and pre-export checks      | Done    |
+| 1.0.0         | First production release                        | Done ³  |
+| 1.1.0         | Productivity features                           | Done    |
+| 1.2.0 – 2.0.0 | Revisions, navigation aids, assisted counting   | Planned |
 
 ¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
 GPL question is decided (see the licence note above).

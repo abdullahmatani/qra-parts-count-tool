@@ -82,3 +82,8 @@ export function updateItem(doc: ProjectDoc, itemId: string, patch: ItemPatch): v
     : undefined;
   if (!type?.hasActuation && item.actuation !== null) item.actuation = null;
 }
+
+/** CNT-10: one change applied to several items (each keeps its own other fields). */
+export function updateItems(doc: ProjectDoc, itemIds: Iterable<string>, patch: ItemPatch): void {
+  for (const id of itemIds) updateItem(doc, id, patch);
+}

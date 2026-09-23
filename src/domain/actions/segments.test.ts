@@ -9,10 +9,12 @@ import {
   deleteSegment,
   isSegmentLabelTaken,
   linkDrawing,
+  mergeSegments,
   moveSegment,
   nextSegmentLabel,
   segmentBoundsOnDrawing,
   segmentMarkerIds,
+  splitSegment,
   unlinkDrawing,
   updateEsdv,
   updateSegment,
@@ -180,5 +182,49 @@ describe('ESDVs (SEG-01, SEG-03)', () => {
     const a = addEsdv(doc, drawingId);
     updateEsdv(doc, a, { upstreamSegmentId: 'seg_missing' });
     expect(doc.markers[a]?.esdv?.upstreamSegmentId).toBeNull();
+  });
+});
+
+describe('split and merge (SEG-07)', () => {
+  it('splits markers into a new segment after the original, with the same process data', () => {
+    const { doc, segmentId } = setup();
+    updateSegment(doc, segmentId, { fluid: 'Gas', pressure: 45 });
+    const other = createSegment(doc, { label: 'IS-09' });
+    const [m1, m2] = Object.keys(doc.markers);
+    const esdv = addEsdv(doc, doc.drawingOrder[0]!);
+    const id = splitSegment(doc, segmentId, [m2!, esdv], 'IS-02')!;
+    expect(doc.segmentOrder).toEqual([segmentId, id, other]);
+    expect(doc.segments[id]).toMatchObject({ label: 'IS-02', fluid: 'Gas', pressure: 45 });
+    expect(doc.markers[m1!]!.segmentId).toBe(segmentId);
+    expect(doc.markers[m2!]!.segmentId).toBe(id);
+    // Its item follows; the ESDV keeps its own sides.
+    expect(Object.values(doc.items).find((i) => i.markerId === m2)!.segmentId).toBe(id);
+    expect(doc.markers[esdv]!.segmentId).toBeNull();
+    expect(doc.segments[id]!.drawingIds).toEqual([doc.drawingOrder[0]]);
+    // Nothing to move: no split.
+    expect(splitSegment(doc, other, [m1!], 'IS-03')).toBeNull();
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
+  });
+
+  it('merges a segment into another with its drawings, notes and ESDV boundary', () => {
+    const { doc, segmentId } = setup();
+    const [, m2] = Object.keys(doc.markers);
+    const id = splitSegment(doc, segmentId, [m2!], 'IS-02')!;
+    const extraDrawing = doc.drawingOrder[0]!;
+    doc.notes.not_1 = makeNote(id, { id: 'not_1' });
+    const esdv = addEsdv(doc, extraDrawing);
+    updateEsdv(doc, esdv, { upstreamSegmentId: segmentId, downstreamSegmentId: id });
+    expect(doc.segments[segmentId]!.boundingEsdvIds).toEqual([esdv]);
+
+    mergeSegments(doc, id, segmentId);
+    expect(doc.segmentOrder).toEqual([segmentId]);
+    expect(doc.markers[m2!]!.segmentId).toBe(segmentId);
+    expect(doc.notes.not_1!.segmentId).toBe(segmentId);
+    // The ESDV between the two is inside the merged segment now: no longer a boundary.
+    expect(doc.markers[esdv]!.esdv).toMatchObject({
+      upstreamSegmentId: segmentId,
+      downstreamSegmentId: null,
+    });
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
   });
 });
