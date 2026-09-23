@@ -9,6 +9,7 @@ import { NewProjectDialog } from '@/features/project/NewProjectDialog';
 import { ProjectSettingsForm } from '@/features/project/ProjectSettingsForm';
 import { RecentProjects } from '@/features/project/RecentProjects';
 import { closeProject, openProjectFromPicker } from '@/features/project/project-actions';
+import { openSampleFromPicker } from '@/features/sample/create-sample';
 import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
 import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
 import { SpacePickerDialog } from '@/features/drawings/SpacePickerDialog';
@@ -61,6 +62,7 @@ export function App() {
           supported={supported}
           onNewProject={() => openDialog('newProject')}
           onOpenProject={() => void openProjectFromPicker()}
+          onOpenSample={() => void openSampleFromPicker()}
           recentProjects={supported ? <RecentProjects /> : undefined}
         />
       )}

@@ -155,8 +155,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     selectedHere.length === 1 ? (visibleById.get(selectedHere[0]!) ?? null) : null;
 
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
-  // The ESDV tool draws circles like the circle tool (SEG-01).
-  const circleLike = tool === 'circle' || tool === 'esdv';
+  // The ESDV tool (SEG-01) and stamp mode (ANN-09) draw circles like the circle tool.
+  const circleLike = tool === 'circle' || tool === 'esdv' || tool === 'stamp';
   const selectLike = !circleLike && tool !== 'dashed' && tool !== 'link';
   const editable = !readOnly;
 
@@ -380,7 +380,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           if (g.radius !== null) ui.setCircleRadiusFraction(g.radius / longSide);
           const circle = { type: 'circle' as const, cx: g.centre.x, cy: g.centre.y, r: radius };
           if (tool === 'esdv') placeEsdv(drawingId, circle);
-          else placeMarker(drawingId, circle);
+          else placeMarker(drawingId, circle, { stamp: tool === 'stamp' });
           return;
         }
         case 'rect':

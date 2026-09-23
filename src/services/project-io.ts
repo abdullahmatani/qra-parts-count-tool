@@ -67,6 +67,16 @@ export interface OpenedProject {
   /** True when unsaved work was recovered from the temporary file after a crash. */
   recoveredFromTemp: boolean;
   integrityIssues: IntegrityIssue[];
+  /** False when another tab holds the project (PRJ-07): nothing was written. */
+  writable: boolean;
+}
+
+export interface OpenOptions {
+  /**
+   * Asked once the file is read and before anything is written, with the
+   * project id. Returning false opens the project without touching the folder.
+   */
+  claim?: (projectId: string) => Promise<boolean>;
 }
 
 function tryParse(text: string | null): ParsedProjectFile | ProjectFileError | null {
@@ -91,6 +101,7 @@ function fileStamp(date: Date): string {
 export async function openProjectFromDirectory(
   dir: FsDirHandle,
   now: Date = new Date(),
+  options: OpenOptions = {},
 ): Promise<OpenedProject> {
   const mainText = await readTextIfExists(dir, PROJECT_FILE_NAME);
   const tempText = await readTextIfExists(dir, TEMP_PROJECT_FILE);
@@ -119,6 +130,17 @@ export async function openProjectFromDirectory(
     );
   }
 
+  const writable = options.claim ? await options.claim(chosen.project.id) : true;
+  if (!writable) {
+    return {
+      doc: projectToDoc(chosen.project),
+      migratedFrom: chosen.migratedFrom,
+      recoveredFromTemp,
+      integrityIssues: checkIntegrity(chosen.project),
+      writable,
+    };
+  }
+
   if (chosen.migratedFrom !== null) {
     // FDS section 5: keep a backup of the original before migrating.
     await writeFile(
@@ -138,6 +160,7 @@ export async function openProjectFromDirectory(
     migratedFrom: chosen.migratedFrom,
     recoveredFromTemp,
     integrityIssues: checkIntegrity(chosen.project),
+    writable,
   };
 }
 

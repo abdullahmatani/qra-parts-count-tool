@@ -1,7 +1,7 @@
 {
   "name": "qra-parts-count-tool",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Offline-first web app for marking up PEFS/P&ID drawings, defining isolatable segments and counting leak-source equipment for QRA studies.",
   "type": "module",
   "packageManager": "pnpm@10.33.0",
@@ -23,6 +23,8 @@
     "test:e2e": "playwright test",
     "schema": "tsx scripts/generate-json-schema.ts",
     "size": "node scripts/check-bundle-size.mjs",
+    "package:site": "node scripts/package-site.mjs",
+    "serve:site": "node scripts/serve-site.mjs --root dist",
     "spike:dwg": "tsx scripts/dwg-spike/run-spike.ts"
   },
   "browserslist": [

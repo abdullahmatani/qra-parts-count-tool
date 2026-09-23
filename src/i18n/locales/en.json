@@ -212,6 +212,11 @@
     "newProjectDetail": "Choose an empty folder as the working directory.",
     "openProject": "Open project",
     "openProjectDetail": "Choose a folder that holds project.qrapc.json.",
+    "sample": "Try the sample project",
+    "sampleDetail": "Creates a small marked-up study (two PEFS sheets, two segments) in an empty folder you choose.",
+    "sampleCreated": "The sample project is ready. Open a drawing from the list on the left.",
+    "sampleExists": "That folder already holds a project. Choose an empty folder for the sample.",
+    "sampleFailed": "The sample project could not be created.",
     "recent": "Recent projects",
     "noRecent": "No recent projects.",
     "unsupported": "This browser cannot write to local folders. Use a current version of Microsoft Edge or Google Chrome.",
@@ -277,7 +282,10 @@
       "recovered": "Unsaved changes from an interrupted session were recovered.",
       "migrated": "The project file was upgraded from schema version {{version}}. A backup of the original is in .backup/.",
       "integrity_one": "The project file has {{count}} consistency warning.",
-      "integrity_other": "The project file has {{count}} consistency warnings."
+      "integrity_other": "The project file has {{count}} consistency warnings.",
+      "openElsewhere": "This project is open in another tab or window, so it opened read-only here. Close it there to edit it here.",
+      "lockFree": "The project was closed in the other tab. You can now edit it here.",
+      "reopenForEditing": "Reopen for editing"
     },
     "openErrors": {
       "missing": "No project file was found in this folder.",

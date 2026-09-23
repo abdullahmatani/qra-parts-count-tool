@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { itemForMarker } from '@/domain/actions/items';
+import { starterLibrary } from '@/domain/count/starter-library';
 import { projectToDoc } from '@/domain/model';
+import { updateItemCommand } from '@/features/count/item-commands';
 import { makePopulatedProject } from '@/test/fixtures';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -50,6 +53,36 @@ describe('marker commands', () => {
       segmentId: null,
       shape: 'dashedHighlight',
     });
+  });
+
+  it('stamp mode repeats the last item without opening the editor (ANN-09)', () => {
+    project().load(projectToDoc({ ...makePopulatedProject(), library: starterLibrary() }));
+    drawingId = project().doc!.drawingOrder[0]!;
+    ui().openDrawing(drawingId);
+    const valve = project().doc!.library.equipmentTypes.find((t) => t.category === 'valve')!;
+    // With nothing to repeat yet, a stamp click behaves like the circle tool.
+    const first = placeMarker(drawingId, { type: 'circle', cx: 5, cy: 5, r: 3 }, { stamp: true })!;
+    expect(ui().editRequest?.markerId).toBe(first);
+    const item = itemForMarker(project().doc!, first)!;
+    updateItemCommand(item.id, {
+      equipmentTypeId: valve.id,
+      actuation: 'automated',
+      nominalSize: 1.5,
+    });
+
+    const before = ui().editRequest;
+    const second = placeMarker(drawingId, { type: 'circle', cx: 9, cy: 5, r: 3 }, { stamp: true })!;
+    expect(itemForMarker(project().doc!, second)).toMatchObject({
+      equipmentTypeId: valve.id,
+      actuation: 'automated',
+      nominalSize: 1.5,
+      sizeUnit: 'in',
+    });
+    expect(ui().editRequest).toBe(before);
+    expect(ui().selection).toEqual([second]);
+    // The next stamp repeats the stamped item in turn.
+    const third = placeMarker(drawingId, { type: 'circle', cx: 13, cy: 5, r: 3 }, { stamp: true })!;
+    expect(itemForMarker(project().doc!, third)?.nominalSize).toBe(1.5);
   });
 
   it('refuses edits on a read-only project', () => {

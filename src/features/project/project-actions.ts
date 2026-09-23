@@ -12,8 +12,19 @@ import {
   createProjectInDirectory,
   openProjectFromDirectory,
 } from '@/services/project-io';
+import {
+  projectLockName,
+  tryLockProject,
+  waitForProjectLock,
+  type ProjectLock,
+} from '@/services/project-lock';
 import { ensurePermission, type RecentProject } from '@/services/recent-projects';
-import { beginSession, endSession } from '@/services/session';
+import {
+  beginSession,
+  endSession,
+  getWorkingDirectory,
+  sessionLockWaitSignal,
+} from '@/services/session';
 
 const t = i18n.t.bind(i18n);
 
@@ -48,7 +59,8 @@ export async function createNewProject(
     if (error instanceof ProjectExistsError) return 'exists';
     throw error;
   }
-  await beginSession(dir, projectToDoc(project), { savedAt: new Date() });
+  const lock = await tryLockProject(projectLockName(project.id, dir.name));
+  await beginSession(dir, projectToDoc(project), { savedAt: new Date(), lock });
   toast.success(t('project.toast.created', { name: project.name }));
   return 'created';
 }
@@ -66,14 +78,57 @@ function reportOpenError(error: unknown): void {
   });
 }
 
+/**
+ * PRJ-07: in a tab that opened the project read-only, waits for the other tab
+ * to let go, then offers to reopen the project (from disk) for editing.
+ */
+function offerEditingWhenFree(dir: FsDirHandle, name: string): void {
+  const signal = sessionLockWaitSignal();
+  void waitForProjectLock(name, signal).then((lock) => {
+    if (!lock) return;
+    if (signal.aborted || getWorkingDirectory() !== dir) {
+      lock.release();
+      return;
+    }
+    signal.addEventListener('abort', () => lock.release(), { once: true });
+    toast.info(t('project.toast.lockFree'), {
+      duration: Infinity,
+      action: {
+        label: t('project.toast.reopenForEditing'),
+        onClick: () => {
+          if (getWorkingDirectory() !== dir) return;
+          void endSession().then(() => openProject(dir));
+        },
+      },
+    });
+  });
+}
+
 /** Opens the project in `dir`; reports problems to the user. Returns success. */
 export async function openProject(dir: FsDirHandle): Promise<boolean> {
   try {
-    const opened = await openProjectFromDirectory(dir);
+    let lock: ProjectLock | null = null;
+    let lockName = '';
+    const opened = await openProjectFromDirectory(dir, new Date(), {
+      claim: async (projectId) => {
+        lockName = projectLockName(projectId, dir.name);
+        lock = await tryLockProject(lockName);
+        return lock !== null;
+      },
+    });
     const warnings = opened.integrityIssues.map((issue) => issue.message);
-    await beginSession(dir, opened.doc, { savedAt: new Date(), warnings });
-    if (opened.recoveredFromTemp) toast.warning(t('project.toast.recovered'));
-    if (opened.migratedFrom !== null) {
+    await beginSession(dir, opened.doc, {
+      savedAt: new Date(),
+      warnings,
+      readOnly: !opened.writable,
+      lock,
+    });
+    if (!opened.writable) {
+      toast.warning(t('project.toast.openElsewhere'), { duration: 15_000 });
+      offerEditingWhenFree(dir, lockName);
+    }
+    if (opened.recoveredFromTemp && opened.writable) toast.warning(t('project.toast.recovered'));
+    if (opened.migratedFrom !== null && opened.writable) {
       toast.info(t('project.toast.migrated', { version: opened.migratedFrom }));
     }
     if (warnings.length > 0) {

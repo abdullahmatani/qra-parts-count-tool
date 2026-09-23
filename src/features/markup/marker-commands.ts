@@ -13,7 +13,7 @@ import {
   type MarkerClip,
 } from '@/domain/actions/markers';
 import type { Draft } from 'immer';
-import { addItem } from '@/domain/actions/items';
+import { addItem, type ItemDefaults } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
 import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
@@ -71,7 +71,27 @@ export function updateEsdvCommand(markerId: string, patch: EsdvPatch): boolean {
 }
 
 /** Places a circle or dashed highlight in the active segment (ANN-01, ANN-03, SEG-06). */
-export function placeMarker(drawingId: string, geometry: MarkerGeometry): string | null {
+/**
+ * ANN-09: what a stamp click repeats: the type, actuation, size and unit of the
+ * item placed or edited last, or null when there is none yet.
+ */
+export function stampTemplate(doc: ProjectDoc): ItemDefaults | null {
+  const lastId = useUiStore.getState().lastItemId;
+  const last = lastId ? doc.items[lastId] : undefined;
+  if (!last?.equipmentTypeId) return null;
+  return {
+    equipmentTypeId: last.equipmentTypeId,
+    actuation: last.actuation,
+    nominalSize: last.nominalSize,
+    sizeUnit: last.sizeUnit,
+  };
+}
+
+export function placeMarker(
+  drawingId: string,
+  geometry: MarkerGeometry,
+  options: { stamp?: boolean } = {},
+): string | null {
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId]) return null;
   const activeSegmentId = useUiStore.getState().activeSegmentId;
@@ -91,19 +111,25 @@ export function placeMarker(drawingId: string, geometry: MarkerGeometry): string
   const withItem =
     geometry.type === 'circle' ||
     (geometry.type === 'polyline' && doc.settings.pipeLengthCounting && !!pipeType);
+  const stamp = options.stamp && geometry.type === 'circle' ? stampTemplate(doc) : null;
   const defaults =
-    geometry.type === 'circle'
+    stamp ??
+    (geometry.type === 'circle'
       ? useUiStore.getState().itemDefaults
-      : { equipmentTypeId: pipeType?.id ?? null, actuation: null };
+      : { equipmentTypeId: pipeType?.id ?? null, actuation: null });
   const label =
     geometry.type === 'circle' ? t('markup.history.addCircle') : t('markup.history.addHighlight');
+  let itemId: string | null = null;
   const done = apply(label, (draft) => {
     addMarker(draft, marker);
-    if (withItem) addItem(draft, marker.id, defaults);
+    if (withItem) itemId = addItem(draft, marker.id, defaults);
   });
   if (!done) return null;
-  if (withItem) useUiStore.getState().requestEdit(marker.id);
-  else useUiStore.getState().setSelection([marker.id]);
+  const ui = useUiStore.getState();
+  if (itemId) ui.setLastItem(itemId);
+  // A stamped item is complete: select it without taking the keyboard focus.
+  if (withItem && !stamp) ui.requestEdit(marker.id);
+  else ui.setSelection([marker.id]);
   return marker.id;
 }
 

@@ -18,6 +18,7 @@ export function updateItemCommand(itemId: string, patch: ItemPatch): boolean {
     (draft) => updateItem(draft, itemId, patch),
     { coalesceKey: `item:${itemId}:${fields}` },
   );
+  if (done) useUiStore.getState().setLastItem(itemId);
   if (done && (patch.equipmentTypeId !== undefined || patch.actuation !== undefined)) {
     const updated = useProjectStore.getState().doc?.items[itemId];
     useUiStore.getState().setItemDefaults({

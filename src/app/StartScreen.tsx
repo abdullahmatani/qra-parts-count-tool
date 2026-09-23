@@ -1,4 +1,4 @@
-import { FolderOpen, FolderPlus, ShieldCheck } from 'lucide-react';
+import { FolderOpen, FolderPlus, GraduationCap, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ export interface StartScreenProps {
   supported: boolean;
   onNewProject?: () => void;
   onOpenProject?: () => void;
+  onOpenSample?: () => void;
   recentProjects?: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function StartScreen({
   supported,
   onNewProject,
   onOpenProject,
+  onOpenSample,
   recentProjects,
 }: StartScreenProps) {
   const { t } = useTranslation();
@@ -74,6 +76,23 @@ export function StartScreen({
             </span>
           </Button>
         </div>
+
+        {onOpenSample && (
+          <Button
+            variant="ghost"
+            className="mt-3 h-auto w-full justify-start gap-3 p-3 text-start whitespace-normal"
+            disabled={!supported}
+            onClick={onOpenSample}
+          >
+            <GraduationCap className="shrink-0" />
+            <span className="flex flex-col items-start">
+              <span className="font-medium">{t('start.sample')}</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                {t('start.sampleDetail')}
+              </span>
+            </span>
+          </Button>
+        )}
 
         <section className="mt-8" aria-labelledby="recent-heading">
           <h2 id="recent-heading" className="text-sm font-semibold">

@@ -82,6 +82,31 @@ describe('project in the working directory', () => {
     expect(parseProjectFile(dir.textAt(PROJECT_FILE_NAME)).project.client).toBe('Recovered client');
   });
 
+  it('writes nothing when another tab holds the project (PRJ-07)', async () => {
+    const project = makeProject({ revision: 3 });
+    await createProjectInDirectory(dir, project);
+    const newer = serializeProject({ ...project, revision: 4, client: 'In flight' });
+    const tmp = await dir.getFileHandle(TEMP_PROJECT_FILE, { create: true });
+    const w = await tmp.createWritable();
+    await w.write(newer);
+    await w.close();
+    const before = dir.textAt(PROJECT_FILE_NAME);
+
+    const claimed: string[] = [];
+    const opened = await openProjectFromDirectory(dir, new Date(), {
+      claim: async (id) => {
+        claimed.push(id);
+        return false;
+      },
+    });
+    expect(claimed).toEqual([project.id]);
+    expect(opened.writable).toBe(false);
+    // The other tab's save in progress is left alone.
+    expect(opened.doc.client).toBe('In flight');
+    expect(dir.textAt(PROJECT_FILE_NAME)).toBe(before);
+    expect(dir.textAt(TEMP_PROJECT_FILE)).toBe(newer);
+  });
+
   it('discards a stale or corrupt temporary file', async () => {
     const project = makeProject({ revision: 5 });
     await createProjectInDirectory(dir, project);

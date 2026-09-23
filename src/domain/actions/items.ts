@@ -4,12 +4,15 @@
  */
 import { newId } from '@/lib/ids';
 import type { ProjectDoc } from '../model';
-import type { Actuation, CountItem } from '../schema/types';
+import type { Actuation, CountItem, SizeUnit } from '../schema/types';
 import { takeItemSeq } from './markers';
 
 export interface ItemDefaults {
   equipmentTypeId: string | null;
   actuation: Actuation | null;
+  /** Stamp mode (ANN-09) repeats the size too; otherwise the size is typed per item. */
+  nominalSize?: number | null;
+  sizeUnit?: SizeUnit;
 }
 
 /** The item on a marker, if any. */
@@ -34,8 +37,8 @@ export function addItem(doc: ProjectDoc, markerId: string, defaults: ItemDefault
     segmentId: marker.segmentId,
     drawingId: marker.drawingId,
     equipmentTypeId: type?.id ?? null,
-    nominalSize: null,
-    sizeUnit: doc.settings.units.size,
+    nominalSize: type?.sizeRequired === false ? null : (defaults.nominalSize ?? null),
+    sizeUnit: defaults.sizeUnit ?? doc.settings.units.size,
     actuation: type?.hasActuation ? defaults.actuation : null,
     quantity: 1,
     tag: '',

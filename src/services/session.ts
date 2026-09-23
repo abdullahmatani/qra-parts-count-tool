@@ -7,9 +7,14 @@ import type { FsDirHandle } from '@/lib/fs/types';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { useWorkspaceStore } from '@/store/workspace-store';
+import type { ProjectLock } from './project-lock';
 import { rememberRecentProject } from './recent-projects';
 
 let workingDirectory: FsDirHandle | null = null;
+/** PRJ-07: the tab lock held while the project is open for editing. */
+let sessionLock: ProjectLock | null = null;
+/** Stops a read-only tab waiting for the lock when its session ends. */
+let lockWait: AbortController | null = null;
 
 type SessionHook = {
   onBegin?: (dir: FsDirHandle) => void;
@@ -42,6 +47,8 @@ export interface BeginSessionOptions {
   /** The file on disk already matches the document (just created or opened). */
   savedAt?: Date;
   remember?: boolean;
+  /** Held for the session and released when it ends (PRJ-07). */
+  lock?: ProjectLock | null;
 }
 
 export async function beginSession(
@@ -50,6 +57,7 @@ export async function beginSession(
   options: BeginSessionOptions = {},
 ): Promise<void> {
   workingDirectory = dir;
+  sessionLock = options.lock ?? null;
   useUiStore.getState().reset();
   useProjectStore.getState().load(doc, { readOnly: options.readOnly });
   const workspace = useWorkspaceStore.getState();
@@ -75,7 +83,18 @@ export async function beginSession(
 export async function endSession(): Promise<void> {
   for (const hook of [...hooks]) await hook.onEnd?.();
   workingDirectory = null;
+  sessionLock?.release();
+  sessionLock = null;
+  lockWait?.abort();
+  lockWait = null;
   useProjectStore.getState().close();
   useUiStore.getState().reset();
   useWorkspaceStore.getState().reset();
+}
+
+/** A signal that aborts when the current session ends (for a read-only tab's lock wait). */
+export function sessionLockWaitSignal(): AbortSignal {
+  lockWait?.abort();
+  lockWait = new AbortController();
+  return lockWait.signal;
 }

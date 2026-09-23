@@ -64,6 +64,8 @@ export interface UiState {
   editRequest: { markerId: string; field: EditField; at: number } | null;
   /** The last type and actuation used, for the next item (FDS section 6). */
   itemDefaults: ItemDefaults;
+  /** ANN-09: the item placed or edited last; stamp mode repeats it. */
+  lastItemId: string | null;
   /** The drawing link being edited (LNK-01); markers and a link are never selected together. */
   selectedLinkId: string | null;
   /** LNK-02: where each followed link came from, for the Back button. */
@@ -87,6 +89,7 @@ export interface UiState {
   setCircleRadiusFraction: (fraction: number) => void;
   requestEdit: (markerId: string, field?: EditField) => void;
   setItemDefaults: (defaults: Partial<ItemDefaults>) => void;
+  setLastItem: (itemId: string | null) => void;
   /** Opens a drawing and zooms to an area of it (the whole sheet when `box` is null). */
   focusDrawing: (drawingId: string, box: Box | null) => void;
   clearFocus: () => void;
@@ -112,6 +115,7 @@ const initial = {
   circleRadiusFraction: DEFAULT_CIRCLE_RADIUS_FRACTION,
   editRequest: null,
   itemDefaults: { equipmentTypeId: null, actuation: null },
+  lastItemId: null,
   pendingFocus: null,
   selectedLinkId: null,
   navHistory: [],
@@ -159,6 +163,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
     set({ selection: [markerId], editRequest: { markerId, field, at: Date.now() } }),
   setItemDefaults: (defaults) =>
     set((state) => ({ itemDefaults: { ...state.itemDefaults, ...defaults } })),
+  setLastItem: (lastItemId) => set({ lastItemId }),
   focusDrawing: (drawingId, box) =>
     set((state) => ({
       activeDrawingId: drawingId,

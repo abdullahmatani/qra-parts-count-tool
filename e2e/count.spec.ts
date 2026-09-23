@@ -113,6 +113,33 @@ test.describe('parts count', () => {
     await app.removeDirectory(dir);
   });
 
+  test('stamp mode repeats the last item on each click (ANN-09)', async ({ app }) => {
+    const { dir, page } = await start(app, 'stamp');
+    await page.getByRole('application').focus();
+    await page.keyboard.press('c');
+    await clickCanvas(page, 0.2, 0.3);
+    const editor = page.getByTestId('item-editor');
+    await editor.getByRole('combobox', { name: 'Equipment type' }).click();
+    await page.getByRole('option', { name: /^Valve/ }).click();
+    await editor.getByRole('radio', { name: 'Automated' }).click();
+    await editor.getByLabel('Size', { exact: true }).fill('3/4');
+    await editor.getByLabel('Size', { exact: true }).press('Enter');
+
+    // S: each click logs a copy, with no typing and the drawing keeping the focus.
+    await page.keyboard.press('s');
+    await expect(page.getByRole('radio', { name: 'Stamp' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    for (const fx of [0.3, 0.4, 0.5]) {
+      await clickCanvas(page, fx, 0.3);
+      await expect(page.getByRole('application')).toBeFocused();
+    }
+    await expect(cell(page, 'Valve, automated ≤ 1": 4')).toBeVisible();
+    await expect(page.getByTestId('status-warnings')).toHaveText('No warnings');
+    await app.removeDirectory(dir);
+  });
+
   test('flags duplicate tags until accepted (CNT-08)', async ({ app }) => {
     const { dir, page } = await start(app, 'dupes');
     await page.getByRole('application').focus();

@@ -7,6 +7,7 @@ import { drawingDisplayName } from '@/domain/drawings';
 import type { Drawing } from '@/domain/schema/types';
 import { cn } from '@/lib/utils';
 import { useMarkerCountsByDrawing, useOrderedDrawings } from '@/store/selectors';
+import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 
 function matches(drawing: Drawing, query: string): boolean {
@@ -29,6 +30,7 @@ export function DrawingList({ onImport }: DrawingListProps) {
   const counts = useMarkerCountsByDrawing();
   const activeDrawingId = useUiStore((s) => s.activeDrawingId);
   const openDrawing = useUiStore((s) => s.openDrawing);
+  const readOnly = useProjectStore((s) => s.readOnly);
   const [query, setQuery] = useState('');
   const visible = useMemo(() => drawings.filter((d) => matches(d, query)), [drawings, query]);
 
@@ -46,6 +48,7 @@ export function DrawingList({ onImport }: DrawingListProps) {
             size="icon-sm"
             variant="ghost"
             aria-label={t('drawings.import')}
+            disabled={readOnly}
             onClick={onImport}
           >
             <Plus />
@@ -66,7 +69,7 @@ export function DrawingList({ onImport }: DrawingListProps) {
         {drawings.length === 0 && (
           <li className="px-3 py-2 text-sm text-muted-foreground">
             {t('drawings.empty')}{' '}
-            {onImport && (
+            {onImport && !readOnly && (
               <Button variant="link" size="sm" className="h-auto p-0" onClick={onImport}>
                 {t('drawings.import')}
               </Button>

@@ -13,6 +13,10 @@ or exports) ever leaves the browser.
 > The full requirements are in the [Functional Design Specification](docs/FDS.md), and the delivery
 > plan is in the [Development Roadmap](docs/ROADMAP.md). Requirement IDs such as `PRJ-04` or
 > `CNT-06` in the code, tests and commit messages trace back to those documents.
+>
+> Users start with the [user guide](docs/user-guide.md) and the
+> [keyboard shortcut sheet](docs/keyboard-shortcuts.md), or **Try the sample project** on the start
+> screen. What changed in each version is in the [release notes](CHANGELOG.md).
 
 ---
 
@@ -37,9 +41,9 @@ or exports) ever leaves the browser.
 
 | Area          | What the user can do                                                                                                                                                     | FDS ref |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| Project       | Create or open a project in a local folder; autosave within 2 s; 20 rolling backups; undo/redo                                                                           | PRJ     |
+| Project       | Create or open a project in a local folder, or try the sample project; autosave within 2 s; 20 rolling backups; undo/redo; one writable tab per project                  | PRJ     |
 | Drawings      | Import PDF (one drawing per page), DWG, DXF and PDF plots; drawing register with editable metadata; pan, zoom, rotate, minimap                                           | DRW     |
-| Markup        | Circle and dashed-highlight markers stored in drawing coordinates; select, move, resize, copy/paste, box-select; labels, tooltips and filters                            | ANN     |
+| Markup        | Circle and dashed-highlight markers stored in drawing coordinates; stamp mode; select, move, resize, copy/paste, box-select; labels, tooltips and filters                | ANN     |
 | Segments      | ESDV markers; isolatable segments with process data, colour and status; many-to-many links to drawings; configurable ESDV boundary rule                                  | SEG     |
 | Parts count   | User-defined equipment library and bin sets; quick item entry; automatic size binning; live segment and project count tables; duplicate-tag check; optional pipe lengths | CNT     |
 | Notes         | Formatted segment notes with timestamps and author initials                                                                                                              | NTE     |
@@ -116,23 +120,24 @@ pnpm preview        # serves dist/ on http://localhost:4173 (service worker enab
 
 ## Scripts
 
-| Command                             | Purpose                                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                          | Vite dev server with hot reload                                                                   |
-| `pnpm build`                        | Type-check (`tsc -b`) and build static files into `dist/`                                         |
-| `pnpm preview`                      | Serve the production build locally                                                                |
-| `pnpm typecheck`                    | TypeScript project build in strict mode                                                           |
-| `pnpm lint`                         | ESLint with zero warnings allowed                                                                 |
-| `pnpm format` / `pnpm format:check` | Prettier write / check                                                                            |
-| `pnpm test`                         | Vitest unit and component tests                                                                   |
-| `pnpm test:watch`                   | Vitest in watch mode                                                                              |
-| `pnpm test:coverage`                | Unit tests with V8 coverage                                                                       |
-| `pnpm test:e2e`                     | Playwright end-to-end tests against the production build, including an offline run                |
-| `pnpm schema`                       | Regenerate the project file JSON Schema in `docs/schema/` from the Zod schemas                    |
-| `pnpm size`                         | Check the bundle-size budget (initial JavaScript under 1.5 MB gzipped)                            |
-| `pnpm spike:dwg <folder> [out.md]`  | Run the DWG/DXF readers on every drawing in a folder and report fidelity and speed (roadmap #12)  |
-| `pnpm verify`                       | Run the whole local quality gate: lint, format, typecheck, unit tests, build, size budget, e2e    |
-| `pnpm package:site`                 | Zip `dist/` with a one-line local server script, as the static site for intranet or local hosting |
+| Command                             | Purpose                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                          | Vite dev server with hot reload                                                                  |
+| `pnpm build`                        | Type-check (`tsc -b`) and build static files into `dist/`                                        |
+| `pnpm preview`                      | Serve the production build locally                                                               |
+| `pnpm typecheck`                    | TypeScript project build in strict mode                                                          |
+| `pnpm lint`                         | ESLint with zero warnings allowed                                                                |
+| `pnpm format` / `pnpm format:check` | Prettier write / check                                                                           |
+| `pnpm test`                         | Vitest unit and component tests                                                                  |
+| `pnpm test:watch`                   | Vitest in watch mode                                                                             |
+| `pnpm test:coverage`                | Unit tests with V8 coverage                                                                      |
+| `pnpm test:e2e`                     | Playwright end-to-end tests against the production build, including an offline run               |
+| `pnpm schema`                       | Regenerate the project file JSON Schema in `docs/schema/` from the Zod schemas                   |
+| `pnpm size`                         | Check the bundle-size budget (initial JavaScript under 1.5 MB gzipped)                           |
+| `pnpm spike:dwg <folder> [out.md]`  | Run the DWG/DXF readers on every drawing in a folder and report fidelity and speed (roadmap #12) |
+| `pnpm verify`                       | Run the whole local quality gate: lint, format, typecheck, unit tests, build, size budget, e2e   |
+| `pnpm package:site`                 | Zip the build with `serve.mjs`, a dependency-free local server, as the static site for local use |
+| `pnpm serve:site`                   | Serve `dist/` with the same local server and security headers as the zipped site                 |
 
 This project has **no hosted CI/CD pipeline**. `pnpm verify` is the local equivalent of a CI build
 and should pass before every commit is pushed.
@@ -168,9 +173,13 @@ Chromium. It includes:
 - **Workflow tests** that drive the UI against a working directory backed by the browser's Origin
   Private File System. The native folder picker is replaced by a test hook, because Playwright
   cannot drive native dialogs.
-- **Performance (NFR-02, NFR-03)**: the `perf` project opens dense A1 PDF and DXF sheets and
-  checks they display in under 3 s, and pans and zooms a sheet with 2,000 markers while
-  recording frame times. It runs after the other projects, one test at a time. Run it alone with
+- **Data safety (PRJ-07, NFR-05)**: `e2e/recovery.spec.ts` opens a project in two tabs (the
+  second is read-only), crashes the renderer after an edit and checks nothing older than two
+  seconds is lost, and opens a project beside a torn temporary file.
+- **Performance (NFR-02..06)**: the `perf` project opens dense A1 PDF and DXF sheets and
+  checks they display in under 3 s, pans and zooms a sheet with 2,000 markers while
+  recording frame times, and runs a 300-drawing, 150-segment, 50,000-item project through
+  open, save and Excel export. It runs after the other projects, one test at a time. Run it alone with
   `pnpm test:e2e --project perf --no-deps`. Results and method are in
   [`docs/performance.md`](docs/performance.md).
 
@@ -192,8 +201,9 @@ Playwright is pinned to the version whose Chromium build is installed. On a new 
 │   ├── ROADMAP.md              Development roadmap with per-task status
 │   ├── schema/                 Generated JSON Schema for project.qrapc.json
 │   ├── spikes/                 Technical spike reports (e.g. DWG renderer selection)
-│   ├── performance.md          Performance method and results (NFR-02, NFR-03)
-│   └── user-guide.md           User guide and keyboard shortcuts
+│   ├── performance.md          Performance method and results (NFR-02..06)
+│   ├── keyboard-shortcuts.md   Keyboard shortcut sheet
+│   └── user-guide.md           User guide
 ├── e2e/                        Playwright end-to-end tests
 ├── public/                     Static assets copied verbatim (icons, headers)
 ├── scripts/                    Build helpers: JSON Schema, bundle-size budget, site packaging
@@ -289,9 +299,12 @@ The build output in `dist/` is a set of static files with no backend. The same b
 two ways:
 
 1. **Public URL**: host `dist/` on any static web host. Serve it over HTTPS.
-2. **Zipped static site**: `pnpm package:site` writes `release/qra-parts-count-tool-<version>.zip`.
-   Unzip it and run the included `serve.mjs` script (`node serve.mjs`) to serve it on
-   `http://localhost:8080`.
+2. **Zipped static site**: `pnpm build && pnpm package:site` writes
+   `release/qra-parts-count-tool-<version>.zip` (the app in `site/`, a README and `serve.mjs`).
+   Unzip it and run `node serve.mjs` (Node.js 22 or later) to serve it on `http://localhost:8080`.
+   The server listens on this computer only and sends the same security headers as the hosted
+   build. To host the app for a team, copy `site/` to any HTTPS static web server and send the
+   headers listed in `site/_headers`.
 
 Browsers allow service workers and folder access only in a secure context, so the app must be
 served over `https://` or `http://localhost`. Opening `index.html` as `file://` will not work.
@@ -311,7 +324,7 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 0.7.0         | Segment notes and drawing links                             | Done    |
 | 0.8.0         | Excel template mapping and export                           | Done ²  |
 | 0.9.0         | Annotated PDF export and pre-export checks                  | Done    |
-| 1.0.0         | First production release                                    | Planned |
+| 1.0.0         | First production release                                    | Done ³  |
 | 1.1.0 – 2.0.0 | Productivity, revisions, navigation aids, assisted counting | Planned |
 
 ¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
@@ -319,6 +332,9 @@ GPL question is decided (see the licence note above).
 
 ² Checked against a synthetic client-style template; to be re-checked with the client's own
 template when it is provided.
+
+³ The acceptance test on a real QRA study (roadmap #44) and publishing to the public URL (#47) are
+steps for the project team; the synthetic 300-drawing test and the zipped site are done.
 
 ## Contributing
 

@@ -2,10 +2,13 @@
 
 How the app is measured against the performance requirements, and the latest results.
 
-| Requirement | Target                                                                                      | Test                             |
-| ----------- | ------------------------------------------------------------------------------------------- | -------------------------------- |
-| NFR-02      | Opens an A1 PDF drawing in under 3 s on a mid-range laptop (16 GB RAM, integrated graphics) | `e2e/perf.spec.ts` (roadmap #15) |
-| NFR-03      | Pans and zooms smoothly with 2,000 markers on one drawing                                   | `e2e/perf.spec.ts` (roadmap #19) |
+| Requirement | Target                                                                                      | Test                                                     |
+| ----------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| NFR-02      | Opens an A1 PDF drawing in under 3 s on a mid-range laptop (16 GB RAM, integrated graphics) | `e2e/perf.spec.ts` (roadmap #15)                         |
+| NFR-03      | Pans and zooms smoothly with 2,000 markers on one drawing                                   | `e2e/perf.spec.ts` (roadmap #19)                         |
+| NFR-04      | Handles a project of 300 drawings, 150 segments and 50,000 count items                      | `e2e/perf.spec.ts` (roadmap #44)                         |
+| NFR-05      | No data loss on browser crash: at most the last 2 s of edits are lost                       | `e2e/recovery.spec.ts`, `e2e/perf.spec.ts` (roadmap #45) |
+| NFR-06      | Excel export of 150 segments completes in under 30 s                                        | `e2e/perf.spec.ts` (roadmap #45)                         |
 
 ## Test drawings
 
@@ -27,7 +30,7 @@ pnpm test:e2e                            # everything; perf runs last, on its ow
 
 The `perf` Playwright project depends on the functional projects, so it starts only after them
 and runs its tests one at a time. Timings are printed and attached to the HTML report
-(`perf-pdf.json`, `perf-dxf.json`).
+(`perf-pdf.json`, `perf-dxf.json`, `perf-markers.json`, `perf-scale.json`).
 
 ## What is measured
 
@@ -42,6 +45,16 @@ and runs its tests one at a time. Timings are printed and attached to the HTML r
   copying the file, parsing the DXF in a worker, building and caching the display list, and the
   first render.
 - **DXF, reopen from cache:** display list from `cache/cad/`, preview from `cache/previews/`.
+- **Project at scale (NFR-04, NFR-05, NFR-06):** a project created through the app, then given
+  300 drawings, 150 segments (two drawings each) and 50,000 markers with typed, sized items
+  (a 26 MB project file). Measured: opening it (click to the full segment list), switching the
+  active segment (segment panel and count table), an edit reaching the disk (timed in the page,
+  from the click to the save status turning "saved": the debounce plus serialising and writing
+  the whole file), and an Excel export of all 150 segments into the client-style template in
+  "sheet per segment" mode (150 sheet copies).
+- **Crash (NFR-05):** `e2e/recovery.spec.ts` makes edits, waits two seconds, crashes the renderer
+  (`Page.crash`), opens the project in a new tab and checks that every edit is there. It also
+  checks that a torn temporary file left by a crash mid-save is ignored.
 - **2,000 markers (NFR-03):** an A1 sheet with 2,000 markers (circles and dashed areas, a third
   unassigned so they carry the amber warning outline, each with a tagged item and a label).
   Twelve wheel steps in, twelve out, then a middle-button pan, while every animation frame's
@@ -69,6 +82,15 @@ and runs its tests one at a time. Timings are printed and attached to the HTML r
 | SVG, one element per marker (first attempt, rejected) | 71 ms      | 367 ms          |
 | Canvas, all markers redrawn every frame               | 38 ms      | 83 ms           |
 | Canvas with a cached marker bitmap (shipped)          | 22 ms      | 33 ms           |
+
+Project at scale (same machine; 300 drawings, 150 segments, 50,000 items, 26 MB file):
+
+| Measurement                              | Time     | Target |
+| ---------------------------------------- | -------- | ------ |
+| Open the project                         | 2,225 ms |        |
+| Switch the active segment                | 716 ms   |        |
+| Edit to saved on disk                    | 1,593 ms | 2 s    |
+| Excel export, 150 sheets from a template | 8,541 ms | 30 s   |
 
 Frames are quantised to the 60 Hz display (16.7 ms, 33.4 ms, …), and software rendering makes
 every number here pessimistic. The one slow frame (about 150–220 ms) is the cache being redrawn

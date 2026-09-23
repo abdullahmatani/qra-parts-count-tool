@@ -1,13 +1,16 @@
 /**
  * Performance tests: NFR-02 — an A1 drawing opens in under 3 s (roadmap #15);
- * NFR-03 — pan and zoom stay smooth with 2,000 markers (roadmap #19).
+ * NFR-03 — pan and zoom stay smooth with 2,000 markers (roadmap #19);
+ * NFR-04/05/06 — a 300-drawing, 150-segment, 50,000-item project opens, saves
+ * within the 2 s autosave window and exports to Excel in under 30 s (#44, #45).
  * Uses heavy synthetic A1 sheets (about 9,600 symbols with tags) generated into
  * .cache/perf/. Timings are written to the test report and to the console; the
  * reference results are in docs/performance.md.
  */
 import { expect, test } from './fixtures';
-import { createProject } from './helpers';
-import { openSeeded, seedProject } from './seed';
+import { createHash } from 'node:crypto';
+import { closeProject, createProject, openMenu } from './helpers';
+import { fixture, openSeeded, seedProject } from './seed';
 import { ensurePerfFixtures } from '../scripts/perf-fixtures.mjs';
 
 const NFR02_MS = 3000;
@@ -18,6 +21,83 @@ const NFR02_MS = 3000;
  */
 const NFR03_P95_MS = 50.5;
 const NFR03_MEAN_MS = 33;
+/** NFR-05: at most the last 2 s of edits may be lost, so a save must finish well inside that. */
+const NFR05_SAVE_MS = 2000;
+const NFR06_EXCEL_MS = 30_000;
+
+interface LibraryType {
+  id: string;
+  category: string;
+}
+
+/**
+ * NFR-04 scale: 300 drawings, 150 segments (two drawings each) and 50,000
+ * sized, typed items, added to a project created through the UI so the
+ * starter library ids are real.
+ */
+function scaleProject(base: Record<string, unknown>, fileHash: string) {
+  const types = (base.library as { equipmentTypes: LibraryType[] }).equipmentTypes;
+  const byCategory = (c: string) => types.find((t) => t.category === c)!.id;
+  const valve = byCategory('valve');
+  const flange = byCategory('flange');
+  const smallBore = byCategory('smallBore');
+  const sizes = [0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 10, 12, 16, 24];
+  const drawings = Array.from({ length: 300 }, (_, i) => ({
+    id: `drw_s${i}`,
+    fileName: 'PEFS-1001_A1.pdf',
+    originalFileName: 'PEFS-1001_A1.pdf',
+    fileHash,
+    fileType: 'pdf',
+    page: 1,
+    drawingNo: `PEFS-${2000 + i}`,
+    sheet: '1',
+    title: 'Scale test sheet',
+    revision: 'A',
+    size: { width: 2384, height: 1684 },
+    importedAt: '2026-09-23T10:00:00.000Z',
+  }));
+  const segments = Array.from({ length: 150 }, (_, s) => ({
+    id: `seg_s${s}`,
+    label: `IS-${String(s + 1).padStart(3, '0')}`,
+    colour: s + 1,
+    fluid: s % 2 ? 'Oil' : 'Gas',
+    drawingIds: [`drw_s${2 * s}`, `drw_s${2 * s + 1}`],
+  }));
+  const markers = [];
+  const items = [];
+  for (let k = 0; k < 50_000; k += 1) {
+    const d = k % 300;
+    const slot = Math.floor(k / 300);
+    const segmentId = `seg_s${Math.floor(d / 2)}`;
+    const id = `mkr_s${k}`;
+    markers.push({
+      id,
+      drawingId: `drw_s${d}`,
+      segmentId,
+      shape: 'circle',
+      geometry: {
+        type: 'circle',
+        cx: 100 + (slot % 20) * 110,
+        cy: 100 + Math.floor(slot / 20) * 170,
+        r: 10,
+      },
+    });
+    const kind = k % 4;
+    items.push({
+      id: `itm_s${k}`,
+      seq: k + 1,
+      markerId: id,
+      segmentId,
+      drawingId: `drw_s${d}`,
+      equipmentTypeId: kind < 2 ? valve : kind === 2 ? flange : smallBore,
+      actuation: kind === 0 ? 'manual' : kind === 1 ? 'automated' : null,
+      nominalSize: kind === 3 ? sizes[k % 5] : sizes[k % sizes.length],
+      sizeUnit: 'in',
+      tag: k % 10 === 0 ? `HV-${100000 + k}` : '',
+    });
+  }
+  return { ...base, drawings, segments, markers, items, nextItemSeq: 50_001 };
+}
 
 /** 2,000 markers spread over an A1 sheet, each with a tagged count item. */
 function manyMarkers(count: number) {
@@ -208,6 +288,123 @@ test.describe('performance (NFR-02)', () => {
     });
     expect(result.p95FrameMs).toBeLessThan(NFR03_P95_MS);
     expect(result.meanFrameMs).toBeLessThan(NFR03_MEAN_MS);
+    await app.removeDirectory(dir);
+  });
+
+  test('handles 300 drawings, 150 segments and 50,000 items (NFR-04, NFR-05, NFR-06)', async ({
+    app,
+  }, testInfo) => {
+    test.setTimeout(300_000);
+    const dir = 'perf-scale';
+    await app.open();
+    await app.removeDirectory(dir);
+    await app.pickDirectory(dir);
+    await createProject(app.page, { name: 'Scale study' });
+    const page = app.page;
+    await closeProject(page);
+
+    const pdf = fixture('PEFS-1001_A1.pdf');
+    await app.writeBytes(dir, 'drawings/PEFS-1001_A1.pdf', pdf);
+    const base = JSON.parse(await app.readText(dir, 'project.qrapc.json')) as Record<
+      string,
+      unknown
+    >;
+    const project = scaleProject(base, createHash('sha256').update(pdf).digest('hex'));
+    const text = JSON.stringify(project, null, 2);
+    await app.writeText(dir, 'project.qrapc.json', text);
+
+    // Open: from the click to the full segment list.
+    await app.pickDirectory(dir);
+    const openStart = Date.now();
+    await page.getByRole('button', { name: /Open project/ }).click();
+    const segmentList = page.getByTestId('segment-list');
+    await expect(segmentList.getByRole('button', { name: /IS-150/ })).toBeAttached({
+      timeout: 60_000,
+    });
+    const openMs = Date.now() - openStart;
+
+    // Switch segment: the count table shows its totals.
+    const switchStart = Date.now();
+    await segmentList.getByRole('button', { name: /IS-075/ }).click();
+    await expect(page.getByTestId('segment-drawings')).toContainText('PEFS-2148');
+    await expect(page.getByTestId('count-table')).toBeVisible();
+    const segmentSwitchMs = Date.now() - switchStart;
+
+    // An edit is on disk within the autosave window (NFR-05 at scale).
+    await page.getByRole('button', { name: 'Settings' }).click();
+    const settings = page.getByRole('dialog', { name: 'Settings' });
+    await settings.getByRole('tab', { name: 'Project' }).click();
+    await settings.getByLabel('Client').fill('Scale client');
+    // Timed in the page: from the click to the save status turning "saved" again.
+    await page.evaluate(() => {
+      const status = document.querySelector('[data-testid="save-status"]')!;
+      const w = window as unknown as { __savedAt: number | null; __busy: boolean };
+      w.__savedAt = null;
+      w.__busy = false;
+      new MutationObserver(() => {
+        const value = status.getAttribute('data-status');
+        if (value !== 'saved') w.__busy = true;
+        else if (w.__busy && w.__savedAt === null) w.__savedAt = performance.now();
+      }).observe(status, { attributes: true, attributeFilter: ['data-status'] });
+    });
+    const editAt = await page.evaluate(() => performance.now());
+    await settings.getByRole('button', { name: 'Apply changes' }).click();
+    await expect
+      .poll(
+        () => page.evaluate(() => (window as unknown as { __savedAt: number | null }).__savedAt),
+        {
+          timeout: 30_000,
+        },
+      )
+      .not.toBeNull();
+    const savedAt = await page.evaluate(
+      () => (window as unknown as { __savedAt: number }).__savedAt,
+    );
+    const editToDiskMs = Math.round(savedAt - editAt);
+    expect(await app.readText(dir, 'project.qrapc.json')).toContain('Scale client');
+    await page.keyboard.press('Escape');
+
+    // Map the client template (sheet per segment) and export Excel (NFR-06).
+    await openMenu(page, 'Template mapper');
+    const mapper = page.getByRole('dialog', { name: 'Template mapper' });
+    await mapper
+      .getByTestId('template-file-input')
+      .setInputFiles(new URL('./fixtures/Client_template.xlsx', import.meta.url).pathname);
+    await expect(mapper.getByTestId('template-name')).toHaveText('Client_template.xlsx');
+    const label = mapper.getByLabel('Segment label');
+    await label.fill('B3');
+    await label.press('Enter');
+    await mapper.getByRole('tab', { name: 'Counts' }).click();
+    const autoFill = mapper.getByLabel('Fill the count block from');
+    await autoFill.fill('C14');
+    await autoFill.press('Enter');
+    await mapper.getByRole('button', { name: 'Fill', exact: true }).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    const exportDialog = page.getByRole('dialog', { name: 'Export' });
+    await exportDialog.getByLabel('Annotated drawings (PDF)').uncheck();
+    const exportStart = Date.now();
+    await exportDialog.getByRole('button', { name: /^Export( anyway)?$/ }).click();
+    await expect(exportDialog.getByTestId('export-result')).toContainText(
+      'Scale study_PartsCount.xlsx',
+      { timeout: 120_000 },
+    );
+    const excelExportMs = Date.now() - exportStart;
+
+    const result = {
+      projectFileMB: Math.round(text.length / 1e5) / 10,
+      openMs,
+      segmentSwitchMs,
+      editToDiskMs,
+      excelExportMs,
+    };
+    console.log('perf scale', JSON.stringify(result));
+    await testInfo.attach('perf-scale.json', {
+      body: JSON.stringify(result),
+      contentType: 'application/json',
+    });
+    expect(editToDiskMs).toBeLessThan(NFR05_SAVE_MS);
+    expect(excelExportMs).toBeLessThan(NFR06_EXCEL_MS);
     await app.removeDirectory(dir);
   });
 });

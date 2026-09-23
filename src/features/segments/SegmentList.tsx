@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { segmentAppearance } from '@/domain/palette';
 import { cn } from '@/lib/utils';
+import { useProjectStore } from '@/store/project-store';
 import { useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
 
@@ -16,6 +17,7 @@ export function SegmentList({ onAdd }: SegmentListProps) {
   const segments = useOrderedSegments();
   const activeSegmentId = useUiStore((s) => s.activeSegmentId);
   const setActiveSegment = useUiStore((s) => s.setActiveSegment);
+  const readOnly = useProjectStore((s) => s.readOnly);
 
   return (
     <section aria-labelledby="segments-heading" className="flex min-h-0 flex-1 flex-col">
@@ -27,7 +29,13 @@ export function SegmentList({ onAdd }: SegmentListProps) {
           {t('segments.title')}
         </h2>
         {onAdd && (
-          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2" onClick={onAdd}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 px-2"
+            disabled={readOnly}
+            onClick={onAdd}
+          >
             <Plus /> {t('segments.add')}
           </Button>
         )}
