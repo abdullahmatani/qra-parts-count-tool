@@ -17,6 +17,8 @@ import { MarkerFilterChips } from '@/features/markup/MarkerFilters';
 import { MarkerInspector } from '@/features/markup/MarkerInspector';
 import { MarkupViewer } from '@/features/markup/MarkupViewer';
 import { ShortcutsDialog } from '@/features/markup/ShortcutsDialog';
+import { NewSegmentDialog } from '@/features/segments/NewSegmentDialog';
+import { SegmentDetails } from '@/features/segments/SegmentDetails';
 import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
 import { countMarkerWarnings } from '@/domain/markup/presentation';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
@@ -42,7 +44,8 @@ export function App() {
           onImportDrawings={openDrawingImport}
           onDropFiles={(files) => void importWithFeedback(files)}
           renderDrawing={(drawingId) => <MarkupViewer drawingId={drawingId} />}
-          rightPane={{ itemEditor: <MarkerInspector /> }}
+          onAddSegment={() => openDialog('newSegment')}
+          rightPane={{ segmentDetails: <SegmentDetails />, itemEditor: <MarkerInspector /> }}
           statusBar={{ warningCount, filterChips: <MarkerFilterChips /> }}
         />
       ) : (
@@ -58,6 +61,7 @@ export function App() {
       {hasProject && <DrawingRegisterDialog />}
       {hasProject && <SpacePickerDialog />}
       <ShortcutsDialog />
+      {hasProject && <NewSegmentDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

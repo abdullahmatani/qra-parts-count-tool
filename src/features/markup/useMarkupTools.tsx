@@ -1,7 +1,8 @@
 /**
  * Markup tools on the drawing canvas (ANN-01, ANN-04, ANN-07):
  *
- * - Circle: click to place a circle of the last-used size, or drag out its radius.
+ * - Circle and ESDV: click to place a circle of the last-used size, or drag out
+ *   its radius. A new ESDV opens in the panel for its tag, size and segments.
  * - Dashed highlight: drag a rectangle around an area, or click points along a
  *   line run and double-click (or press Enter) to finish.
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
@@ -35,7 +36,7 @@ import { MarkerCanvas, MarkerList, type MarkerPreview } from './MarkerLayer';
 import { useMarkerEntries } from './useMarkerEntries';
 import { MarkerTooltip } from './MarkerTooltip';
 import { Draft, SelectionBox, type DraftShape } from './MarkupDrafts';
-import { moveMarkerIds, placeMarker, resizeMarker } from './marker-commands';
+import { moveMarkerIds, placeEsdv, placeMarker, resizeMarker } from './marker-commands';
 
 /** Pointer travel (CSS px) before a press becomes a drag. */
 const DRAG_THRESHOLD = 4;
@@ -135,7 +136,9 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     selectedHere.length === 1 ? (visibleById.get(selectedHere[0]!) ?? null) : null;
 
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
-  const selectLike = tool !== 'circle' && tool !== 'dashed';
+  // The ESDV tool draws circles like the circle tool (SEG-01).
+  const circleLike = tool === 'circle' || tool === 'esdv';
+  const selectLike = !circleLike && tool !== 'dashed';
   const editable = !readOnly;
 
   const handlesOf = (marker: Marker | null, geometry?: MarkerGeometry): Handle[] =>
@@ -185,7 +188,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
   const interaction: ViewerInteraction = {
     cursor:
-      tool === 'circle' || tool === 'dashed'
+      circleLike || tool === 'dashed'
         ? 'crosshair'
         : gesture.kind === 'move' && gesture.dragging
           ? 'grabbing'
@@ -203,7 +206,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       const { point, screen } = event;
       const additive = event.native.shiftKey || event.native.ctrlKey || event.native.metaKey;
 
-      if (tool === 'circle' && editable) {
+      if (circleLike && editable) {
         setGesture({ kind: 'circle', centre: point, start: screen, radius: null });
         return;
       }
@@ -327,7 +330,9 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           const ui = useUiStore.getState();
           const radius = g.radius ?? ui.circleRadiusFraction * longSide;
           if (g.radius !== null) ui.setCircleRadiusFraction(g.radius / longSide);
-          placeMarker(drawingId, { type: 'circle', cx: g.centre.x, cy: g.centre.y, r: radius });
+          const circle = { type: 'circle' as const, cx: g.centre.x, cy: g.centre.y, r: radius };
+          if (tool === 'esdv') placeEsdv(drawingId, circle);
+          else placeMarker(drawingId, circle);
           return;
         }
         case 'rect':

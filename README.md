@@ -305,7 +305,7 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 0.2.0         | Working directory, project file and PDF viewing             | Done    |
 | 0.3.0         | DWG support                                                 | Done ¹  |
 | 0.4.0         | Markup engine                                               | Done    |
-| 0.5.0         | Isolatable segments                                         | Planned |
+| 0.5.0         | Isolatable segments                                         | Done    |
 | 0.6.0         | Parts count                                                 | Planned |
 | 0.7.0         | Segment notes and drawing links                             | Planned |
 | 0.8.0         | Excel template mapping and export                           | Planned |

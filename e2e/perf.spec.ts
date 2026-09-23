@@ -11,8 +11,13 @@ import { openSeeded, seedProject } from './seed';
 import { ensurePerfFixtures } from '../scripts/perf-fixtures.mjs';
 
 const NFR02_MS = 3000;
-/** NFR-03: 95th-percentile frame time while panning and zooming (20 fps floor). */
-const NFR03_P95_MS = 50;
+/**
+ * NFR-03 while panning and zooming: 95 % of frames within three display
+ * frames (a 20 fps floor), and on average above 30 fps. Frame times are
+ * quantised to the 60 Hz display, so 50 ms means "three frames".
+ */
+const NFR03_P95_MS = 50.5;
+const NFR03_MEAN_MS = 33;
 
 /** 2,000 markers spread over an A1 sheet, each with a tagged count item. */
 function manyMarkers(count: number) {
@@ -202,6 +207,7 @@ test.describe('performance (NFR-02)', () => {
       contentType: 'application/json',
     });
     expect(result.p95FrameMs).toBeLessThan(NFR03_P95_MS);
+    expect(result.meanFrameMs).toBeLessThan(NFR03_MEAN_MS);
     await app.removeDirectory(dir);
   });
 });

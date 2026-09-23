@@ -74,13 +74,17 @@ export function RightPane({ segmentDetails, countTable, itemEditor, notes }: Rig
         </Select>
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <PanelSection title={t('panels.segment')}>{segmentDetails ?? placeholder}</PanelSection>
-        <PanelSection title={t('panels.count')}>{countTable ?? placeholder}</PanelSection>
+        <PanelSection title={t('panels.segment')}>
+          {active ? (segmentDetails ?? placeholder) : placeholder}
+        </PanelSection>
+        <PanelSection title={t('panels.count')}>
+          {active ? (countTable ?? placeholder) : placeholder}
+        </PanelSection>
         <PanelSection title={t('panels.item')}>
           {itemEditor ?? <p className="text-sm text-muted-foreground">{t('panels.noItem')}</p>}
         </PanelSection>
         <PanelSection title={t('panels.notes')} grow>
-          {notes ?? placeholder}
+          {active ? (notes ?? placeholder) : placeholder}
         </PanelSection>
       </div>
     </div>

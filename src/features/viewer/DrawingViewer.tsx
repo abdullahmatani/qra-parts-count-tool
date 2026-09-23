@@ -29,6 +29,7 @@ import {
   panBy,
   rotateBy,
   setZoom,
+  viewForRect,
   viewMatrix,
   zoomAt,
   type Matrix,
@@ -86,6 +87,27 @@ export function DrawingViewer({
       setViewport(drawingId, fitView(ready.source.size, size, 0));
     }
   }, [ready, size, view, drawingId, setViewport]);
+
+  // SEG-05: zoom to an area requested from elsewhere, e.g. a segment's markers.
+  const pendingFocus = useUiStore((s) =>
+    s.pendingFocus?.drawingId === drawingId ? s.pendingFocus : null,
+  );
+  useEffect(() => {
+    if (!pendingFocus || !ready || !size || size.width <= 0) return;
+    const rotation = useUiStore.getState().viewports[drawingId]?.rotation ?? 0;
+    const box = pendingFocus.box;
+    setViewport(
+      drawingId,
+      box
+        ? viewForRect(
+            { x: box.minX, y: box.minY, width: box.maxX - box.minX, height: box.maxY - box.minY },
+            size,
+            rotation,
+          )
+        : fitView(ready.source.size, size, rotation),
+    );
+    useUiStore.getState().clearFocus();
+  }, [pendingFocus, ready, size, drawingId, setViewport]);
 
   const updateView = useCallback(
     (next: ViewState | ((current: ViewState) => ViewState)) => {

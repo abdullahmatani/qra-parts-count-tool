@@ -161,5 +161,31 @@ export function pasteMarkers(
     };
     doc.items[item.id] = item;
   }
+  if (clip.markers.some((m) => m.esdv)) syncBoundingEsdvs(doc);
   return [...idMap.values()];
+}
+
+/**
+ * SEG-03: a segment's bounding ESDVs are the ESDV markers that name it as their
+ * upstream or downstream segment. The ESDV is the source of truth; this keeps
+ * each segment's `boundingEsdvIds` in step, in marker order.
+ */
+export function syncBoundingEsdvs(doc: ProjectDoc): void {
+  const bounding = new Map<string, string[]>();
+  for (const marker of Object.values(doc.markers)) {
+    if (!marker.esdv) continue;
+    for (const side of new Set([marker.esdv.upstreamSegmentId, marker.esdv.downstreamSegmentId])) {
+      if (!side || !doc.segments[side]) continue;
+      const list = bounding.get(side) ?? [];
+      list.push(marker.id);
+      bounding.set(side, list);
+    }
+  }
+  for (const segment of Object.values(doc.segments)) {
+    const next = bounding.get(segment.id) ?? [];
+    const same =
+      next.length === segment.boundingEsdvIds.length &&
+      next.every((id, i) => segment.boundingEsdvIds[i] === id);
+    if (!same) segment.boundingEsdvIds = next;
+  }
 }

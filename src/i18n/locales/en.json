@@ -87,6 +87,69 @@
       "inProgress": "In progress",
       "counted": "Counted",
       "checked": "Checked"
+    },
+    "history": {
+      "create": "create segment {{label}}",
+      "edit": "edit segment {{label}}",
+      "delete": "delete segment {{label}}",
+      "link": "link a drawing to {{label}}",
+      "unlink": "unlink a drawing from {{label}}"
+    },
+    "new": {
+      "title": "New segment",
+      "description": "An isolatable segment between ESDVs. It becomes the active segment, so new markers go to it.",
+      "create": "Create segment"
+    },
+    "fields": {
+      "label": "Label",
+      "description": "Description",
+      "colour": "Colour",
+      "colourOption": "Colour {{index}}",
+      "fluid": "Fluid",
+      "phase": "Phase",
+      "pressure": "Operating pressure ({{unit}})",
+      "temperature": "Operating temperature ({{unit}})",
+      "status": "Status",
+      "countedBy": "Counted by",
+      "checkedBy": "Checked by"
+    },
+    "errors": {
+      "labelRequired": "Enter a label, e.g. IS-01.",
+      "labelTaken": "Another segment already uses this label.",
+      "number": "Enter a number."
+    },
+    "details": {
+      "process": "Process data",
+      "review": "Count and check",
+      "esdvs": "Bounding ESDVs",
+      "esdvsHint": "Set on each ESDV: its upstream and downstream segments.",
+      "esdvsFew_one": "Only {{count}} bounding ESDV: a segment usually has two or more.",
+      "esdvsFew_other": "Only {{count}} bounding ESDVs: a segment usually has two or more.",
+      "esdvSide": {
+        "upstream": "flows out through it",
+        "downstream": "flows in through it"
+      },
+      "drawings": "Linked drawings",
+      "noDrawings": "Not linked to any drawing yet. Markers link their drawing automatically.",
+      "markerCount_one": "{{count}} marker",
+      "markerCount_other": "{{count}} markers",
+      "open": "Open {{drawing}} at this segment",
+      "unlink": "Unlink {{drawing}}",
+      "linkDrawing": "Link a drawing",
+      "delete": "Delete segment"
+    },
+    "delete": {
+      "title": "Delete segment {{label}}?",
+      "description": "It has {{markers}} and {{notes}}. Choose what happens to them.",
+      "markers_one": "{{count}} marker",
+      "markers_other": "{{count}} markers",
+      "notes_one": "{{count}} note",
+      "notes_other": "{{count}} notes",
+      "move": "Move them to another segment",
+      "moveTarget": "Segment to move them to",
+      "deleteAll": "Delete the markers, their items and the notes",
+      "esdvsKept": "ESDVs on its boundary are kept.",
+      "confirm": "Delete segment"
     }
   },
   "canvas": {
@@ -325,7 +388,9 @@
       "paste_one": "paste marker",
       "paste_other": "paste {{count}} markers",
       "assign_one": "move marker to {{segment}}",
-      "assign_other": "move {{count}} markers to {{segment}}"
+      "assign_other": "move {{count}} markers to {{segment}}",
+      "addEsdv": "add ESDV",
+      "editEsdv": "edit ESDV"
     },
     "shapes": {
       "circle": "Circle",
@@ -374,7 +439,25 @@
       "hidden": "Hidden: {{name}}",
       "show": "Show {{name}} again"
     },
-    "layer": "Markers"
+    "layer": "Markers",
+    "esdv": {
+      "title": "ESDV",
+      "tag": "Tag",
+      "tagPlaceholder": "e.g. ESDV-1001",
+      "size": "Size",
+      "sizePlaceholder": "e.g. 12\" or DN300",
+      "sizeInvalid": "Enter a size such as 2, 2\", 3/4 or DN50.",
+      "upstream": "Upstream segment",
+      "upstreamHint": "The segment the flow comes from.",
+      "downstream": "Downstream segment",
+      "downstreamHint": "The segment the flow goes to.",
+      "rule": "Counted in",
+      "projectRule": "Project rule: {{rule}}",
+      "noProjectRule": "Project rule not set",
+      "countedIn": "This ESDV is counted in: {{segments}}",
+      "countedNowhere": "This ESDV is not counted in any segment.",
+      "none": "None"
+    }
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

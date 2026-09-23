@@ -3,6 +3,7 @@ import type {
   CountItem,
   Drawing,
   Marker,
+  Note,
   Project,
   ProjectSettings,
   Segment,
@@ -103,6 +104,18 @@ export function makeItem(
     tag: '',
     remarks: '',
     pipeLength: null,
+    ...overrides,
+  };
+}
+
+export function makeNote(segmentId: string, overrides: Partial<Note> = {}): Note {
+  return {
+    id: 'not_1',
+    segmentId,
+    author: 'AM',
+    timestamp: FIXED_NOW.toISOString(),
+    text: 'Assumed all flanges are ANSI 300.',
+    markerRef: null,
     ...overrides,
   };
 }

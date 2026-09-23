@@ -16,6 +16,7 @@ import type { Marker, MarkerGeometry } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
 import { useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
+import { EsdvEditor } from '@/features/segments/EsdvEditor';
 import { assignMarkerIds, deleteMarkerIds } from './marker-commands';
 
 const NO_SEGMENT = '__none__';
@@ -74,7 +75,11 @@ export function MarkerInspector() {
   useEffect(() => {
     if (!editRequest) return;
     rootRef.current?.scrollIntoView({ block: 'nearest' });
-    triggerRef.current?.focus();
+    // An ESDV's editor focuses its tag field instead.
+    const marker = markersRecord?.[editRequest.markerId];
+    if (!marker?.esdv) triggerRef.current?.focus();
+    // Only a new request moves the focus, not later marker edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRequest]);
 
   const first = markers[0];
@@ -105,6 +110,7 @@ export function MarkerInspector() {
           ))}
         </dl>
       )}
+      {markers.length === 1 && first.esdv && <EsdvEditor key={first.id} marker={first} />}
       {assignable.length > 0 && (
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground" htmlFor="marker-segment">

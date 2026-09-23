@@ -3,6 +3,7 @@
  * part of the project file, and none of it is undoable.
  */
 import { create } from 'zustand';
+import type { Box } from '@/domain/markup/geometry';
 import type { MarkerFilterState } from '@/domain/markup/presentation';
 
 export type Tool = 'select' | 'circle' | 'dashed' | 'link' | 'esdv' | 'stamp';
@@ -33,6 +34,7 @@ export type DialogName =
   | 'drawingRegister'
   | 'backups'
   | 'shortcuts'
+  | 'newSegment'
   | null;
 
 export interface UiState {
@@ -56,6 +58,8 @@ export interface UiState {
   circleRadiusFraction: number;
   /** Set by double-clicking a marker: the edit panel shows and focuses it (ANN-07). */
   editRequest: { markerId: string; at: number } | null;
+  /** SEG-05: an area of a drawing to bring into view once its viewer is ready. */
+  pendingFocus: { drawingId: string; box: Box | null } | null;
 
   openDrawing: (drawingId: string) => void;
   closeDrawing: (drawingId: string) => void;
@@ -72,6 +76,9 @@ export interface UiState {
   setOfflineReady: (ready: boolean) => void;
   setCircleRadiusFraction: (fraction: number) => void;
   requestEdit: (markerId: string) => void;
+  /** Opens a drawing and zooms to an area of it (the whole sheet when `box` is null). */
+  focusDrawing: (drawingId: string, box: Box | null) => void;
+  clearFocus: () => void;
   reset: () => void;
 }
 
@@ -90,6 +97,7 @@ const initial = {
   dialog: null,
   circleRadiusFraction: DEFAULT_CIRCLE_RADIUS_FRACTION,
   editRequest: null,
+  pendingFocus: null,
 } satisfies Partial<UiState>;
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -131,5 +139,15 @@ export const useUiStore = create<UiState>()((set) => ({
   setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
   requestEdit: (markerId) =>
     set({ selection: [markerId], editRequest: { markerId, at: Date.now() } }),
+  focusDrawing: (drawingId, box) =>
+    set((state) => ({
+      activeDrawingId: drawingId,
+      openDrawingIds: state.openDrawingIds.includes(drawingId)
+        ? state.openDrawingIds
+        : [...state.openDrawingIds, drawingId],
+      selection: state.activeDrawingId === drawingId ? state.selection : [],
+      pendingFocus: { drawingId, box },
+    })),
+  clearFocus: () => set({ pendingFocus: null }),
   reset: () => set({ ...initial }),
 }));

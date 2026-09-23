@@ -45,7 +45,8 @@ and runs its tests one at a time. Timings are printed and attached to the HTML r
 - **2,000 markers (NFR-03):** an A1 sheet with 2,000 markers (circles and dashed areas, a third
   unassigned so they carry the amber warning outline, each with a tagged item and a label).
   Twelve wheel steps in, twelve out, then a middle-button pan, while every animation frame's
-  duration is recorded. The test asserts a 95th-percentile frame time under 50 ms (20 fps).
+  duration is recorded. The test asserts that 95 % of frames take at most three display frames
+  (50 ms, a 20 fps floor) and that the mean frame time is under 33 ms (above 30 fps).
 
 ## Results
 

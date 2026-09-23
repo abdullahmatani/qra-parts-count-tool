@@ -13,6 +13,8 @@ import {
   type MarkerClip,
 } from '@/domain/actions/markers';
 import type { Draft } from 'immer';
+import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
+import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { ProjectDoc } from '@/domain/model';
@@ -34,6 +36,37 @@ export function selectedMarkerIds(): string[] {
   const { selection, activeDrawingId } = useUiStore.getState();
   if (!doc) return [];
   return selection.filter((id) => doc.markers[id]?.drawingId === activeDrawingId);
+}
+
+/**
+ * SEG-01: places an ESDV (a red circle marker with a tag and size) and opens
+ * it for editing. Its upstream and downstream segments are chosen in the panel.
+ */
+export function placeEsdv(drawingId: string, geometry: MarkerGeometry): string | null {
+  const doc = useProjectStore.getState().doc;
+  if (!doc?.drawings[drawingId] || geometry.type !== 'circle') return null;
+  const marker: Marker = {
+    id: newId('mkr'),
+    drawingId,
+    segmentId: null,
+    shape: 'circle',
+    geometry,
+    style: { labelOffset: null },
+    esdv: newEsdvData(doc.settings.units.size),
+  };
+  if (!apply(t('markup.history.addEsdv'), (draft) => addMarker(draft, marker))) return null;
+  useUiStore.getState().requestEdit(marker.id);
+  return marker.id;
+}
+
+/** Edits an ESDV's data; typing merges into one undo step per field. */
+export function updateEsdvCommand(markerId: string, patch: EsdvPatch): boolean {
+  const fields = Object.keys(patch).sort().join(',');
+  return useProjectStore
+    .getState()
+    .apply(t('markup.history.editEsdv'), (draft) => updateEsdv(draft, markerId, patch), {
+      coalesceKey: `esdv:${markerId}:${fields}`,
+    });
 }
 
 /** Places a circle or dashed highlight in the active segment (ANN-01, ANN-03, SEG-06). */
