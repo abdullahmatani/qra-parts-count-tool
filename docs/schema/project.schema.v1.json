@@ -1,0 +1,1392 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qra-parts-count-tool.local/schema/project.schema.v1.json",
+  "title": "QRA Parts Count Tool project file (project.qrapc.json)",
+  "description": "Schema version 1. Generated from the Zod schemas in src/domain/schema by `pnpm schema`; do not edit by hand.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "app": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "name": {
+          "default": "qra-parts-count-tool",
+          "type": "string"
+        },
+        "version": {
+          "default": "",
+          "type": "string"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "client": {
+      "default": "",
+      "type": "string",
+      "maxLength": 500
+    },
+    "facility": {
+      "default": "",
+      "type": "string",
+      "maxLength": 500
+    },
+    "studyRef": {
+      "default": "",
+      "type": "string",
+      "maxLength": 500
+    },
+    "description": {
+      "default": "",
+      "type": "string",
+      "maxLength": 20000
+    },
+    "countRevision": {
+      "default": "A",
+      "type": "string",
+      "maxLength": 20
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "revision": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "settings": {
+      "$ref": "#/$defs/ProjectSettings"
+    },
+    "drawings": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Drawing"
+      }
+    },
+    "segments": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Segment"
+      }
+    },
+    "markers": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Marker"
+      }
+    },
+    "items": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CountItem"
+      }
+    },
+    "notes": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Note"
+      }
+    },
+    "links": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DrawingLink"
+      }
+    },
+    "library": {
+      "default": {},
+      "$ref": "#/$defs/Library"
+    },
+    "templateMapping": {
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TemplateMapping"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "acceptedDuplicates": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AcceptedDuplicate"
+      }
+    },
+    "nextItemSeq": {
+      "default": 1,
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "createdAt",
+    "updatedAt",
+    "settings"
+  ],
+  "$defs": {
+    "ProjectSettings": {
+      "type": "object",
+      "properties": {
+        "esdvBoundaryRule": {
+          "type": "string",
+          "enum": [
+            "upstream",
+            "downstream",
+            "both",
+            "neither"
+          ]
+        },
+        "flangeConvention": {
+          "type": "string",
+          "enum": [
+            "perJoint",
+            "perFace"
+          ]
+        },
+        "pipeLengthCounting": {
+          "default": false,
+          "type": "boolean"
+        },
+        "units": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "size": {
+              "default": "in",
+              "type": "string",
+              "enum": [
+                "in",
+                "DN"
+              ]
+            },
+            "pressure": {
+              "default": "barg",
+              "type": "string",
+              "maxLength": 20
+            },
+            "temperature": {
+              "default": "°C",
+              "type": "string",
+              "maxLength": 20
+            },
+            "length": {
+              "default": "m",
+              "type": "string",
+              "const": "m"
+            }
+          }
+        },
+        "exportFilenamePattern": {
+          "default": "{drawingNo}_{rev}_annotated",
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "esdvBoundaryRule",
+        "flangeConvention"
+      ],
+      "description": "Project-level counting rules chosen at setup (SEG-08, CNT-09, CNT-12, EXP-05)."
+    },
+    "Drawing": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "originalFileName": {
+          "default": "",
+          "type": "string",
+          "maxLength": 255
+        },
+        "fileHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "fileType": {
+          "type": "string",
+          "enum": [
+            "pdf",
+            "dwg",
+            "dxf"
+          ]
+        },
+        "page": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layout": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "isCadPlot": {
+          "default": false,
+          "type": "boolean"
+        },
+        "drawingNo": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "sheet": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "title": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "revision": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "size": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ]
+        },
+        "importedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "needsReview": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "fileName",
+        "fileHash",
+        "fileType",
+        "size",
+        "importedAt"
+      ],
+      "description": "One drawing: a PDF page or a DWG/DXF layout copied into drawings/ (DRW-01..04)."
+    },
+    "Segment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "description": {
+          "default": "",
+          "type": "string",
+          "maxLength": 20000
+        },
+        "colour": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "fluid": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "phase": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "pressure": {
+          "default": null,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "temperature": {
+          "default": null,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "status": {
+          "default": "notStarted",
+          "type": "string",
+          "enum": [
+            "notStarted",
+            "inProgress",
+            "counted",
+            "checked"
+          ]
+        },
+        "boundingEsdvIds": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "drawingIds": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "countedBy": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "checkedBy": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "colour"
+      ],
+      "description": "An isolatable segment between ESDVs; the unit of the parts count (SEG-02..05)."
+    },
+    "Marker": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "drawingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "segmentId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shape": {
+          "type": "string",
+          "enum": [
+            "circle",
+            "dashedHighlight"
+          ]
+        },
+        "geometry": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "circle"
+                },
+                "cx": {
+                  "type": "number"
+                },
+                "cy": {
+                  "type": "number"
+                },
+                "r": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "type",
+                "cx",
+                "cy",
+                "r"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "rect"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "type",
+                "x",
+                "y",
+                "width",
+                "height"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "polyline"
+                },
+                "points": {
+                  "minItems": 2,
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "points"
+              ]
+            }
+          ]
+        },
+        "style": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "labelOffset": {
+              "default": null,
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "dx": {
+                      "type": "number"
+                    },
+                    "dy": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "dx",
+                    "dy"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "esdv": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EsdvData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "drawingId",
+        "shape",
+        "geometry"
+      ],
+      "description": "A circle or dashed-highlight annotation in drawing coordinates (ANN-01..03)."
+    },
+    "EsdvData": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "nominalSize": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sizeUnit": {
+          "default": "in",
+          "type": "string",
+          "enum": [
+            "in",
+            "DN"
+          ]
+        },
+        "upstreamSegmentId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "downstreamSegmentId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundaryRuleOverride": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "upstream",
+                "downstream",
+                "both",
+                "neither"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "ESDV tag, size, adjoining segments and boundary rule override (SEG-01, SEG-08)."
+    },
+    "CountItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "seq": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "markerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "segmentId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drawingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "equipmentTypeId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nominalSize": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sizeUnit": {
+          "default": "in",
+          "type": "string",
+          "enum": [
+            "in",
+            "DN"
+          ]
+        },
+        "actuation": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "manual",
+                "automated"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tag": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "remarks": {
+          "default": "",
+          "type": "string",
+          "maxLength": 20000
+        },
+        "pipeLength": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "seq",
+        "markerId",
+        "drawingId"
+      ],
+      "description": "One row of the count, attached to a marker (CNT-01)."
+    },
+    "Note": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "segmentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "author": {
+          "default": "",
+          "type": "string",
+          "maxLength": 20
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "text": {
+          "default": "",
+          "type": "string",
+          "maxLength": 20000
+        },
+        "markerRef": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "segmentId",
+        "timestamp"
+      ],
+      "description": "A timestamped segment note (NTE-01, NTE-02)."
+    },
+    "DrawingLink": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "sourceDrawingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "rect": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number",
+              "minimum": 0
+            },
+            "height": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height"
+          ]
+        },
+        "targetDrawingId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "targetView": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "zoom": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "zoom"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "id",
+        "sourceDrawingId",
+        "rect",
+        "targetDrawingId"
+      ],
+      "description": "A hotspot linking to another drawing; overlay only, never exported (LNK-01..04)."
+    },
+    "Library": {
+      "type": "object",
+      "properties": {
+        "datasetName": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "datasetDescription": {
+          "default": "",
+          "type": "string",
+          "maxLength": 20000
+        },
+        "equipmentTypes": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquipmentType"
+          }
+        },
+        "binSets": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BinSet"
+          }
+        },
+        "esdvEquipmentTypeId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "Equipment types and bin sets for this project (CNT-02, CNT-04)."
+    },
+    "EquipmentType": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "valve",
+            "flange",
+            "smallBore",
+            "pump",
+            "compressor",
+            "vessel",
+            "heatExchanger",
+            "filter",
+            "pigTrap",
+            "instrument",
+            "pipe",
+            "other"
+          ]
+        },
+        "hasActuation": {
+          "default": false,
+          "type": "boolean"
+        },
+        "binSetId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actuationBinSetIds": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "manual": {
+              "default": null,
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "automated": {
+              "default": null,
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "sizeRequired": {
+          "default": true,
+          "type": "boolean"
+        },
+        "excelKey": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "datasetCategory": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "shortcut": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "category"
+      ],
+      "description": "A user-defined equipment type mapped to a leak frequency dataset category (CNT-02)."
+    },
+    "BinSet": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "bins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bin"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "bins"
+      ],
+      "description": "A named set of size bins used by equipment types (CNT-04)."
+    },
+    "Bin": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "lower": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lowerInclusive": {
+          "type": "boolean"
+        },
+        "upper": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upperInclusive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "lower",
+        "lowerInclusive",
+        "upper",
+        "upperInclusive"
+      ],
+      "description": "A size range; edges are in inches and null means unbounded (CNT-04)."
+    },
+    "TemplateMapping": {
+      "type": "object",
+      "properties": {
+        "templateFile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "layoutMode": {
+          "type": "string",
+          "enum": [
+            "sheetPerSegment",
+            "rowPerSegment",
+            "blockPerSegment",
+            "flatItemList"
+          ]
+        },
+        "sheet": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 31
+        },
+        "startRow": {
+          "default": 1,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "blockOffset": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sheetNamePattern": {
+          "default": "{segment}",
+          "type": "string",
+          "maxLength": 100
+        },
+        "headerFields": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "projectName",
+              "client",
+              "facility",
+              "studyRef",
+              "segmentLabel",
+              "segmentDescription",
+              "fluid",
+              "phase",
+              "pressure",
+              "temperature",
+              "boundingEsdvTags",
+              "linkedDrawingNumbers",
+              "date",
+              "countedBy",
+              "checkedBy",
+              "countRevision"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^\\$?[A-Za-z]{1,3}\\$?(\\d{1,7})?$"
+          }
+        },
+        "countCells": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "equipmentTypeId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "actuation": {
+                "default": null,
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "manual",
+                      "automated"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "binId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "cell": {
+                "type": "string",
+                "pattern": "^\\$?[A-Za-z]{1,3}\\$?(\\d{1,7})?$"
+              }
+            },
+            "required": [
+              "equipmentTypeId",
+              "binId",
+              "cell"
+            ]
+          }
+        },
+        "pipeLengthCells": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "binId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "cell": {
+                "type": "string",
+                "pattern": "^\\$?[A-Za-z]{1,3}\\$?(\\d{1,7})?$"
+              }
+            },
+            "required": [
+              "binId",
+              "cell"
+            ]
+          }
+        },
+        "notesCell": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\$?[A-Za-z]{1,3}\\$?(\\d{1,7})?$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "itemColumns": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "seq",
+              "segmentLabel",
+              "drawingNo",
+              "drawingRevision",
+              "equipmentType",
+              "excelKey",
+              "datasetCategory",
+              "actuation",
+              "nominalSize",
+              "sizeUnit",
+              "sizeInches",
+              "bin",
+              "quantity",
+              "effectiveCount",
+              "tag",
+              "pipeLength",
+              "remarks"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^\\$?[A-Za-z]{1,3}\\$?(\\d{1,7})?$"
+          }
+        }
+      },
+      "required": [
+        "templateFile",
+        "layoutMode",
+        "sheet"
+      ],
+      "description": "Where count data lands in the client Excel template (FDS section 7)."
+    },
+    "AcceptedDuplicate": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "note": {
+          "default": "",
+          "type": "string",
+          "maxLength": 20000
+        },
+        "acceptedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        }
+      },
+      "required": [
+        "tag",
+        "acceptedAt"
+      ],
+      "description": "A duplicate tag the user has accepted (CNT-08)."
+    }
+  }
+}
