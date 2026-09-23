@@ -12,6 +12,8 @@ import { closeProject, openProjectFromPicker } from '@/features/project/project-
 import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
 import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
 import { SpacePickerDialog } from '@/features/drawings/SpacePickerDialog';
+import { ExportDialog } from '@/features/export/ExportDialog';
+import { TemplateMapperDialog } from '@/features/export/TemplateMapperDialog';
 import { LibraryDialog } from '@/features/library/LibraryDialog';
 import { MarkerFilterChips } from '@/features/markup/MarkerFilters';
 import { MarkerInspector } from '@/features/markup/MarkerInspector';
@@ -69,6 +71,8 @@ export function App() {
       <ShortcutsDialog />
       {hasProject && <NewSegmentDialog />}
       {hasProject && <LibraryDialog />}
+      {hasProject && <TemplateMapperDialog />}
+      {hasProject && <ExportDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

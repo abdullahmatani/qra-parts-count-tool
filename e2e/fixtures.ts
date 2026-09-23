@@ -29,6 +29,8 @@ export interface AppFixture {
   pickDirectory(name: string): Promise<void>;
   /** Reads a text file from an OPFS folder, e.g. readText('study', 'project.qrapc.json'). */
   readText(directory: string, path: string): Promise<string>;
+  /** Reads a binary file from an OPFS folder. */
+  readBytes(directory: string, path: string): Promise<Uint8Array>;
   /** Lists entry names in an OPFS folder (optionally a sub-path). */
   list(directory: string, path?: string): Promise<string[]>;
   /** Writes a text file into an OPFS folder, creating sub-folders as needed. */
@@ -114,6 +116,27 @@ export const test = base.extend<{ app: AppFixture }, { offlineMode: boolean }>({
           },
           [directory, path],
         );
+      },
+      async readBytes(directory, path) {
+        const b64 = await page.evaluate(
+          async ([d, p]) => {
+            const root = await navigator.storage.getDirectory();
+            let dir = await root.getDirectoryHandle(d!);
+            const parts = p!.split('/').filter(Boolean);
+            const fileName = parts.pop()!;
+            for (const part of parts) dir = await dir.getDirectoryHandle(part);
+            const bytes = new Uint8Array(
+              await (await (await dir.getFileHandle(fileName)).getFile()).arrayBuffer(),
+            );
+            let binary = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) {
+              binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+            }
+            return btoa(binary);
+          },
+          [directory, path],
+        );
+        return new Uint8Array(Buffer.from(b64, 'base64'));
       },
       async list(directory, path = '') {
         return page.evaluate(

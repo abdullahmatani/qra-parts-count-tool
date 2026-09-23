@@ -174,9 +174,10 @@ Chromium. It includes:
   `pnpm test:e2e --project perf --no-deps`. Results and method are in
   [`docs/performance.md`](docs/performance.md).
 
-Test drawings are generated, not hand-made: `node scripts/generate-fixtures.mjs` (PDF) and
-`node scripts/generate-cad-fixtures.mjs` (DXF) write `e2e/fixtures/`; the heavy performance
-sheets are generated on demand into `.cache/perf/`.
+Test files are generated, not hand-made: `node scripts/generate-fixtures.mjs` (PDF),
+`node scripts/generate-cad-fixtures.mjs` (DXF) and `node scripts/generate-excel-fixtures.mjs`
+(a client-style Excel template) write `e2e/fixtures/`; the heavy performance sheets are
+generated on demand into `.cache/perf/`.
 
 Playwright is pinned to the version whose Chromium build is installed. On a new machine, run
 `pnpm exec playwright install chromium` once. To use a different Chromium binary, set
@@ -308,10 +309,13 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 0.5.0         | Isolatable segments                                         | Done    |
 | 0.6.0         | Parts count                                                 | Done    |
 | 0.7.0         | Segment notes and drawing links                             | Done    |
-| 0.8.0         | Excel template mapping and export                           | Planned |
+| 0.8.0         | Excel template mapping and export                           | Done ²  |
 | 0.9.0         | Annotated PDF export and pre-export checks                  | Planned |
 | 1.0.0         | First production release                                    | Planned |
 | 1.1.0 – 2.0.0 | Productivity, revisions, navigation aids, assisted counting | Planned |
+
+² Checked against a synthetic client-style template; to be re-checked with the client's own
+template when it is provided.
 
 ¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
 GPL question is decided (see the licence note above).
