@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { segmentAppearance } from '@/domain/palette';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore, type Tool } from '@/store/ui-store';
+import { MarkerFilterMenu } from '@/features/markup/MarkerFilters';
 import { TOOLS } from './tools';
 
 /**
@@ -131,6 +132,7 @@ export function Toolbar() {
       >
         {showLinks ? <Link2 /> : <Unlink />}
       </Toggle>
+      <MarkerFilterMenu />
 
       <div
         className="ms-auto flex min-w-0 items-center gap-2 ps-2 text-xs whitespace-nowrap text-muted-foreground"

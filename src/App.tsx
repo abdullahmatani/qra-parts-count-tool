@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SettingsDialog } from '@/app/SettingsDialog';
@@ -12,7 +13,12 @@ import { closeProject, openProjectFromPicker } from '@/features/project/project-
 import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
 import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
 import { SpacePickerDialog } from '@/features/drawings/SpacePickerDialog';
-import { DrawingViewer } from '@/features/viewer/DrawingViewer';
+import { MarkerFilterChips } from '@/features/markup/MarkerFilters';
+import { MarkerInspector } from '@/features/markup/MarkerInspector';
+import { MarkupViewer } from '@/features/markup/MarkupViewer';
+import { ShortcutsDialog } from '@/features/markup/ShortcutsDialog';
+import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
+import { countMarkerWarnings } from '@/domain/markup/presentation';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
@@ -22,6 +28,9 @@ export function App() {
   const theme = useApplyPreferences();
   useServiceWorker();
   const hasProject = useProjectStore((s) => s.doc !== null);
+  const markers = useProjectStore((s) => s.doc?.markers);
+  const warningCount = useMemo(() => (markers ? countMarkerWarnings({ markers }) : 0), [markers]);
+  useWorkspaceShortcuts(hasProject);
   const openDialog = useUiStore((s) => s.openDialog);
   const supported = isFileSystemAccessSupported();
 
@@ -32,7 +41,9 @@ export function App() {
           onCloseProject={() => void closeProject()}
           onImportDrawings={openDrawingImport}
           onDropFiles={(files) => void importWithFeedback(files)}
-          renderDrawing={(drawingId) => <DrawingViewer drawingId={drawingId} />}
+          renderDrawing={(drawingId) => <MarkupViewer drawingId={drawingId} />}
+          rightPane={{ itemEditor: <MarkerInspector /> }}
+          statusBar={{ warningCount, filterChips: <MarkerFilterChips /> }}
         />
       ) : (
         <StartScreen
@@ -46,6 +57,7 @@ export function App() {
       {hasProject && <BackupsDialog />}
       {hasProject && <DrawingRegisterDialog />}
       {hasProject && <SpacePickerDialog />}
+      <ShortcutsDialog />
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

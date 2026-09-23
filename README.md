@@ -168,8 +168,9 @@ Chromium. It includes:
 - **Workflow tests** that drive the UI against a working directory backed by the browser's Origin
   Private File System. The native folder picker is replaced by a test hook, because Playwright
   cannot drive native dialogs.
-- **Performance (NFR-02)**: the `perf` project opens dense A1 PDF and DXF sheets and checks they
-  display in under 3 s. It runs after the other projects, one test at a time. Run it alone with
+- **Performance (NFR-02, NFR-03)**: the `perf` project opens dense A1 PDF and DXF sheets and
+  checks they display in under 3 s, and pans and zooms a sheet with 2,000 markers while
+  recording frame times. It runs after the other projects, one test at a time. Run it alone with
   `pnpm test:e2e --project perf --no-deps`. Results and method are in
   [`docs/performance.md`](docs/performance.md).
 
@@ -303,7 +304,7 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 0.1.0         | Foundation: project scaffold and offline shell              | Done    |
 | 0.2.0         | Working directory, project file and PDF viewing             | Done    |
 | 0.3.0         | DWG support                                                 | Done ¹  |
-| 0.4.0         | Markup engine                                               | Planned |
+| 0.4.0         | Markup engine                                               | Done    |
 | 0.5.0         | Isolatable segments                                         | Planned |
 | 0.6.0         | Parts count                                                 | Planned |
 | 0.7.0         | Segment notes and drawing links                             | Planned |

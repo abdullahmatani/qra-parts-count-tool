@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ESDV_COLOUR,
   LINK_OVERLAY,
+  MARKER_SELECTION,
   MARKER_WARNING,
   SEGMENT_PALETTE,
   hexToRgb01,
@@ -21,11 +22,12 @@ describe('segment palette (FDS 9.3)', () => {
     expect(token('marker-warning')).toBe(MARKER_WARNING);
     expect(token('link-overlay')).toBe(LINK_OVERLAY);
     expect(token('esdv')).toBe(ESDV_COLOUR);
+    expect(token('marker-selection')).toBe(MARKER_SELECTION);
   });
 
   it('never uses a reserved colour as a segment colour', () => {
     const palette: readonly string[] = SEGMENT_PALETTE;
-    for (const reserved of [MARKER_WARNING, LINK_OVERLAY, ESDV_COLOUR]) {
+    for (const reserved of [MARKER_WARNING, MARKER_SELECTION, LINK_OVERLAY, ESDV_COLOUR]) {
       expect(palette).not.toContain(reserved);
     }
     expect(new Set(SEGMENT_PALETTE).size).toBe(12);

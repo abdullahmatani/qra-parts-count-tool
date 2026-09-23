@@ -120,6 +120,8 @@ export function DrawingViewer({
       data-drawing-id={drawingId}
       data-zoom={view?.zoom ?? ''}
       data-rotation={view?.rotation ?? ''}
+      data-center-x={view?.x ?? ''}
+      data-center-y={view?.y ?? ''}
     >
       {sourceState.status === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground">

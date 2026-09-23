@@ -1,5 +1,6 @@
 /**
- * Performance tests (roadmap #15): NFR-02 — an A1 drawing opens in under 3 s.
+ * Performance tests: NFR-02 — an A1 drawing opens in under 3 s (roadmap #15);
+ * NFR-03 — pan and zoom stay smooth with 2,000 markers (roadmap #19).
  * Uses heavy synthetic A1 sheets (about 9,600 symbols with tags) generated into
  * .cache/perf/. Timings are written to the test report and to the console; the
  * reference results are in docs/performance.md.
@@ -10,6 +11,43 @@ import { openSeeded, seedProject } from './seed';
 import { ensurePerfFixtures } from '../scripts/perf-fixtures.mjs';
 
 const NFR02_MS = 3000;
+/** NFR-03: 95th-percentile frame time while panning and zooming (20 fps floor). */
+const NFR03_P95_MS = 50;
+
+/** 2,000 markers spread over an A1 sheet, each with a tagged count item. */
+function manyMarkers(count: number) {
+  const markers = [];
+  const items = [];
+  for (let i = 0; i < count; i += 1) {
+    const id = `mkr_load${i}`;
+    const cx = 80 + (i % 50) * 45;
+    const cy = 80 + Math.floor(i / 50) * 38;
+    markers.push({
+      id,
+      drawingId: 'drw_seed0',
+      segmentId: i % 3 === 0 ? null : 'seg_load',
+      shape: i % 10 === 9 ? 'dashedHighlight' : 'circle',
+      geometry:
+        i % 10 === 9
+          ? { type: 'rect', x: cx - 15, y: cy - 10, width: 30, height: 20 }
+          : { type: 'circle', cx, cy, r: 10 },
+    });
+    items.push({
+      id: `itm_load${i}`,
+      seq: i + 1,
+      markerId: id,
+      drawingId: 'drw_seed0',
+      segmentId: i % 3 === 0 ? null : 'seg_load',
+      tag: `HV-${1000 + i}`,
+    });
+  }
+  return {
+    segments: [{ id: 'seg_load', label: 'IS-01', colour: 3 }],
+    markers,
+    items,
+    nextItemSeq: count + 1,
+  };
+}
 
 test.describe('performance (NFR-02)', () => {
   // Runs in its own Playwright project, alone, after the functional tests.
@@ -100,6 +138,70 @@ test.describe('performance (NFR-02)', () => {
       contentType: 'application/json',
     });
     expect(result.reopenFromCacheMs).toBeLessThan(NFR02_MS);
+    await app.removeDirectory(dir);
+  });
+
+  test('pans and zooms smoothly with 2,000 markers on one drawing (NFR-03)', async ({
+    app,
+  }, testInfo) => {
+    const dir = 'perf-markers';
+    await app.open();
+    await seedProject(
+      app,
+      dir,
+      [{ file: 'PEFS-1001_A1.pdf', drawingNo: 'PEFS-1001', width: 2384, height: 1684 }],
+      manyMarkers(2000),
+    );
+    await openSeeded(app, dir);
+    const page = app.page;
+    await page.getByTestId('drawing-list').getByText('PEFS-1001').click();
+    await expect(page.getByTestId('marker')).toHaveCount(2000);
+
+    const surface = page.getByRole('application');
+    const box = (await surface.boundingBox())!;
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    await page.evaluate(() => {
+      const w = window as unknown as { __frames: number[]; __recording: boolean };
+      w.__frames = [];
+      w.__recording = true;
+      let last = performance.now();
+      const tick = (now: number) => {
+        w.__frames.push(now - last);
+        last = now;
+        if (w.__recording) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    // Zoom in and out with the wheel, then pan with the middle button.
+    await page.mouse.move(cx, cy);
+    for (let i = 0; i < 12; i += 1) await page.mouse.wheel(0, -120);
+    for (let i = 0; i < 12; i += 1) await page.mouse.wheel(0, 120);
+    await page.mouse.down({ button: 'middle' });
+    await page.mouse.move(cx + 300, cy + 150, { steps: 30 });
+    await page.mouse.move(cx - 200, cy - 100, { steps: 30 });
+    await page.mouse.up({ button: 'middle' });
+    const frames = await page.evaluate(() => {
+      const w = window as unknown as { __frames: number[]; __recording: boolean };
+      w.__recording = false;
+      return w.__frames.slice(1);
+    });
+    const sorted = [...frames].sort((a, b) => a - b);
+    const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? 0;
+    const mean = frames.reduce((a, b) => a + b, 0) / Math.max(frames.length, 1);
+    const result = {
+      markers: 2000,
+      frames: frames.length,
+      meanFrameMs: Math.round(mean * 10) / 10,
+      p95FrameMs: Math.round(p95 * 10) / 10,
+      maxFrameMs: Math.round((sorted[sorted.length - 1] ?? 0) * 10) / 10,
+    };
+    console.log('perf markers', JSON.stringify(result));
+    await testInfo.attach('perf-markers.json', {
+      body: JSON.stringify(result),
+      contentType: 'application/json',
+    });
+    expect(result.p95FrameMs).toBeLessThan(NFR03_P95_MS);
     await app.removeDirectory(dir);
   });
 });

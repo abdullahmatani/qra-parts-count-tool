@@ -21,10 +21,10 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 13 | 0.3.0 | DWG support | Implement chosen DWG-to-vector renderer with layout selection and render cache (DRW-02) | Done — LibreDWG-WASM in an isolated worker (`src/features/cad`), layout/space picker on import, display-list cache in `cache/cad/`; `VITE_DWG_READER=none` builds without it |
 | 14 | 0.3.0 | DWG support | Implement DXF import and PDF-plot import alongside native .dwg; native .dwg stays mandatory (DRW-02, DRW-10) | Done — own DXF parser (`src/features/cad/dxf`), PDF plots flagged as CAD plots in the register; `e2e/cad.spec.ts` |
 | 15 | 0.3.0 | DWG support | Performance test with A1 drawings against NFR-02 | Done — `e2e/perf.spec.ts`, results in `docs/performance.md` (A1 PDF opens in 2.1 s; cached reopen 0.2 s) |
-| 16 | 0.4.0 | Markup engine | Build SVG overlay in drawing coordinates with circle and dashed-highlight tools (ANN-01, ANN-02) | Planned |
-| 17 | 0.4.0 | Markup engine | Select, move, resize, copy/paste, delete, box multi-select (ANN-04) | Planned |
-| 18 | 0.4.0 | Markup engine | Command-pattern undo/redo, 100+ steps (PRJ-09) | Planned |
-| 19 | 0.4.0 | Markup engine | Marker labels, hover tooltips, visibility filters (ANN-05..07); load test with 2,000 markers (NFR-03) | Planned |
+| 16 | 0.4.0 | Markup engine | Build SVG overlay in drawing coordinates with circle and dashed-highlight tools (ANN-01, ANN-02) | Done — `src/features/markup` (canvas marker layer, SVG drafts), geometry in `src/domain/markup`; `e2e/markup.spec.ts` |
+| 17 | 0.4.0 | Markup engine | Select, move, resize, copy/paste, delete, box multi-select (ANN-04) | Done — click/Shift-click, box select, drag to move, handles to resize, Ctrl+C/Ctrl+V, Delete, arrow-key nudge |
+| 18 | 0.4.0 | Markup engine | Command-pattern undo/redo, 100+ steps (PRJ-09) | Done — every edit is one Immer-patch command; 200 steps kept; Ctrl+Z/Ctrl+Y; e2e undoes 101 steps |
+| 19 | 0.4.0 | Markup engine | Marker labels, hover tooltips, visibility filters (ANN-05..07); load test with 2,000 markers (NFR-03) | Done — labels with decluttering, hover tooltip, double-click to edit, filter menu and status-bar chips; 2,000-marker test in `e2e/perf.spec.ts` (`docs/performance.md`) |
 | 20 | 0.5.0 | Isolatable segments | ESDV marker type with tag and size (SEG-01) | Planned |
 | 21 | 0.5.0 | Isolatable segments | Segment create/edit panel with label, description, colour, process data (SEG-02, SEG-03) | Planned |
 | 22 | 0.5.0 | Isolatable segments | Many-to-many segment-drawing linking and linked-drawing navigation (SEG-04, SEG-05) | Planned |

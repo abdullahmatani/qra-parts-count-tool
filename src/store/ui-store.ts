@@ -3,6 +3,7 @@
  * part of the project file, and none of it is undoable.
  */
 import { create } from 'zustand';
+import type { MarkerFilterState } from '@/domain/markup/presentation';
 
 export type Tool = 'select' | 'circle' | 'dashed' | 'link' | 'esdv' | 'stamp';
 
@@ -16,13 +17,10 @@ export interface Viewport {
   rotation: 0 | 90 | 180 | 270;
 }
 
-export interface MarkerFilters {
-  /** Segment ids whose markers are hidden; `unassigned` hides markers with no segment. */
-  hiddenSegments: string[];
-  /** Equipment type ids whose markers are hidden. */
-  hiddenTypes: string[];
-  showUnassignedOnly: boolean;
-}
+export type MarkerFilters = MarkerFilterState;
+
+/** Default circle radius as a fraction of the drawing's longer side. */
+export const DEFAULT_CIRCLE_RADIUS_FRACTION = 1 / 200;
 
 export type RightPanelSection = 'segment' | 'count' | 'item' | 'notes';
 
@@ -54,6 +52,10 @@ export interface UiState {
   dialog: DialogName;
   /** Offline readiness reported by the service worker. */
   offlineReady: boolean;
+  /** Size of the last circle drawn, as a fraction of the drawing's longer side. */
+  circleRadiusFraction: number;
+  /** Set by double-clicking a marker: the edit panel shows and focuses it (ANN-07). */
+  editRequest: { markerId: string; at: number } | null;
 
   openDrawing: (drawingId: string) => void;
   closeDrawing: (drawingId: string) => void;
@@ -68,6 +70,8 @@ export interface UiState {
   setFilters: (filters: Partial<MarkerFilters>) => void;
   openDialog: (dialog: DialogName) => void;
   setOfflineReady: (ready: boolean) => void;
+  setCircleRadiusFraction: (fraction: number) => void;
+  requestEdit: (markerId: string) => void;
   reset: () => void;
 }
 
@@ -84,6 +88,8 @@ const initial = {
   showLinks: true,
   filters: { hiddenSegments: [], hiddenTypes: [], showUnassignedOnly: false },
   dialog: null,
+  circleRadiusFraction: DEFAULT_CIRCLE_RADIUS_FRACTION,
+  editRequest: null,
 } satisfies Partial<UiState>;
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -122,5 +128,8 @@ export const useUiStore = create<UiState>()((set) => ({
   setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
   openDialog: (dialog) => set({ dialog }),
   setOfflineReady: (offlineReady) => set({ offlineReady }),
+  setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
+  requestEdit: (markerId) =>
+    set({ selection: [markerId], editRequest: { markerId, at: Date.now() } }),
   reset: () => set({ ...initial }),
 }));

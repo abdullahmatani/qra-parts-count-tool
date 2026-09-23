@@ -58,6 +58,7 @@
 
   /* Reserved marker colours: never used as a segment colour. */
   --marker-warning: #f59e0b; /* incomplete or duplicate items: amber outline */
+  --marker-selection: #0284c7; /* selected and hovered markers, drafts */
   --link-overlay: #2563eb; /* drawing link hotspots: blue hatch */
   --esdv: #dc2626; /* ESDV markers: red */
 
@@ -160,4 +161,27 @@
     min-height: 720px;
     overflow: hidden;
   }
+}
+
+/*
+ * Shapes being drawn on the markup overlay, in drawing coordinates. Widths and
+ * dashes are in screen pixels through --upp (drawing units per CSS pixel).
+ * Placed markers are drawn on a canvas (src/features/markup/marker-canvas.ts).
+ */
+.markup-layer {
+  --upp: 1;
+  pointer-events: none;
+}
+.mk-draft {
+  fill: var(--marker-selection);
+  fill-opacity: 0.06;
+  stroke: var(--marker-selection);
+  stroke-width: calc(var(--upp) * 1.5px);
+  stroke-dasharray: calc(var(--upp) * 5px) calc(var(--upp) * 4px);
+}
+.mk-draft-line {
+  fill: none;
+  stroke: var(--marker-selection);
+  stroke-width: calc(var(--upp) * 2px);
+  stroke-dasharray: calc(var(--upp) * 9px) calc(var(--upp) * 5px);
 }

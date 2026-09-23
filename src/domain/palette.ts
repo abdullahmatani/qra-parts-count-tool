@@ -19,6 +19,8 @@ export const SEGMENT_PALETTE = [
 ] as const;
 
 export const MARKER_WARNING = '#f59e0b';
+/** Selected and hovered markers, and shapes being drawn (screen only). */
+export const MARKER_SELECTION = '#0284c7';
 export const LINK_OVERLAY = '#2563eb';
 export const ESDV_COLOUR = '#dc2626';
 /** Colour for markers that belong to no segment. */

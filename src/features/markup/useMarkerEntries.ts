@@ -1,0 +1,52 @@
+import { useMemo } from 'react';
+import {
+  isMarkerVisible,
+  itemsByMarker,
+  markerLabel,
+  markerPaint,
+  markerWarnings,
+} from '@/domain/markup/presentation';
+import type { Marker } from '@/domain/schema/types';
+import { useProjectStore } from '@/store/project-store';
+import { useUiStore } from '@/store/ui-store';
+import type { MarkerEntry } from './marker-canvas';
+
+/**
+ * The visible markers on a drawing with their resolved appearance, in paint
+ * order: dashed highlights first, circles on top. Recomputed only when the
+ * project, selection or filters change, never on pan or zoom.
+ */
+export function useMarkerEntries(drawingId: string): MarkerEntry[] {
+  const markers = useProjectStore((s) => s.doc?.markers);
+  const items = useProjectStore((s) => s.doc?.items);
+  const segments = useProjectStore((s) => s.doc?.segments);
+  const selection = useUiStore((s) => s.selection);
+  const filters = useUiStore((s) => s.filters);
+  const showLabels = useUiStore((s) => s.showLabels);
+
+  return useMemo(() => {
+    const index = itemsByMarker(items ?? {});
+    const selected = new Set(selection);
+    const areas: MarkerEntry[] = [];
+    const circles: MarkerEntry[] = [];
+    for (const marker of Object.values(markers ?? {}) as Marker[]) {
+      if (marker.drawingId !== drawingId) continue;
+      const item = index.get(marker.id);
+      if (!isMarkerVisible(marker, item, filters)) continue;
+      const paint = markerPaint(marker, segments ?? {});
+      const entry: MarkerEntry = {
+        id: marker.id,
+        geometry: marker.geometry,
+        colour: paint.colour,
+        dash: paint.dash,
+        label: showLabels ? markerLabel(marker, item) : '',
+        selected: selected.has(marker.id),
+        warning: markerWarnings(marker).length > 0,
+        esdv: marker.esdv !== null,
+        segmentId: marker.segmentId,
+      };
+      (marker.geometry.type === 'circle' ? circles : areas).push(entry);
+    }
+    return [...areas, ...circles];
+  }, [markers, items, segments, selection, filters, showLabels, drawingId]);
+}

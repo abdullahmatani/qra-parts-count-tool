@@ -312,5 +312,93 @@
     "viewports_other": "{{count}} viewports",
     "import_one": "Import {{count}} drawing",
     "import_other": "Import {{count}} drawings"
+  },
+  "markup": {
+    "history": {
+      "addCircle": "add circle",
+      "addHighlight": "add dashed highlight",
+      "move_one": "move marker",
+      "move_other": "move {{count}} markers",
+      "resize": "resize marker",
+      "delete_one": "delete marker",
+      "delete_other": "delete {{count}} markers",
+      "paste_one": "paste marker",
+      "paste_other": "paste {{count}} markers",
+      "assign_one": "move marker to {{segment}}",
+      "assign_other": "move {{count}} markers to {{segment}}"
+    },
+    "shapes": {
+      "circle": "Circle",
+      "rect": "Dashed rectangle",
+      "polyline": "Dashed line run",
+      "esdv": "ESDV"
+    },
+    "unassigned": "Unassigned",
+    "noSegment": "No segment",
+    "warnings": {
+      "unassigned": "Not in a segment"
+    },
+    "tooltip": {
+      "segment": "Segment",
+      "item": "Item",
+      "tag": "Tag",
+      "size": "Size",
+      "quantity": "Quantity",
+      "noItem": "No count item yet",
+      "edit": "Double-click to edit"
+    },
+    "inspector": {
+      "selected_one": "{{count}} marker selected",
+      "selected_other": "{{count}} markers selected",
+      "shape": "Shape",
+      "segment": "Segment",
+      "delete": "Delete",
+      "position": "Position",
+      "radius": "Radius",
+      "size": "Size",
+      "points": "{{count}} points"
+    },
+    "copied_one": "Copied {{count}} marker.",
+    "copied_other": "Copied {{count}} markers.",
+    "pasted_one": "Pasted {{count}} marker.",
+    "pasted_other": "Pasted {{count}} markers.",
+    "readOnly": "The project is read-only.",
+    "polylineHint": "Click to add points. Double-click or press Enter to finish, Esc to cancel.",
+    "filters": {
+      "button": "Marker filters",
+      "segments": "Segments",
+      "types": "Equipment types",
+      "unassigned": "Unassigned markers",
+      "unassignedOnly": "Show only unassigned markers",
+      "noSegments": "No segments yet",
+      "hidden": "Hidden: {{name}}",
+      "show": "Show {{name}} again"
+    },
+    "layer": "Markers"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "description": "Shortcuts work while the canvas or the workspace has focus, not while you type in a field.",
+    "tools": "Markup tools",
+    "editing": "Editing",
+    "view": "View",
+    "undo": "Undo",
+    "redo": "Redo",
+    "copy": "Copy selected markers",
+    "paste": "Paste (at the pointer when it is over the drawing)",
+    "selectAll": "Select all markers on the drawing",
+    "delete": "Delete selected markers",
+    "deselect": "Cancel drawing, or clear the selection",
+    "nudge": "Nudge selected markers (Shift: 10 px)",
+    "finish": "Finish a dashed line run",
+    "addToSelection": "Add to or remove from the selection",
+    "zoom": "Zoom in / out",
+    "fit": "Fit page",
+    "pan": "Pan (hold and drag)",
+    "wheel": "Zoom at the pointer",
+    "click": "Click",
+    "drag": "Drag",
+    "middleDrag": "Middle-button drag",
+    "space": "Space"
   }
 }
