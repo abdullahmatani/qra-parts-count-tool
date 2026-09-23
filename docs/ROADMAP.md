@@ -7,7 +7,7 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | No # | Version | Description | Task to be done for execution | Status |
 | --- | --- | --- | --- | --- |
 | 1 | 0.1.0 | Foundation: project scaffold and offline shell | Set up React + TypeScript + Vite repo, linting, unit test runner and CI build | Done — the "CI build" is the local `pnpm verify` gate; no hosted CI/CD by project decision |
-| 2 | 0.1.0 | Foundation: project scaffold and offline shell | Add service worker (vite-plugin-pwa) precaching all assets; verify app reloads with network off (NFR-01) | Planned |
+| 2 | 0.1.0 | Foundation: project scaffold and offline shell | Add service worker (vite-plugin-pwa) precaching all assets; verify app reloads with network off (NFR-01) | Done — `e2e/offline.spec.ts` |
 | 3 | 0.1.0 | Foundation: project scaffold and offline shell | Define project file Zod schemas v1 (with generated JSON Schema) and TypeScript types for all entities (section 5) | Planned |
 | 4 | 0.1.0 | Foundation: project scaffold and offline shell | Build app shell: header, three-pane layout, status bar, settings dialog | Planned |
 | 5 | 0.1.0 | Foundation: project scaffold and offline shell | Set up Tailwind CSS 4 and shadcn/ui, design tokens (segment palette, light/dark), bundled fonts and icons (section 9) | Planned |

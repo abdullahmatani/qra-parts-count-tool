@@ -19,7 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e",
+    "test:e2e": "playwright test"
   },
   "browserslist": [
     "last 2 Chrome versions",
