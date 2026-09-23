@@ -226,10 +226,16 @@ folder copies the whole study.
 
 - **No network at runtime.** After the first load, the only requests the app makes are for its
   own static files. There is no telemetry, analytics or error reporting.
-- **Content Security Policy.** `index.html` sets
+- **Content Security Policy.** The production `index.html` carries the FDS policy
   `default-src 'self'; connect-src 'self'; worker-src 'self' blob:; img-src 'self' blob: data:`,
-  so the browser itself blocks any request to a third-party origin. ESLint rules also forbid
-  `XMLHttpRequest`, `WebSocket`, `EventSource` and `navigator.sendBeacon`.
+  plus hardening directives, so the browser itself blocks any request to a third-party origin. The
+  policy is defined once in [`scripts/csp.mjs`](scripts/csp.mjs) and is also emitted as a
+  `_headers` file for static hosts and sent by the packaged local server. The only additions are
+  `'wasm-unsafe-eval'` (bundled WebAssembly decoders) and inline styles (injected by UI libraries);
+  neither allows another origin. ESLint rules forbid `XMLHttpRequest`, `WebSocket`, `EventSource`
+  and `navigator.sendBeacon`.
+- **Verified by tests.** Every Playwright test fails if the page requests anything outside the
+  app's origin, and `e2e/privacy.spec.ts` checks that the browser blocks third-party requests.
 - **Everything is bundled.** Fonts (Inter and JetBrains Mono via `@fontsource`), icons and all
   libraries are in the build. Nothing loads from a CDN.
 - **Offline.** The service worker precaches the full app, including web workers, WASM and fonts.

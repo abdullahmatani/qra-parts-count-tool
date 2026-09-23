@@ -1,10 +1,40 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json' with { type: 'json' };
+import { CSP_META, SECURITY_HEADERS } from './scripts/csp.mjs';
+
+/**
+ * Adds the Content Security Policy to index.html in production builds, and writes
+ * a `_headers` file (Netlify / Cloudflare Pages format) with the header form.
+ * The dev server is left without a CSP because hot reload needs a WebSocket.
+ */
+function contentSecurityPolicy(): Plugin {
+  return {
+    name: 'qrapc-content-security-policy',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: () => [
+        {
+          tag: 'meta',
+          attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP_META },
+          injectTo: 'head-prepend',
+        },
+        { tag: 'meta', attrs: { name: 'referrer', content: 'no-referrer' }, injectTo: 'head' },
+      ],
+    },
+    generateBundle() {
+      const headers = Object.entries(SECURITY_HEADERS)
+        .map(([name, value]) => `  ${name}: ${value}`)
+        .join('\n');
+      this.emitFile({ type: 'asset', fileName: '_headers', source: `/*\n${headers}\n` });
+    },
+  };
+}
 
 export default defineConfig({
   // Relative base so the same build works from a public URL, a sub-path on an
@@ -16,6 +46,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    contentSecurityPolicy(),
     VitePWA({
       // A new version waits for the user to accept it, so an update never reloads
       // the page in the middle of an edit.
@@ -68,10 +99,24 @@ export default defineConfig({
   build: {
     target: 'es2023',
     sourcemap: true,
+    // Never inline assets as data: URLs; fonts must satisfy `font-src 'self'`
+    // and every asset should be a precached file.
+    assetsInlineLimit: 0,
+    // The initial-JS budget is enforced by `pnpm size`; lazily loaded libraries
+    // (PDF.js, ExcelJS, pdf-lib) are legitimately large chunks.
+    chunkSizeWarningLimit: 4096,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Tailwind's generated CSS has no sourcemap; harmless.
+        if (warning.code === 'SOURCEMAP_BROKEN') return;
+        warn(warning);
+      },
+    },
   },
   preview: {
     port: 4173,
     strictPort: true,
+    headers: SECURITY_HEADERS,
   },
   test: {
     environment: 'jsdom',

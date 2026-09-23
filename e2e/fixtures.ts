@@ -37,6 +37,10 @@ export interface AppFixture {
   removeDirectory(directory: string): Promise<void>;
   /** All requests made by the page so far. */
   requests: Request[];
+  /** Requests that left the app's origin (checked automatically after every test). */
+  foreignRequests(): string[];
+  /** Skips the automatic egress check, for tests that deliberately attempt a foreign request. */
+  allowForeignRequestAttempts(): void;
 }
 
 export const test = base.extend<{ app: AppFixture }, { offlineMode: boolean }>({
@@ -44,6 +48,7 @@ export const test = base.extend<{ app: AppFixture }, { offlineMode: boolean }>({
 
   app: async ({ page, context, offlineMode }, use) => {
     const requests: Request[] = [];
+    let checkEgress = true;
     page.on('request', (request) => requests.push(request));
 
     await page.addInitScript(() => {
@@ -57,6 +62,19 @@ export const test = base.extend<{ app: AppFixture }, { offlineMode: boolean }>({
     const fixture: AppFixture = {
       page,
       requests,
+      allowForeignRequestAttempts() {
+        checkEgress = false;
+      },
+      foreignRequests() {
+        const origin = new URL(page.url() === 'about:blank' ? 'http://localhost:4173' : page.url())
+          .origin;
+        return requests
+          .map((request) => request.url())
+          .filter(
+            (url) =>
+              !url.startsWith(origin) && !url.startsWith('blob:') && !url.startsWith('data:'),
+          );
+      },
       async open() {
         await page.goto('/');
         await expect(page.locator('#root')).not.toBeEmpty();
@@ -135,6 +153,11 @@ export const test = base.extend<{ app: AppFixture }, { offlineMode: boolean }>({
       },
     };
     await use(fixture);
+
+    // Every end-to-end test doubles as a data-egress check (FDS section 2).
+    if (checkEgress) {
+      expect(fixture.foreignRequests(), 'requests to a third-party origin').toEqual([]);
+    }
   },
 });
 
