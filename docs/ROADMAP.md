@@ -15,7 +15,7 @@ Status values: **Done** (implemented and tested), **Partial** (implemented with 
 | 7 | 0.1.0 | Foundation: project scaffold and offline shell | Configure strict Content Security Policy (connect-src 'self', no third-party origins) and verify with network inspection that no project data leaves the browser | Done — `scripts/csp.mjs`, `e2e/privacy.spec.ts`; every e2e test also asserts no foreign request |
 | 8 | 0.2.0 | Working directory, project file and PDF viewing | Implement create/open project via File System Access API and folder structure creation (PRJ-01..03) | Done — also PRJ-06 recent projects; `src/services/project-io.ts`, `e2e/project.spec.ts` |
 | 9 | 0.2.0 | Working directory, project file and PDF viewing | Implement autosave with temp-file-then-rename and 20 snapshot backups (PRJ-04, PRJ-05) | Done — `src/services/autosave.ts`, `src/services/backups.ts`, Backups dialog |
-| 10 | 0.2.0 | Working directory, project file and PDF viewing | Integrate PDF.js viewer with pan, zoom, fit, rotate and minimap (DRW-05) | Planned |
+| 10 | 0.2.0 | Working directory, project file and PDF viewing | Integrate PDF.js viewer with pan, zoom, fit, rotate and minimap (DRW-05) | Done — `src/features/viewer`, `e2e/viewer.spec.ts` |
 | 11 | 0.2.0 | Working directory, project file and PDF viewing | Import PDFs into drawings/, split multi-page PDFs, build drawing register with editable metadata (DRW-01, DRW-03, DRW-04) | Planned |
 | 12 | 0.3.0 | DWG support | Technical spike: compare LibreDWG-WASM, ODA SDK and DXF parser on 10 sample PEFS/P&IDs for fidelity, speed and licence (risk R1) | Planned |
 | 13 | 0.3.0 | DWG support | Implement chosen DWG-to-vector renderer with layout selection and render cache (DRW-02) | Planned |

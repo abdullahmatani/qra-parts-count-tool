@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json' with { type: 'json' };
 import { CSP_META, SECURITY_HEADERS } from './scripts/csp.mjs';
+import { pdfjsAssets } from './scripts/vite-plugin-pdfjs-assets.ts';
 
 /**
  * Adds the Content Security Policy to index.html in production builds, and writes
@@ -47,6 +48,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     contentSecurityPolicy(),
+    pdfjsAssets(),
     VitePWA({
       // A new version waits for the user to accept it, so an update never reloads
       // the page in the middle of an edit.
@@ -77,7 +79,9 @@ export default defineConfig({
       workbox: {
         // Precache everything the app can ever need, including lazily loaded chunks,
         // workers, WASM and fonts, so every feature works offline (NFR-01).
-        globPatterns: ['**/*.{js,mjs,css,html,svg,png,ico,woff,woff2,ttf,wasm,json,bcmap,pfb}'],
+        globPatterns: [
+          '**/*.{js,mjs,css,html,svg,png,ico,woff,woff2,ttf,wasm,json,webmanifest,bcmap,pfb,icc}',
+        ],
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

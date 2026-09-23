@@ -236,5 +236,21 @@
   "errors": {
     "crashTitle": "Something went wrong",
     "crashBody": "The app hit an unexpected error. Your work up to the last autosave is in the project folder; reload to continue."
+  },
+  "viewer": {
+    "loading": "Loading drawing…",
+    "minimap": "Minimap",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "actualSize": "Actual size (100%)",
+    "fitPage": "Fit page",
+    "fitWidth": "Fit width",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "errors": {
+      "missing": "The drawing file is missing from the drawings folder.",
+      "unsupported": "This drawing type cannot be displayed yet.",
+      "failed": "The drawing could not be displayed."
+    }
   }
 }

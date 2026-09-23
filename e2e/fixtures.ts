@@ -33,6 +33,8 @@ export interface AppFixture {
   list(directory: string, path?: string): Promise<string[]>;
   /** Writes a text file into an OPFS folder, creating sub-folders as needed. */
   writeText(directory: string, path: string, content: string): Promise<void>;
+  /** Writes a binary file (e.g. a fixture PDF) into an OPFS folder. */
+  writeBytes(directory: string, path: string, bytes: Uint8Array): Promise<void>;
   /** Removes an OPFS folder. */
   removeDirectory(directory: string): Promise<void>;
   /** All requests made by the page so far. */
@@ -143,6 +145,25 @@ export const test = base.extend<{ app: AppFixture }, { offlineMode: boolean }>({
             await writable.close();
           },
           [directory, path, content],
+        );
+      },
+      async writeBytes(directory, path, bytes) {
+        await page.evaluate(
+          async ([d, p, b64]) => {
+            const binary = atob(b64!);
+            const data = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i += 1) data[i] = binary.charCodeAt(i);
+            const root = await navigator.storage.getDirectory();
+            let dir = await root.getDirectoryHandle(d!, { create: true });
+            const parts = p!.split('/').filter(Boolean);
+            const fileName = parts.pop()!;
+            for (const part of parts) dir = await dir.getDirectoryHandle(part, { create: true });
+            const handle = await dir.getFileHandle(fileName, { create: true });
+            const writable = await handle.createWritable();
+            await writable.write(data);
+            await writable.close();
+          },
+          [directory, path, Buffer.from(bytes).toString('base64')],
         );
       },
       async removeDirectory(directory) {

@@ -9,6 +9,7 @@ import { NewProjectDialog } from '@/features/project/NewProjectDialog';
 import { ProjectSettingsForm } from '@/features/project/ProjectSettingsForm';
 import { RecentProjects } from '@/features/project/RecentProjects';
 import { closeProject, openProjectFromPicker } from '@/features/project/project-actions';
+import { DrawingViewer } from '@/features/viewer/DrawingViewer';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
@@ -24,7 +25,10 @@ export function App() {
   return (
     <TooltipProvider delayDuration={400}>
       {hasProject ? (
-        <Workspace onCloseProject={() => void closeProject()} />
+        <Workspace
+          onCloseProject={() => void closeProject()}
+          renderDrawing={(drawingId) => <DrawingViewer drawingId={drawingId} />}
+        />
       ) : (
         <StartScreen
           supported={supported}
