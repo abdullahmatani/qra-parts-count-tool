@@ -1,10 +1,11 @@
-import { X } from 'lucide-react';
+import { Columns2, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { drawingDisplayName } from '@/domain/drawings';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { FindBar } from '@/features/search/FindBar';
 import { Toolbar } from './Toolbar';
 
 export interface CanvasAreaProps {
@@ -19,6 +20,9 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
   const activeDrawingId = useUiStore((s) => s.activeDrawingId);
   const openDrawing = useUiStore((s) => s.openDrawing);
   const closeDrawing = useUiStore((s) => s.closeDrawing);
+  const split = useUiStore((s) => s.split);
+  const toggleSplit = useUiStore((s) => s.toggleSplit);
+  const focusPane = useUiStore((s) => s.focusPane);
   const drawings = useProjectStore((s) => s.doc?.drawings);
   const hasDrawings = useProjectStore((s) => (s.doc?.drawingOrder.length ?? 0) > 0);
   const tabs = openDrawingIds.flatMap((id) => (drawings?.[id] ? [drawings[id]] : []));
@@ -62,13 +66,51 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
               </div>
             );
           })}
+          <button
+            type="button"
+            aria-pressed={split !== null}
+            aria-label={t('canvas.split')}
+            title={t('canvas.split')}
+            disabled={!split && tabs.length < 2}
+            onClick={toggleSplit}
+            className={cn(
+              'ms-auto me-1 mb-0.5 rounded p-1 text-muted-foreground hover:bg-accent disabled:opacity-40',
+              split && 'bg-accent text-foreground',
+            )}
+          >
+            <Columns2 className="size-4" />
+          </button>
         </div>
       )}
-      <div className="relative min-h-0 flex-1 bg-canvas" data-testid="canvas-area">
-        {activeDrawingId && drawings?.[activeDrawingId] && renderDrawing ? (
+      <div className="relative flex min-h-0 flex-1 bg-canvas" data-testid="canvas-area">
+        <FindBar />
+        {split && renderDrawing && drawings?.[split.left] && drawings[split.right] ? (
+          (['left', 'right'] as const).map((side) => {
+            const drawing = drawings[split[side]]!;
+            const focused = drawing.id === activeDrawingId;
+            return (
+              <div
+                key={side}
+                data-testid={`pane-${side}`}
+                data-focused={focused}
+                className={cn(
+                  'relative min-w-0 flex-1 border-e last:border-e-0',
+                  focused && 'ring-2 ring-primary/40 ring-inset',
+                )}
+                onPointerDownCapture={() => focusPane(side)}
+                onFocusCapture={() => focusPane(side)}
+              >
+                {renderDrawing(drawing.id)}
+                <span className="pointer-events-none absolute start-2 top-2 z-10 rounded bg-background/90 px-1.5 py-0.5 font-mono text-xs shadow-sm">
+                  {drawingDisplayName(drawing)}
+                </span>
+              </div>
+            );
+          })
+        ) : activeDrawingId && drawings?.[activeDrawingId] && renderDrawing ? (
           renderDrawing(activeDrawingId)
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
             {hasDrawings ? t('canvas.noDrawing') : t('canvas.noDrawings')}
           </div>
         )}

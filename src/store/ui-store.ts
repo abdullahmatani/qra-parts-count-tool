@@ -38,6 +38,7 @@ export type DialogName =
   | 'drawingRegister'
   | 'backups'
   | 'shortcuts'
+  | 'openZip'
   | 'newSegment'
   | null;
 
@@ -45,6 +46,11 @@ export interface UiState {
   activeDrawingId: string | null;
   /** Drawings open as tabs (DRW-06). */
   openDrawingIds: string[];
+  /**
+   * DRW-06: two drawings side by side. `activeDrawingId` is whichever pane
+   * was used last, so panels and shortcuts follow it.
+   */
+  split: { left: string; right: string } | null;
   activeSegmentId: string | null;
   tool: Tool;
   selection: string[];
@@ -75,6 +81,8 @@ export interface UiState {
 
   openDrawing: (drawingId: string) => void;
   closeDrawing: (drawingId: string) => void;
+  toggleSplit: () => void;
+  focusPane: (side: 'left' | 'right') => void;
   setActiveSegment: (segmentId: string | null) => void;
   setTool: (tool: Tool) => void;
   setSelection: (ids: string[]) => void;
@@ -99,9 +107,22 @@ export interface UiState {
   reset: () => void;
 }
 
+/** Opens a drawing in the pane in use, or just uses the pane that already shows it. */
+function showInSplit(
+  state: Pick<UiState, 'split' | 'activeDrawingId'>,
+  drawingId: string,
+): UiState['split'] {
+  const { split } = state;
+  if (!split || split.left === drawingId || split.right === drawingId) return split;
+  return split.right === state.activeDrawingId
+    ? { ...split, right: drawingId }
+    : { ...split, left: drawingId };
+}
+
 const initial = {
   activeDrawingId: null,
   openDrawingIds: [],
+  split: null,
   activeSegmentId: null,
   tool: 'select' as Tool,
   selection: [],
@@ -132,6 +153,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
         ? state.openDrawingIds
         : [...state.openDrawingIds, drawingId],
       selection: state.activeDrawingId === drawingId ? state.selection : [],
+      split: showInSplit(state, drawingId),
     })),
 
   closeDrawing: (drawingId) =>
@@ -142,7 +164,27 @@ export const useUiStore = create<UiState>()((set, get) => ({
         state.activeDrawingId === drawingId
           ? (openDrawingIds[Math.min(index, openDrawingIds.length - 1)] ?? null)
           : state.activeDrawingId;
-      return { openDrawingIds, activeDrawingId };
+      // Closing a drawing shown in split view ends the split.
+      const split =
+        state.split && (state.split.left === drawingId || state.split.right === drawingId)
+          ? null
+          : state.split;
+      return { openDrawingIds, activeDrawingId, split };
+    }),
+
+  toggleSplit: () =>
+    set((state) => {
+      if (state.split) return { split: null };
+      const active = state.activeDrawingId;
+      const other = state.openDrawingIds.find((id) => id !== active);
+      return active && other ? { split: { left: active, right: other } } : {};
+    }),
+
+  focusPane: (side) =>
+    set((state) => {
+      const drawingId = state.split?.[side];
+      if (!drawingId || drawingId === state.activeDrawingId) return {};
+      return { activeDrawingId: drawingId, selection: [] };
     }),
 
   setActiveSegment: (activeSegmentId) => set({ activeSegmentId }),
@@ -172,6 +214,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
         : [...state.openDrawingIds, drawingId],
       selection: state.activeDrawingId === drawingId ? state.selection : [],
       pendingFocus: { drawingId, box },
+      split: showInSplit(state, drawingId),
     })),
   clearFocus: () => set({ pendingFocus: null }),
   setSelectedLink: (selectedLinkId) =>

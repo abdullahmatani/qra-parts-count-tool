@@ -3,6 +3,20 @@
 Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 [functional design specification](docs/FDS.md).
 
+## 1.2.0 — revisions, search and portability
+
+- **Revision replacement** (DRW-07, LNK-05): replace a drawing's file with its next revision from
+  the drawing register. Markers, items, segments and links stay; a changed sheet size flags the
+  drawing for review (list icon, banner, pre-export check) until marked as reviewed.
+- **Text search** (DRW-08): `Ctrl+F` finds tag and line numbers on the drawing (ignoring case,
+  spaces and dashes, and across split text runs), highlights and steps through the matches, and
+  searches all drawings. Works on PDF and DWG/DXF drawings.
+- **Split view** (DRW-06): two drawings side by side; the pane in use is the active drawing.
+- **Project .zip** (PRJ-08): export the project as one `.zip`, open one into an empty folder, and
+  in Firefox and Safari open one read-only in the tab and download the exports as a `.zip`.
+- A read-only tab no longer writes an opening snapshot to `.backup/`, and cannot run exports into
+  a folder another tab is editing.
+
 ## 1.1.0 — productivity features
 
 - **Bulk edit** (CNT-10): with several markers selected, set the type, actuation or size of all

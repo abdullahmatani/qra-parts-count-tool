@@ -52,6 +52,7 @@ Change or add keys in **Project › Equipment library** (column **Key**).
 | Middle-button drag, `Space`+drag   | Pan                                 |
 | `←` `↑` `→` `↓` (nothing selected) | Pan                                 |
 | `Alt+←`                            | Back after following a drawing link |
+| `Ctrl+F`                           | Find text (tag or line numbers)     |
 
 ## Notes
 

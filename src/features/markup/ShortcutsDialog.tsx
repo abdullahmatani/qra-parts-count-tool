@@ -89,6 +89,7 @@ export function ShortcutsDialog() {
               [t('shortcuts.zoom'), ['+', '−']],
               [t('shortcuts.fit'), ['0']],
               [t('shortcuts.back'), ['Alt+←']],
+              [t('shortcuts.find'), ['Ctrl+F']],
               [t('shortcuts.wheel'), ['Wheel']],
               [
                 t('shortcuts.pan'),

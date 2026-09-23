@@ -78,7 +78,8 @@ export class AutosaveController {
     this.unsubscribe = useProjectStore.subscribe((state, previous) => {
       if (state.changeCounter !== previous.changeCounter) this.onChange();
     });
-    if (snapshotOnStart) {
+    // A read-only session (PRJ-07, PRJ-08) writes nothing, not even a snapshot.
+    if (snapshotOnStart && !useProjectStore.getState().readOnly) {
       // Snapshot of the project as opened, so the session can always be undone.
       const doc = useProjectStore.getState().doc;
       if (doc) {

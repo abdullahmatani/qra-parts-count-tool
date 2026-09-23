@@ -25,6 +25,7 @@ import { useUiStore } from '@/store/ui-store';
 import { AppMark } from './AppMark';
 import { OfflineIndicator } from './OfflineIndicator';
 import { SaveIndicator } from './SaveIndicator';
+import { exportProjectZip } from '@/features/project/project-zip-actions';
 
 export interface HeaderProps {
   onCloseProject?: () => void;
@@ -73,6 +74,9 @@ export function Header({ onCloseProject }: HeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => openDialog('templateMapper')}>
               <Grid3x3 /> {t('header.templateMapper')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => void exportProjectZip()}>
+              {t('zip.menu')}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => openDialog('backups')}>
               <History /> {t('header.backups')}

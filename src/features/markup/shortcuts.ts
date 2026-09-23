@@ -9,6 +9,7 @@ import { TOOLS } from '@/app/tools';
 import { itemForMarker } from '@/domain/actions/items';
 import { updateItemCommand } from '@/features/count/item-commands';
 import { deleteLinkCommand, goBack } from '@/features/links/link-commands';
+import { useSearchStore } from '@/features/search/search-store';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -39,7 +40,8 @@ export type ShortcutAction =
   | { kind: 'selectAll' }
   | { kind: 'clearSelection' }
   | { kind: 'equipmentType'; typeId: string }
-  | { kind: 'back' };
+  | { kind: 'back' }
+  | { kind: 'find' };
 
 /**
  * Maps a key press to a workspace action. `typeKeys` maps equipment type
@@ -58,6 +60,7 @@ export function shortcutFor(
     if (key === 'c') return { kind: 'copy' };
     if (key === 'v') return { kind: 'paste' };
     if (key === 'a') return { kind: 'selectAll' };
+    if (key === 'f') return { kind: 'find' };
     return null;
   }
   if (event.key === 'Delete' || event.key === 'Backspace') return { kind: 'delete' };
@@ -91,6 +94,9 @@ export function runShortcut(action: ShortcutAction): boolean {
       return deleteMarkerIds(selectedMarkerIds());
     case 'back':
       return goBack();
+    case 'find':
+      useSearchStore.getState().openFind();
+      return true;
     case 'copy': {
       const count = copySelection();
       if (count) toast(t('markup.copied', { count }), { duration: 1500 });

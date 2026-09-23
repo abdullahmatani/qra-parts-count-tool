@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, FolderOutput, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Download, FolderOutput, Loader2 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,8 @@ import { CommitInput } from '@/features/segments/fields';
 import { showMarker } from '@/features/segments/segment-commands';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { useWorkspaceStore } from '@/store/workspace-store';
+import { downloadExportFolder } from '@/features/project/project-zip-actions';
 import {
   exportErrorMessage,
   runExport,
@@ -99,7 +101,10 @@ function PreExportCheck({
             {issues.map((issue) => {
               const text = t(`export.check.kinds.${issue.kind}`, { count: issue.count });
               const more = issue.names.length - NAMES_SHOWN;
-              const canShow = issue.markerIds.length > 0 || issue.segmentIds.length > 0;
+              const canShow =
+                issue.markerIds.length > 0 ||
+                issue.segmentIds.length > 0 ||
+                (issue.drawingIds?.length ?? 0) > 0;
               return (
                 <li
                   key={issue.kind}
@@ -154,6 +159,10 @@ export function ExportDialog() {
   const [result, setResult] = useState<ExportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const mapping = doc?.templateMapping ?? null;
+  const readOnly = useProjectStore((s) => s.readOnly);
+  const inMemory = useWorkspaceStore((s) => s.inMemory);
+  // A read-only tab next to an editing one writes nothing; a .zip opened in memory can export.
+  const blocked = readOnly && !inMemory;
 
   const issues = useMemo(() => {
     if (!open || !doc) return [];
@@ -180,6 +189,8 @@ export function ExportDialog() {
       ui.setHighlighted(issue.markerIds);
     } else if (issue.segmentIds[0]) {
       ui.setActiveSegment(issue.segmentIds[0]);
+    } else if (issue.drawingIds?.[0]) {
+      ui.openDrawing(issue.drawingIds[0]);
     }
     close(false);
   };
@@ -283,6 +294,11 @@ export function ExportDialog() {
             <p className="text-xs text-muted-foreground">{t('export.segmentPdfsHint')}</p>
           </OutputOption>
         </section>
+        {blocked && (
+          <p className="text-sm text-muted-foreground" role="note">
+            {t('zip.readOnlyExport')}
+          </p>
+        )}
         {busy && progress && (
           <p className="text-sm text-muted-foreground" role="status" data-testid="export-progress">
             {t('export.progress', progress)}
@@ -312,6 +328,18 @@ export function ExportDialog() {
                 {t('export.unmapped', { count: result.unmapped })}
               </p>
             )}
+            {inMemory && (
+              <div className="space-y-1 pt-1">
+                <p className="text-xs text-marker-warning">{t('zip.exportsNotSaved')}</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void downloadExportFolder(result.folder)}
+                >
+                  <Download /> {t('zip.downloadExports')}
+                </Button>
+              </div>
+            )}
             {result.failures.length > 0 && (
               <div className="text-xs text-destructive" data-testid="export-failures">
                 <p>{t('export.failures', { count: result.failures.length })}</p>
@@ -330,7 +358,7 @@ export function ExportDialog() {
           <Button variant="outline" onClick={() => close(false)} disabled={busy}>
             {t('common.close')}
           </Button>
-          <Button onClick={() => void run()} disabled={busy || nothing}>
+          <Button onClick={() => void run()} disabled={busy || nothing || blocked}>
             {busy ? <Loader2 className="animate-spin" /> : <FolderOutput />}
             {busy
               ? t('export.running')

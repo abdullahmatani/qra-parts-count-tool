@@ -51,6 +51,15 @@ describe('autosave (PRJ-04, PRJ-05, NFR-05)', () => {
     vi.useRealTimers();
   });
 
+  it('writes nothing, not even the opening snapshot, for a read-only project (PRJ-07)', async () => {
+    controller.stop();
+    const before = dir.tree();
+    useProjectStore.getState().setReadOnly(true);
+    controller.start(dir);
+    await advance(5000);
+    expect(dir.tree()).toEqual(before);
+  });
+
   it('saves within 2 s of the last edit', async () => {
     edit('First edit');
     expect(useWorkspaceStore.getState().saveStatus).toBe('pending');

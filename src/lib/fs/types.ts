@@ -1,7 +1,7 @@
 /**
  * The subset of the File System Access API the app uses. Native handles from
  * `showDirectoryPicker()` and OPFS satisfy these interfaces, and so does the
- * in-memory implementation used by unit tests (src/test/memory-fs.ts).
+ * in-memory implementation (src/lib/fs/memory.ts).
  */
 
 export type WriteData = string | ArrayBuffer | ArrayBufferView | Blob;

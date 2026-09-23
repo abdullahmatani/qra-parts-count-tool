@@ -15,11 +15,17 @@ export interface WorkspaceState {
   saveError: string | null;
   /** Integrity warnings found when the project was opened. */
   openWarnings: string[];
+  /**
+   * PRJ-08: the project was opened from a .zip into memory (browsers without
+   * folder access). Nothing is saved; exports are offered as a download.
+   */
+  inMemory: boolean;
 
   setDirectory: (name: string | null) => void;
   setSaveStatus: (status: SaveStatus, error?: string | null) => void;
   markSaved: (at: Date) => void;
   setOpenWarnings: (warnings: string[]) => void;
+  setInMemory: (inMemory: boolean) => void;
   reset: () => void;
 }
 
@@ -29,11 +35,13 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
   lastSavedAt: null,
   saveError: null,
   openWarnings: [],
+  inMemory: false,
 
   setDirectory: (directoryName) => set({ directoryName }),
   setSaveStatus: (saveStatus, saveError = null) => set({ saveStatus, saveError }),
   markSaved: (at) => set({ saveStatus: 'saved', lastSavedAt: at, saveError: null }),
   setOpenWarnings: (openWarnings) => set({ openWarnings }),
+  setInMemory: (inMemory) => set({ inMemory }),
   reset: () =>
     set({
       directoryName: null,
@@ -41,5 +49,6 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
       lastSavedAt: null,
       saveError: null,
       openWarnings: [],
+      inMemory: false,
     }),
 }));

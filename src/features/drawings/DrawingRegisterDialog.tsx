@@ -6,7 +6,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import { ExternalLink, Plus, Search, Trash2 } from 'lucide-react';
+import { ExternalLink, FileUp, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -43,6 +43,7 @@ import {
 } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
 import { openDrawingImport } from './import-actions';
+import { ReplaceRevisionDialog } from './ReplaceRevisionDialog';
 
 type TextField = 'drawingNo' | 'sheet' | 'title' | 'revision';
 
@@ -114,6 +115,7 @@ export function DrawingRegisterDialog() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState('');
   const [removing, setRemoving] = useState<Drawing | null>(null);
+  const [replacing, setReplacing] = useState<Drawing | null>(null);
 
   const rows = useMemo<Row[]>(
     () =>
@@ -281,6 +283,16 @@ export function DrawingRegisterDialog() {
               size="icon-sm"
               variant="ghost"
               disabled={readOnly}
+              aria-label={`${t('register.replace')} ${drawingDisplayName(row.original.drawing)}`}
+              title={t('register.replace')}
+              onClick={() => setReplacing(row.original.drawing)}
+            >
+              <FileUp />
+            </Button>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              disabled={readOnly}
               aria-label={`${t('register.remove')} ${drawingDisplayName(row.original.drawing)}`}
               title={t('register.remove')}
               onClick={() => setRemoving(row.original.drawing)}
@@ -289,7 +301,7 @@ export function DrawingRegisterDialog() {
             </Button>
           </span>
         ),
-        size: 76,
+        size: 108,
       },
     ],
     [t, readOnly, openDrawing, openDialog],
@@ -346,6 +358,9 @@ export function DrawingRegisterDialog() {
           />
         </DialogContent>
       </Dialog>
+      {replacing && (
+        <ReplaceRevisionDialog drawing={replacing} onClose={() => setReplacing(null)} />
+      )}
       <AlertDialog open={removing !== null} onOpenChange={(next) => !next && setRemoving(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

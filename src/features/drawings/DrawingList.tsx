@@ -1,4 +1,4 @@
-import { FileImage, FileText, Plus, Search } from 'lucide-react';
+import { AlertTriangle, FileImage, FileText, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -99,6 +99,13 @@ export function DrawingList({ onImport }: DrawingListProps) {
                 <span className="min-w-0 flex-1 truncate font-mono text-xs">
                   {drawingDisplayName(drawing)}
                 </span>
+                {drawing.needsReview && (
+                  <AlertTriangle
+                    className="size-3.5 shrink-0 text-marker-warning"
+                    aria-label={t('drawings.review.flag')}
+                    data-testid="drawing-needs-review"
+                  />
+                )}
                 {drawing.revision && (
                   <span className="text-xs text-muted-foreground">{drawing.revision}</span>
                 )}

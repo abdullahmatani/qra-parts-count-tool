@@ -73,7 +73,13 @@
     "searchPlaceholder": "Search drawings",
     "empty": "No drawings yet.",
     "import": "Import drawings",
-    "noMatch": "No drawings match."
+    "noMatch": "No drawings match.",
+    "review": {
+      "flag": "Needs review: new revision with another sheet size",
+      "banner": "This drawing was replaced by a revision with another sheet size. Check that the markers still sit on their symbols, then mark it as reviewed.",
+      "done": "Mark as reviewed",
+      "history": "mark {{drawing}} as reviewed"
+    }
   },
   "segments": {
     "title": "Segments",
@@ -167,7 +173,8 @@
   "canvas": {
     "noDrawing": "Open a drawing from the list on the left.",
     "noDrawings": "Import PDF, DWG or DXF drawings to begin.",
-    "closeTab": "Close {{name}}"
+    "closeTab": "Close {{name}}",
+    "split": "Split view: two drawings side by side"
   },
   "panels": {
     "segment": "Segment",
@@ -383,7 +390,8 @@
     "count_other": "{{count}} drawings",
     "historyEdit": "Edit drawing",
     "historyRemove": "Remove drawing",
-    "cadPlotHint": "PDF plot of a DWG drawing (DRW-10)"
+    "cadPlotHint": "PDF plot of a DWG drawing (DRW-10)",
+    "replace": "Replace with a new revision"
   },
   "spaces": {
     "title": "Choose drawings to import",
@@ -508,7 +516,8 @@
     "middleDrag": "Middle-button drag",
     "space": "Space",
     "types": "Equipment types (sets the selected item and the next one)",
-    "back": "Back after following a drawing link"
+    "back": "Back after following a drawing link",
+    "find": "Find text on the drawing"
   },
   "count": {
     "history": {
@@ -847,7 +856,9 @@
         "duplicateTags_one": "{{count}} tag appears more than once",
         "duplicateTags_other": "{{count}} tags appear more than once",
         "unmappedCounts_one": "{{count}} count has no cell in the template",
-        "unmappedCounts_other": "{{count}} counts have no cell in the template"
+        "unmappedCounts_other": "{{count}} counts have no cell in the template",
+        "drawingsToReview_one": "{{count}} drawing has a new revision with another sheet size: check its markers",
+        "drawingsToReview_other": "{{count}} drawings have a new revision with another sheet size: check their markers"
       }
     }
   },
@@ -916,5 +927,63 @@
     "preview": "Preview of {{sheet}}",
     "mapped": "Mapped: {{what}}",
     "history": "edit template mapping"
+  },
+  "revision": {
+    "title": "New revision of {{drawing}}",
+    "description": "Choose the file of the new revision. The drawing keeps its markers, items, segment links and drawing links; the old file stays in drawings/.",
+    "file": "Revision file",
+    "choose": "Choose file…",
+    "reading": "Reading {{file}}…",
+    "page": "Page",
+    "layout": "Layout",
+    "revision": "New revision",
+    "current": "Current: rev {{revision}}, {{size}}",
+    "next": "New: {{size}}",
+    "sizeChanged": "The sheet size changes, so markers may no longer sit on their symbols. The drawing will be flagged for review until you have checked them.",
+    "sameSize": "Same sheet size: markers stay where they are.",
+    "sameFile": "This is the file the drawing already uses.",
+    "replace": "Replace",
+    "history": "replace {{drawing}} with rev {{revision}}",
+    "done": "{{drawing}} now shows rev {{revision}}.",
+    "failed": "The revision could not be read."
+  },
+  "search": {
+    "label": "Find text on the drawing",
+    "placeholder": "Tag or line number, e.g. HV-1001",
+    "open": "Find text (Ctrl+F)",
+    "previous": "Previous match",
+    "next": "Next match",
+    "close": "Close search",
+    "searching": "Searching…",
+    "position": "{{index}} of {{count}}",
+    "noMatches": "No matches on this drawing",
+    "allDrawings": "Search all drawings",
+    "progress": "Searching drawing {{done}} of {{total}}…",
+    "found_one": "Found on {{count}} drawing",
+    "found_other": "Found on {{count}} drawings",
+    "hits_one": "{{count}} match",
+    "hits_other": "{{count}} matches"
+  },
+  "zip": {
+    "menu": "Export project as .zip",
+    "exporting": "Packing the project…",
+    "exported": "Project .zip saved to your downloads.",
+    "exportFailed": "The project .zip could not be made.",
+    "open": "Open a project .zip",
+    "openDetail": "A study sent as a single .zip, e.g. for checking.",
+    "openReadOnly": "Open a project .zip (read-only)",
+    "openReadOnlyDetail": "This browser cannot write to folders: view, check and export a project sent as a .zip.",
+    "dialogTitle": "Open a project .zip",
+    "dialogDescription": "The project is unpacked into an empty folder you choose, then opened there. The .zip itself is not changed.",
+    "dialogDescriptionReadOnly": "This browser cannot write to folders, so the project opens read-only in the browser tab. Nothing is saved; exports can be downloaded as a .zip.",
+    "chooseZip": "Choose .zip…",
+    "chooseFolder": "Choose an empty folder and open",
+    "openInBrowser": "Open read-only",
+    "reading": "Opening {{file}}…",
+    "failed": "The .zip could not be opened",
+    "openedReadOnly": "{{file}} is open read-only. Nothing is saved; download exports from the Export dialog.",
+    "downloadExports": "Download exports (.zip)",
+    "exportsNotSaved": "This project is open from a .zip: download the exports to keep them.",
+    "readOnlyExport": "Exports are written by the tab or window that has this project open for editing."
   }
 }

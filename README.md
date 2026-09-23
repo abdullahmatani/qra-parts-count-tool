@@ -286,10 +286,10 @@ The selection is documented in [`docs/spikes/dwg-renderer.md`](docs/spikes/dwg-r
 
 ## Browser support
 
-| Browser                                                    | Support                                                                          |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Microsoft Edge, Google Chrome (last two releases, desktop) | Full read/write access to a local working directory                              |
-| Firefox, Safari                                            | Read-only fallback: open a project from a `.zip`, export a `.zip` (roadmap v1.2) |
+| Browser                                                    | Support                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Microsoft Edge, Google Chrome (last two releases, desktop) | Full read/write access to a local working directory                            |
+| Firefox, Safari                                            | Read-only fallback: open a project from a `.zip`, download exports as a `.zip` |
 
 The app is designed for desktop use, with a minimum screen of 1366 × 768 and mouse or pen input.
 

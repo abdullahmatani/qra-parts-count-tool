@@ -1,3 +1,5 @@
+import { ReviewBanner } from '@/features/drawings/ReviewBanner';
+import { SearchHitsLayer } from '@/features/search/SearchHitsLayer';
 import { DrawingViewer } from '@/features/viewer/DrawingViewer';
 import { useMarkupTools } from './useMarkupTools';
 
@@ -5,11 +7,19 @@ import { useMarkupTools } from './useMarkupTools';
 export function MarkupViewer({ drawingId }: { drawingId: string }) {
   const tools = useMarkupTools(drawingId);
   return (
-    <DrawingViewer
-      drawingId={drawingId}
-      overlay={tools.overlay}
-      screenOverlay={tools.screenOverlay}
-      interaction={tools.interaction}
-    />
+    <>
+      <DrawingViewer
+        drawingId={drawingId}
+        overlay={(context) => (
+          <>
+            <SearchHitsLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
+            {tools.overlay(context)}
+          </>
+        )}
+        screenOverlay={tools.screenOverlay}
+        interaction={tools.interaction}
+      />
+      <ReviewBanner drawingId={drawingId} />
+    </>
   );
 }

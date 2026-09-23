@@ -1,4 +1,5 @@
 import type { Size2D } from '@/domain/schema/types';
+import type { TextBox } from '@/domain/text-search';
 import type { DrawingSource, RenderRequest, RenderTask } from '../drawing-source';
 import { BASE_SCALE, viewMatrix } from '../view-transform';
 import { openPdf, type PDFDocumentProxy, type PDFPageProxy } from './pdfjs';
@@ -62,13 +63,45 @@ export class PdfPageSource implements DrawingSource {
     return { promise: task.promise, cancel: () => task.cancel() };
   }
 
+  /**
+   * DRW-08: the page's text runs as boxes in drawing coordinates. Each run's
+   * text-space box (advance × font size) is mapped through the page transform
+   * and viewport, so rotated text and rotated pages get the right box.
+   */
+  async textBoxes(): Promise<TextBox[]> {
+    const viewport = this.page.getViewport({ scale: 1 });
+    const content = await this.page.getTextContent();
+    const boxes: TextBox[] = [];
+    for (const item of content.items) {
+      if (!('str' in item) || !item.str.trim()) continue;
+      const [a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = item.transform as number[];
+      const along = Math.hypot(a, b) || 1;
+      const up = Math.hypot(c, d) || 1;
+      const width = item.width || item.str.length * up * 0.5;
+      const height = item.height || up;
+      const corners = [
+        [e, f],
+        [e + (a / along) * width, f + (b / along) * width],
+        [e + (c / up) * height, f + (d / up) * height],
+        [e + (a / along) * width + (c / up) * height, f + (b / along) * width + (d / up) * height],
+      ].map(([x, y]) => viewport.convertToViewportPoint(x!, y!) as [number, number]);
+      const xs = corners.map((p) => p[0]);
+      const ys = corners.map((p) => p[1]);
+      const x = Math.min(...xs);
+      const y = Math.min(...ys);
+      boxes.push({ text: item.str, x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y });
+    }
+    return boxes;
+  }
+
   prepare(): void {
     // A tiny render makes PDF.js parse the page and keep its operator list.
     this.renderPreview(64).catch(() => {});
   }
 
-  dispose(): void {
-    this.page.cleanup();
+  /** `cleanup: false` keeps the parsed page for a viewer that shows the same page. */
+  dispose(cleanup = true): void {
+    if (cleanup) this.page.cleanup();
     this.release();
   }
 }

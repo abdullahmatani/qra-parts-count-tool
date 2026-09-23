@@ -49,6 +49,8 @@ export interface BeginSessionOptions {
   remember?: boolean;
   /** Held for the session and released when it ends (PRJ-07). */
   lock?: ProjectLock | null;
+  /** PRJ-08: opened from a .zip into memory; nothing is saved. */
+  inMemory?: boolean;
 }
 
 export async function beginSession(
@@ -64,6 +66,7 @@ export async function beginSession(
   workspace.reset();
   workspace.setDirectory(dir.name);
   workspace.setOpenWarnings(options.warnings ?? []);
+  workspace.setInMemory(options.inMemory ?? false);
   if (options.savedAt) workspace.markSaved(options.savedAt);
   for (const hook of hooks) hook.onBegin?.(dir);
   if (options.remember !== false) {

@@ -1,4 +1,4 @@
-import { FolderOpen, FolderPlus, GraduationCap, ShieldCheck } from 'lucide-react';
+import { FileArchive, FolderOpen, FolderPlus, GraduationCap, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ export interface StartScreenProps {
   onNewProject?: () => void;
   onOpenProject?: () => void;
   onOpenSample?: () => void;
+  onOpenZip?: () => void;
   recentProjects?: ReactNode;
 }
 
@@ -19,6 +20,7 @@ export function StartScreen({
   onNewProject,
   onOpenProject,
   onOpenSample,
+  onOpenZip,
   recentProjects,
 }: StartScreenProps) {
   const { t } = useTranslation();
@@ -89,6 +91,24 @@ export function StartScreen({
               <span className="font-medium">{t('start.sample')}</span>
               <span className="text-sm font-normal text-muted-foreground">
                 {t('start.sampleDetail')}
+              </span>
+            </span>
+          </Button>
+        )}
+
+        {onOpenZip && (
+          <Button
+            variant="ghost"
+            className="mt-1 h-auto w-full justify-start gap-3 p-3 text-start whitespace-normal"
+            onClick={onOpenZip}
+          >
+            <FileArchive className="shrink-0" />
+            <span className="flex flex-col items-start">
+              <span className="font-medium">
+                {supported ? t('zip.open') : t('zip.openReadOnly')}
+              </span>
+              <span className="text-sm font-normal text-muted-foreground">
+                {supported ? t('zip.openDetail') : t('zip.openReadOnlyDetail')}
               </span>
             </span>
           </Button>

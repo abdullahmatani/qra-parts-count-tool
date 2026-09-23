@@ -10,7 +10,8 @@ a folder on your computer and are never uploaded anywhere.
 ## 1. Before you start
 
 - Use a current **Microsoft Edge** or **Google Chrome** on a desktop or laptop (screen at least
-  1366 × 768). These browsers can read and write a local folder. Firefox and Safari cannot yet.
+  1366 × 768). These browsers can read and write a local folder. In Firefox and Safari, which
+  cannot, a project sent as a `.zip` opens read-only (section 11).
 - Open the app once while online. After that it works with no network: the header shows
   **Offline ready** when everything is cached.
 - Make an empty folder for each study, for example on a project share. This is the **working
@@ -37,6 +38,8 @@ On the start screen:
   each flange face). These two rules are deliberate choices for each study, so there is no default.
 - **Open project** asks for a folder that already holds `project.qrapc.json`.
 - **Recent projects** reopens a folder you used before (the browser may ask you to confirm access).
+- **Open a project .zip** unpacks a study sent as a single `.zip` into an empty folder and opens
+  it there.
 - **Try the sample project** creates a small, finished study (two PEFS sheets, two segments, a
   count, notes and one open query) in an empty folder you choose. It is the quickest way to see
   every feature before starting real work.
@@ -50,7 +53,7 @@ snapshots are kept in `.backup/` (restore one from **Project › Backups**). If 
 computer crashes, at most the last two seconds of work are lost.
 
 If the same project is open in another tab, the app opens it **read-only** so two tabs cannot
-overwrite each other.
+overwrite each other. When the other tab closes the project, **Reopen for editing** takes over.
 
 ## 3. Import drawings
 
@@ -65,6 +68,13 @@ The app reads the drawing number, title, sheet and revision from the title block
 and correct them in **Project › Drawing register**: they appear in the count, the stamps and the
 export file names.
 
+**New revisions.** When a drawing is reissued, use **Replace with a new revision** on its row in the
+drawing register and choose the new file (and page or layout). The drawing keeps its markers, items,
+segments and drawing links; the old file stays in `drawings/`. If the new sheet has another size,
+markers may no longer sit on their symbols, so the drawing is flagged: it shows a warning in the
+drawing list and a banner on the sheet until you check the markers and choose **Mark as reviewed**.
+The pre-export check also lists it.
+
 ## 4. Viewing drawings
 
 Click a drawing in the list to open it in a tab.
@@ -76,6 +86,13 @@ Click a drawing in the list to open it in a tab.
   them.
 - **DWG/DXF colours**: Settings › General › DWG and DXF drawings switches between monochrome (like a
   plot) and CAD colours.
+- **Find text** (`Ctrl+F`, or the search button in the toolbar): type a tag or line number. Case,
+  spaces and dashes are ignored, so `hv 1001` finds `HV-1001`. Matches are highlighted; `Enter` and
+  `Shift+Enter` step through them. **Search all drawings** lists every drawing with a match; click
+  one to open it at its first match.
+- **Split view**: with two or more drawings open, the split button at the end of the tab bar shows
+  two drawings side by side, for example at a match line. The pane you work in is the active
+  drawing; a tab opens in that pane.
 
 ## 5. Segments and ESDVs
 
@@ -218,14 +235,19 @@ was exported, from which revision of the project, and which warnings were accept
 - The checker opens the same folder (or a copy), reviews the drawings, and signs their notes with
   their own initials. Segment status (**Not started**, **In progress**, **Counted**, **Checked**) and
   **Counted by** / **Checked by** show where each segment stands.
-- To archive or send the study, zip the working directory. `cache/` can be left out.
+- To archive or send the study, use **Project › Export project as .zip**: one file with the project,
+  drawings, template and exports (caches and backups are left out). The recipient opens it with
+  **Open a project .zip** on the start screen.
+- In **Firefox or Safari**, which cannot write to folders, **Open a project .zip (read-only)** opens
+  the study in the browser tab: drawings, markers, counts and notes can be checked and exports run.
+  Nothing is saved, so download the exports with **Download exports (.zip)** in the Export dialog.
 
 ## Troubleshooting
 
 | Symptom                                                | What to do                                                                                    |
 | ------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| "This browser cannot write to local folders"           | Use a current Edge or Chrome.                                                                 |
-| The project opens read-only                            | It is open in another tab or window. Close it there, then reload.                             |
+| "This browser cannot write to local folders"           | Use a current Edge or Chrome, or open a project .zip read-only.                               |
+| The project opens read-only                            | It is open in another tab or window. Close it there, then choose **Reopen for editing**.      |
 | "The drawing file is missing from the drawings folder" | The file in `drawings/` was moved or renamed. Put it back, or re-import it.                   |
 | A DWG will not import                                  | Import a DXF saved from the same drawing, or a PDF plot of it.                                |
 | A PDF is reported as encrypted on export               | Ask for an unprotected copy of the drawing; password-protected PDFs cannot be annotated.      |

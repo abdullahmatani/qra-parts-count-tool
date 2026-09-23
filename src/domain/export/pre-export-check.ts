@@ -12,6 +12,7 @@ export type CheckKind =
   | 'emptySegments'
   | 'segmentsWithoutDrawings'
   | 'duplicateTags'
+  | 'drawingsToReview'
   | 'unmappedCounts';
 
 export interface CheckResult {
@@ -21,6 +22,8 @@ export interface CheckResult {
   markerIds: string[];
   /** Segments concerned (empty or unlinked segments). */
   segmentIds: string[];
+  /** Drawings concerned (replaced by a revision with another sheet size). */
+  drawingIds?: string[];
   /** Short names for the list: segment labels or tags. */
   names: string[];
 }
@@ -31,7 +34,9 @@ export interface CheckExtras {
 }
 
 export function preExportCheck(
-  doc: CountDoc & Pick<ProjectDoc, 'segmentOrder'>,
+  doc: CountDoc &
+    Pick<ProjectDoc, 'segmentOrder'> &
+    Partial<Pick<ProjectDoc, 'drawings' | 'drawingOrder'>>,
   entries: readonly CountEntry[],
   extras: CheckExtras = {},
 ): CheckResult[] {
@@ -83,6 +88,18 @@ export function preExportCheck(
     markerIds: duplicates.flatMap((d) => d.markerIds),
     segmentIds: [],
     names: duplicates.map((d) => d.tag),
+  });
+
+  const toReview = (doc.drawingOrder ?? [])
+    .map((id) => doc.drawings?.[id])
+    .filter((d) => d?.needsReview);
+  results.push({
+    kind: 'drawingsToReview',
+    count: toReview.length,
+    markerIds: [],
+    segmentIds: [],
+    drawingIds: toReview.map((d) => d!.id),
+    names: toReview.map((d) => d!.drawingNo || d!.fileName),
   });
 
   if (extras.unmappedCounts) {

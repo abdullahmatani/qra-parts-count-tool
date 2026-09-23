@@ -78,7 +78,7 @@ export function defaultSpaces(spaces: readonly SpaceInfo[]): string[] {
  * Copies a file into drawings/, reusing an identical copy already there (for
  * example after an import was undone) instead of creating a duplicate.
  */
-async function copyIntoDrawings(
+export async function copyIntoDrawings(
   dir: FsDirHandle,
   fileName: string,
   bytes: ArrayBuffer,
@@ -103,7 +103,7 @@ async function copyIntoDrawings(
 }
 
 /** Title-block text of a CAD display list, in the TextItem form the heuristics use. */
-function cadTextItems(list: DisplayList): TextItem[] {
+export function cadTextItems(list: DisplayList): TextItem[] {
   return displayListText(list)
     .filter((item) => Math.abs(item.angle) < 5)
     .map(({ text, x, y, size, width }) => ({ text, x, y, size, width }));

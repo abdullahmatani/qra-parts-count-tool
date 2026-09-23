@@ -1,4 +1,4 @@
-import { Link2, Redo2, Tag, Undo2, Unlink } from 'lucide-react';
+import { Link2, Redo2, Search, Tag, Undo2, Unlink } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { segmentAppearance } from '@/domain/palette';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore, type Tool } from '@/store/ui-store';
 import { MarkerFilterMenu } from '@/features/markup/MarkerFilters';
+import { useSearchStore } from '@/features/search/search-store';
 import { TOOLS } from './tools';
 
 /**
@@ -133,6 +134,15 @@ export function Toolbar() {
         {showLinks ? <Link2 /> : <Unlink />}
       </Toggle>
       <MarkerFilterMenu />
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t('search.open')}
+        title={t('search.open')}
+        onClick={() => useSearchStore.getState().openFind()}
+      >
+        <Search />
+      </Button>
 
       <div
         className="ms-auto flex min-w-0 items-center gap-2 ps-2 text-xs whitespace-nowrap text-muted-foreground"
