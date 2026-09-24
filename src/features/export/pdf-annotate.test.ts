@@ -5,7 +5,15 @@
  * marker was placed on screen, whatever the page's crop box and /Rotate.
  */
 import { afterAll, describe, expect, it } from 'vitest';
-import { PDFDocument, degrees, pushGraphicsState, concatTransformationMatrix } from 'pdf-lib';
+import {
+  PDFDocument,
+  concatTransformationMatrix,
+  decodePDFRawStream,
+  degrees,
+  pushGraphicsState,
+  type PDFArray,
+  type PDFRawStream,
+} from 'pdf-lib';
 import type * as PdfjsModule from 'pdfjs-dist';
 import type { DisplayList } from '@/features/cad/display-list';
 import {
@@ -259,4 +267,45 @@ describe('addCadPage', () => {
     expect(paints).toContain(pdfjs.OPS.stroke);
     expect(fnArray).not.toContain(pdfjs.OPS.paintImageXObject);
   });
+
+  it('draws a large drawing, with more operators than a call takes as arguments', async () => {
+    const count = 200_000;
+    const paths = Array.from({ length: count }, (_, i) => {
+      const [x, y] = [(i % 1000) + 0.12345, Math.floor(i / 1000) + 0.5];
+      return [x, y, x + 0.5, y, x + 0.5, y + 0.5];
+    });
+    const large: DisplayList = {
+      ...list,
+      groups: [
+        {
+          clip: null,
+          fills: [],
+          texts: [],
+          strokes: [{ color: 0, width: 0.25, dash: null, paths }],
+        },
+      ],
+    };
+    const out = await PDFDocument.create();
+    addCadPage(out, large, await embedFonts(out), 'color', overlay('HV-9', 300, 200));
+    const bytes = await out.save({ useObjectStreams: true });
+
+    const page = await (await readBack(bytes)).getPage(1);
+    const { fnArray, argsArray } = await page.getOperatorList();
+    const strokes = fnArray.filter(
+      (fn, i) =>
+        fn === pdfjs.OPS.constructPath && (argsArray[i] as number[])[0] === pdfjs.OPS.stroke,
+    );
+    // Every path, plus the overlay's circle and rectangle outlines and panels.
+    expect(strokes.length).toBeGreaterThanOrEqual(count);
+    const content = await page.getTextContent();
+    expect(content.items.map((item) => ('str' in item ? item.str : ''))).toContain('HV-9');
+
+    // The drawing's own stream comes first, coordinates to a thousandth of a point.
+    const saved = await PDFDocument.load(bytes);
+    const streams = saved.getPage(0).node.Contents() as PDFArray;
+    const cad = saved.context.lookup(streams.get(0)) as PDFRawStream;
+    expect(new TextDecoder().decode(decodePDFRawStream(cad).decode())).toContain(
+      '0.123 0.5 m\n0.623 0.5 l\n0.623 1 l\nS\n',
+    );
+  }, 30_000);
 });
