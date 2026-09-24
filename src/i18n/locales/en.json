@@ -316,6 +316,11 @@
       "invalid": "The project file failed validation.",
       "permission": "Access to the folder \"{{name}}\" was not granted.",
       "unexpected": "The project could not be opened."
+    },
+    "folderPicker": {
+      "busy": "The folder picker is already open. Choose a folder there, or cancel it, and try again.",
+      "failed": "The folder picker could not be used.",
+      "failedHint": "Open the app in Google Chrome or Microsoft Edge, and check that the browser is allowed to access files."
     }
   },
   "backups": {
