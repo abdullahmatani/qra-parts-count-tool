@@ -122,6 +122,15 @@ function geometryPath(ops: Ops, g: MarkerGeometry): void {
   }
 }
 
+/**
+ * Adds operators to a page as a content stream of their own. `pushOperators`
+ * takes them as arguments, which overflows the stack when there are many.
+ */
+function addContent(page: PDFPage, ops: Ops): void {
+  const { context } = page.doc;
+  page.node.addContentStream(context.register(PDFContentStream.of(context.obj({}), ops)));
+}
+
 function alphaState(page: PDFPage, fillAlpha: number, strokeAlpha = 1): PDFName {
   return page.node.newExtGState(
     'GS',
@@ -389,7 +398,7 @@ export function drawOverlay(
     });
   }
   ops.push(popGraphicsState());
-  page.pushOperators(...ops);
+  addContent(page, ops);
 }
 
 function panel(ops: Ops, page: PDFPage, x: number, y: number, w: number, h: number, k: number) {
@@ -454,7 +463,62 @@ function cadColour(rgb: number, mode: CadColorMode): [number, number, number] {
   return colour(displayColor(rgb, mode));
 }
 
-function textRunOps(ops: Ops, fonts: Fonts, run: TextRun, mode: CadColorMode): void {
+/** A coordinate to a thousandth of a point: far finer than print, and half the digits. */
+function coordinate(v: number): string {
+  const rounded = Math.round(v * 1000) / 1000;
+  return rounded === 0 ? '0' : String(rounded);
+}
+
+const encoder = new TextEncoder();
+
+/**
+ * CAD page content, written straight to text. A large drawing has millions of
+ * points, and a pdf-lib operator object for each would exhaust the worker's
+ * memory.
+ */
+class CadContent {
+  private readonly chunks: Uint8Array[] = [];
+  private text = '';
+
+  push(...ops: PDFOperator[]): void {
+    for (const op of ops) this.write(`${op.toString()}\n`);
+  }
+
+  /** A path through flat coordinates [x0, y0, x1, y1, …]. */
+  path(coords: readonly number[], close: boolean): void {
+    let text = '';
+    for (let i = 0; i + 1 < coords.length; i += 2) {
+      text += `${coordinate(coords[i]!)} ${coordinate(coords[i + 1]!)} ${i === 0 ? 'm' : 'l'}\n`;
+    }
+    this.write(close ? `${text}h\n` : text);
+  }
+
+  private write(text: string): void {
+    this.text += text;
+    if (this.text.length >= 1 << 16) this.flush();
+  }
+
+  private flush(): void {
+    // Operators, numbers, names and hex strings are all ASCII: one byte a character.
+    this.chunks.push(encoder.encode(this.text));
+    this.text = '';
+  }
+
+  /** Adds the content to the page as one compressed stream. */
+  addTo(page: PDFPage): void {
+    this.flush();
+    const bytes = new Uint8Array(this.chunks.reduce((n, chunk) => n + chunk.length, 0));
+    let offset = 0;
+    for (const chunk of this.chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.length;
+    }
+    const { context } = page.doc;
+    page.node.addContentStream(context.register(context.flateStream(bytes)));
+  }
+}
+
+function textRunOps(ops: CadContent, fonts: Fonts, run: TextRun, mode: CadColorMode): void {
   const text = encodable(fonts.regular, run.text, fonts.cache);
   if (!text.trim()) return;
   const width = fonts.regular.widthOfTextAtSize(text, run.size);
@@ -489,22 +553,20 @@ export function addCadPage(
 ): PDFPage {
   const page = out.addPage([list.width, list.height]);
   registerFonts(page, fonts);
-  const ops: Ops = [
+  const ops = new CadContent();
+  ops.push(
     pushGraphicsState(),
     // Display lists are in points with y down.
     concatTransformationMatrix(1, 0, 0, -1, 0, list.height),
     setLineJoin(LineJoinStyle.Round),
     setLineCap(LineCapStyle.Round),
-  ];
+  );
   const alphaStates = new Map<number, PDFName>();
   for (const group of list.groups) {
     ops.push(pushGraphicsState());
     if (group.clip && group.clip.length >= 6) {
-      group.clip.forEach((v, i) => {
-        if (i % 2 === 0)
-          ops.push(i === 0 ? moveTo(v, group.clip![i + 1]!) : lineTo(v, group.clip![i + 1]!));
-      });
-      ops.push(closePath(), clip(), endPath());
+      ops.path(group.clip, true);
+      ops.push(clip(), endPath());
     }
     for (const batch of group.fills) {
       let state = alphaStates.get(batch.alpha);
@@ -514,12 +576,7 @@ export function addCadPage(
       }
       ops.push(setGraphicsState(state), setFillingRgbColor(...cadColour(batch.color, mode)));
       for (const shape of batch.shapes) {
-        for (const loop of shape) {
-          loop.forEach((v, i) => {
-            if (i % 2 === 0) ops.push(i === 0 ? moveTo(v, loop[i + 1]!) : lineTo(v, loop[i + 1]!));
-          });
-          ops.push(closePath());
-        }
+        for (const loop of shape) ops.path(loop, true);
         ops.push(PDFOperator.of(PDFOperatorNames.FillEvenOdd));
       }
     }
@@ -531,9 +588,7 @@ export function addCadPage(
       );
       for (const path of batch.paths) {
         if (path.length < 4) continue;
-        path.forEach((v, i) => {
-          if (i % 2 === 0) ops.push(i === 0 ? moveTo(v, path[i + 1]!) : lineTo(v, path[i + 1]!));
-        });
+        ops.path(path, false);
         ops.push(stroke());
       }
     }
@@ -542,7 +597,7 @@ export function addCadPage(
     ops.push(popGraphicsState());
   }
   ops.push(popGraphicsState());
-  page.pushOperators(...ops);
+  ops.addTo(page);
   drawOverlay(page, fonts, overlay, [1, 0, 0, -1, 0, list.height], {
     width: list.width,
     height: list.height,
