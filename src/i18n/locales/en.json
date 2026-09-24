@@ -1007,5 +1007,29 @@
     "none": "No layers with content.",
     "unnamed": "(no layer)",
     "hint": "Hidden layers are not drawn in this session. Exports always show every layer."
+  },
+  "assist": {
+    "find": "Find similar symbols",
+    "findHint": "Searches this drawing for symbols that look like the one this marker rings. Nothing is counted until you accept a suggestion.",
+    "title": "Similar symbols",
+    "searching": "Searching the drawing…",
+    "position": "{{index}} of {{count}}",
+    "score": "{{score}}% similar",
+    "similarity": "Similarity",
+    "atLeast": "{{score}}% or more",
+    "accept": "Accept",
+    "reject": "Reject",
+    "acceptAll_one": "Accept {{count}}",
+    "acceptAll_other": "Accept all {{count}}",
+    "previous": "Previous suggestion",
+    "next": "Next suggestion",
+    "close": "Close suggestions",
+    "none": "No similar symbols found. Try a lower similarity.",
+    "history_one": "add {{count}} suggested marker",
+    "history_other": "add {{count}} suggested markers",
+    "errors": {
+      "render": "The drawing could not be rendered for matching.",
+      "tooSmall": "The marker is too small on this sheet to match. Ring the symbol with a larger circle and try again."
+    }
   }
 }

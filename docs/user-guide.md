@@ -164,6 +164,15 @@ mappings keep working.
    (type, actuation and size) without opening the editor.
 5. Use the **Dashed highlight** tool (`D`) to outline an area or trace a line run (click points,
    `Enter` to finish). With pipe length counting on, a traced run can carry a pipe length item.
+6. To find the rest of a symbol, select one counted circle (say a gate valve) and click **Find
+   similar symbols** in the right pane. The drawing is searched for symbols that look like the
+   one the circle rings, at any quarter turn; symbols that already have a marker are skipped.
+   Candidates appear as dashed violet rings, and a bar at the top of the drawing steps through
+   them: **Accept** turns the one in focus into a marker with the example's type, actuation and
+   size (in the active segment), **Reject** drops it, and **Accept all** takes every one shown.
+   The similarity setting (90 % down to 60 %) trades missed symbols against false ones. Nothing is
+   counted until you accept it; check the sizes of accepted items, as line sizes vary. It works
+   best on clean PDF and CAD drawings and on one symbol type at a time.
 
 Markers with a problem (not in a segment, missing type or size, duplicate tag) get an amber outline,
 and the status bar counts them; hover a marker to see what is missing. **Marker filters** in the

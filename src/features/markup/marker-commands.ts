@@ -19,7 +19,7 @@ import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { ProjectDoc } from '@/domain/model';
-import type { Marker, MarkerGeometry } from '@/domain/schema/types';
+import type { CircleGeometry, Marker, MarkerGeometry } from '@/domain/schema/types';
 import i18n from '@/i18n';
 import { newId } from '@/lib/ids';
 import { useProjectStore } from '@/store/project-store';
@@ -131,6 +131,39 @@ export function placeMarker(
   if (withItem && !stamp) ui.requestEdit(marker.id);
   else ui.setSelection([marker.id]);
   return marker.id;
+}
+
+/**
+ * Roadmap #60: markers for accepted symbol suggestions, each with a count item
+ * from `defaults`, in the active segment, as one undo step. Returns their ids.
+ */
+export function placeSuggestedMarkers(
+  drawingId: string,
+  geometries: readonly CircleGeometry[],
+  defaults: ItemDefaults,
+): string[] {
+  const doc = useProjectStore.getState().doc;
+  if (!doc?.drawings[drawingId] || geometries.length === 0) return [];
+  const activeSegmentId = useUiStore.getState().activeSegmentId;
+  const segmentId = activeSegmentId && doc.segments[activeSegmentId] ? activeSegmentId : null;
+  const markers: Marker[] = geometries.map((geometry) => ({
+    id: newId('mkr'),
+    drawingId,
+    segmentId,
+    shape: 'circle',
+    geometry,
+    style: { labelOffset: null },
+    esdv: null,
+  }));
+  const done = apply(t('assist.history', { count: markers.length }), (draft) => {
+    for (const marker of markers) {
+      addMarker(draft, marker);
+      addItem(draft, marker.id, defaults);
+    }
+  });
+  if (!done) return [];
+  useUiStore.getState().setSelection(markers.map((m) => m.id));
+  return markers.map((m) => m.id);
 }
 
 export function moveMarkerIds(ids: readonly string[], dx: number, dy: number): boolean {

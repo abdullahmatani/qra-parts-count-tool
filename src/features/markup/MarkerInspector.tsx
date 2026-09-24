@@ -1,4 +1,4 @@
-import { AlertTriangle, Plus, Scissors, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, ScanSearch, Scissors, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import { itemForMarker } from '@/domain/actions/items';
 import { itemsByMarker as indexItems } from '@/domain/markup/presentation';
 import { BulkItemEditor } from '@/features/count/BulkItemEditor';
 import { ItemEditor } from '@/features/count/ItemEditor';
+import { findSimilarSymbols } from '@/features/assist/find-similar';
 import { addItemCommand } from '@/features/count/item-commands';
 import { LinkEditor } from '@/features/links/LinkEditor';
 import { EsdvEditor } from '@/features/segments/EsdvEditor';
@@ -152,7 +153,9 @@ export function MarkerInspector() {
           {geometrySummary(first.geometry, t).map(([label, value]) => (
             <div key={label} className="contents">
               <dt>{label}</dt>
-              <dd className="font-mono text-foreground tabular-nums">{value}</dd>
+              <dd className="font-mono text-foreground tabular-nums">
+                <bdi dir="ltr">{value}</bdi>
+              </dd>
             </div>
           ))}
         </dl>
@@ -206,6 +209,18 @@ export function MarkerInspector() {
           disabled={readOnly}
         >
           <Scissors /> {t('markup.inspector.split')}
+        </Button>
+      )}
+      {markers.length === 1 && first.geometry.type === 'circle' && item?.equipmentTypeId && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start"
+          title={t('assist.findHint')}
+          onClick={() => void findSimilarSymbols(first.id)}
+          disabled={readOnly}
+        >
+          <ScanSearch /> {t('assist.find')}
         </Button>
       )}
       {warnings.map((warning) => (

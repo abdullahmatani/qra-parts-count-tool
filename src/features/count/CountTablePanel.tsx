@@ -92,7 +92,7 @@ function Table({ table }: { table: CountTable }) {
                   title={bin.label}
                   className="py-1 text-end font-medium"
                 >
-                  {shortBinLabel(bin)}
+                  <bdi dir="ltr">{shortBinLabel(bin)}</bdi>
                 </th>
               ))}
               <th scope="col" className="w-12 py-1 text-end font-semibold">
@@ -151,7 +151,7 @@ function Table({ table }: { table: CountTable }) {
             <tr className="border-b text-muted-foreground">
               {lengths.binSet.bins.map((bin) => (
                 <th key={bin.id} title={bin.label} className="py-1 text-end font-medium">
-                  {shortBinLabel(bin)}
+                  <bdi dir="ltr">{shortBinLabel(bin)}</bdi>
                 </th>
               ))}
               <th className="w-12 py-1 text-end font-semibold">{t('count.table.total')}</th>

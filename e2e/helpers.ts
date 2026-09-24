@@ -47,3 +47,18 @@ export async function openMenu(page: Page, item: string) {
   await page.getByRole('button', { name: 'Project', exact: true }).click();
   await page.getByRole('menuitem', { name: item }).click();
 }
+
+/** A point in drawing coordinates on the screen, through the viewer's current transform. */
+export async function toScreen(page: Page, x: number, y: number) {
+  const overlay = page.getByTestId('viewer-overlay');
+  const box = (await overlay.boundingBox())!;
+  const transform = (await overlay.locator('g').first().getAttribute('transform'))!;
+  const [a, b, c, d, e, f] = transform.match(/-?[\d.]+(e-?\d+)?/g)!.map(Number) as number[];
+  return { x: box.x + a! * x + c! * y + e!, y: box.y + b! * x + d! * y + f! };
+}
+
+/** Clicks a point given in drawing coordinates. */
+export async function clickDrawing(page: Page, x: number, y: number) {
+  const point = await toScreen(page, x, y);
+  await page.mouse.click(point.x, point.y);
+}

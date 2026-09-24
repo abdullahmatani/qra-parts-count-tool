@@ -5,6 +5,7 @@ import { drawingDisplayName } from '@/domain/drawings';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { SuggestionBar } from '@/features/assist/SuggestionBar';
 import { FindBar } from '@/features/search/FindBar';
 import { Toolbar } from './Toolbar';
 
@@ -84,6 +85,7 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
       )}
       <div className="relative flex min-h-0 flex-1 bg-canvas" data-testid="canvas-area">
         <FindBar />
+        <SuggestionBar />
         {split && renderDrawing && drawings?.[split.left] && drawings[split.right] ? (
           (['left', 'right'] as const).map((side) => {
             const drawing = drawings[split[side]]!;

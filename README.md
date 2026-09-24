@@ -45,7 +45,7 @@ or exports) ever leaves the browser.
 | Drawings      | Import PDF (one drawing per page), DWG, DXF and PDF plots; drawing register with editable metadata; replace a drawing with its next revision; pan, zoom, rotate, minimap; split view; find text (`Ctrl+F`); DWG/DXF layer toggles | DRW     |
 | Markup        | Circle and dashed-highlight markers stored in drawing coordinates; stamp mode; select, move, resize, copy/paste, box-select; labels, tooltips and filters                                                                         | ANN     |
 | Segments      | ESDV markers; isolatable segments with process data, colour and status; split, merge and reorder; many-to-many links to drawings; configurable ESDV boundary rule                                                                 | SEG     |
-| Parts count   | User-defined equipment library and bin sets, reusable as files; quick item entry and bulk edit; automatic size binning; live count tables; duplicate-tag check; pipe lengths                                                      | CNT     |
+| Parts count   | User-defined equipment library and bin sets, reusable as files; quick item entry and bulk edit; similar-symbol suggestions to accept or reject; automatic size binning; live count tables; duplicate-tag check; pipe lengths      | CNT     |
 | Notes         | Formatted segment notes with timestamps and author initials                                                                                                                                                                       | NTE     |
 | Drawing links | Hotspots that jump between drawings, with Back history, suggested from off-page connector text; never exported                                                                                                                    | LNK     |
 | Export        | Pre-export checks; populate the client's Excel template (four layout modes); annotated vector PDFs with legend and stamp; CSV item list; export log                                                                               | EXP     |
@@ -314,22 +314,22 @@ served over `https://` or `http://localhost`. Opening `index.html` as `file://` 
 
 Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is kept in that file.
 
-| Version | Theme                                           | Status  |
-| ------- | ----------------------------------------------- | ------- |
-| 0.1.0   | Foundation: project scaffold and offline shell  | Done    |
-| 0.2.0   | Working directory, project file and PDF viewing | Done    |
-| 0.3.0   | DWG support                                     | Done ¹  |
-| 0.4.0   | Markup engine                                   | Done    |
-| 0.5.0   | Isolatable segments                             | Done    |
-| 0.6.0   | Parts count                                     | Done    |
-| 0.7.0   | Segment notes and drawing links                 | Done    |
-| 0.8.0   | Excel template mapping and export               | Done ²  |
-| 0.9.0   | Annotated PDF export and pre-export checks      | Done    |
-| 1.0.0   | First production release                        | Done ³  |
-| 1.1.0   | Productivity features                           | Done    |
-| 1.2.0   | Revisions, search and portability               | Done    |
-| 1.3.0   | Navigation aids                                 | Done ⁴  |
-| 2.0.0   | Assisted counting                               | Planned |
+| Version | Theme                                           | Status |
+| ------- | ----------------------------------------------- | ------ |
+| 0.1.0   | Foundation: project scaffold and offline shell  | Done   |
+| 0.2.0   | Working directory, project file and PDF viewing | Done   |
+| 0.3.0   | DWG support                                     | Done ¹ |
+| 0.4.0   | Markup engine                                   | Done   |
+| 0.5.0   | Isolatable segments                             | Done   |
+| 0.6.0   | Parts count                                     | Done   |
+| 0.7.0   | Segment notes and drawing links                 | Done   |
+| 0.8.0   | Excel template mapping and export               | Done ² |
+| 0.9.0   | Annotated PDF export and pre-export checks      | Done   |
+| 1.0.0   | First production release                        | Done ³ |
+| 1.1.0   | Productivity features                           | Done   |
+| 1.2.0   | Revisions, search and portability               | Done   |
+| 1.3.0   | Navigation aids                                 | Done ⁴ |
+| 2.0.0   | Assisted counting                               | Done ⁵ |
 
 ¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
 GPL question is decided (see the licence note above).
@@ -342,6 +342,9 @@ steps for the project team; the synthetic 300-drawing test and the zipped site a
 
 ⁴ The Arabic interface text is a draft translation. It needs review by a native-speaking
 process-safety engineer before it is used on a client study.
+
+⁵ Symbol suggestions match by example (no trained model). A trained detector needs a labelled
+set of the client's drawings; see [the research note](docs/spikes/symbol-detection.md).
 
 ## Contributing
 

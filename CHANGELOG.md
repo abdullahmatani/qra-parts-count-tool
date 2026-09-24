@@ -3,6 +3,17 @@
 Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 [functional design specification](docs/FDS.md).
 
+## 2.0.0 — assisted counting
+
+- **Find similar symbols** (roadmap #59, #60): select a counted circle and the app searches the
+  drawing for symbols that look like the one it rings (PDF and DWG/DXF, any quarter turn,
+  entirely in the browser). Candidates are shown as dashed rings for review: accept one, reject
+  one, or accept all shown at the chosen similarity. Nothing is counted until accepted; accepted
+  suggestions become ordinary markers with the example's type, actuation and size.
+- Research note on offline symbol detection: `docs/spikes/symbol-detection.md`.
+- Arabic interface: size bins (`6" < x ≤ 11"`), marker coordinates and the names in the
+  pre-export check now read left to right instead of being reordered and mirrored.
+
 ## 1.3.0 — navigation aids
 
 - **Suggested drawing links** (LNK-06): **Project › Suggest drawing links…** reads the text of
