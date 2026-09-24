@@ -122,27 +122,32 @@ pnpm preview        # serves dist/ on http://localhost:4173 (service worker enab
 
 ## Scripts
 
-| Command                             | Purpose                                                                                          |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `pnpm dev`                          | Vite dev server with hot reload                                                                  |
-| `pnpm build`                        | Type-check (`tsc -b`) and build static files into `dist/`                                        |
-| `pnpm preview`                      | Serve the production build locally                                                               |
-| `pnpm typecheck`                    | TypeScript project build in strict mode                                                          |
-| `pnpm lint`                         | ESLint with zero warnings allowed                                                                |
-| `pnpm format` / `pnpm format:check` | Prettier write / check                                                                           |
-| `pnpm test`                         | Vitest unit and component tests                                                                  |
-| `pnpm test:watch`                   | Vitest in watch mode                                                                             |
-| `pnpm test:coverage`                | Unit tests with V8 coverage                                                                      |
-| `pnpm test:e2e`                     | Playwright end-to-end tests against the production build, including an offline run               |
-| `pnpm schema`                       | Regenerate the project file JSON Schema in `docs/schema/` from the Zod schemas                   |
-| `pnpm size`                         | Check the bundle-size budget (initial JavaScript under 1.5 MB gzipped)                           |
-| `pnpm spike:dwg <folder> [out.md]`  | Run the DWG/DXF readers on every drawing in a folder and report fidelity and speed (roadmap #12) |
-| `pnpm verify`                       | Run the whole local quality gate: lint, format, typecheck, unit tests, build, size budget, e2e   |
-| `pnpm package:site`                 | Zip the build with `serve.mjs`, a dependency-free local server, as the static site for local use |
-| `pnpm serve:site`                   | Serve `dist/` with the same local server and security headers as the zipped site                 |
+| Command                             | Purpose                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                          | Vite dev server with hot reload                                                                   |
+| `pnpm build`                        | Type-check (`tsc -b`) and build static files into `dist/`                                         |
+| `pnpm preview`                      | Serve the production build locally                                                                |
+| `pnpm typecheck`                    | TypeScript project build in strict mode                                                           |
+| `pnpm lint`                         | ESLint with zero warnings allowed                                                                 |
+| `pnpm format` / `pnpm format:check` | Prettier write / check                                                                            |
+| `pnpm test`                         | Vitest unit and component tests                                                                   |
+| `pnpm test:watch`                   | Vitest in watch mode                                                                              |
+| `pnpm test:coverage`                | Unit tests with V8 coverage                                                                       |
+| `pnpm test:e2e`                     | Playwright end-to-end tests against the production build, including an offline run                |
+| `pnpm schema`                       | Regenerate the project file JSON Schema in `docs/schema/` from the Zod schemas                    |
+| `pnpm size`                         | Check the bundle-size budget (initial JavaScript under 1.5 MB gzipped) and Workers asset limits   |
+| `pnpm spike:dwg <folder> [out.md]`  | Run the DWG/DXF readers on every drawing in a folder and report fidelity and speed (roadmap #12)  |
+| `pnpm verify`                       | Run the whole local quality gate: lint, format, typecheck, unit tests, build, size budget, e2e    |
+| `pnpm package:site`                 | Zip the build with `serve.mjs`, a dependency-free local server, as the static site for local use  |
+| `pnpm serve:site`                   | Serve `dist/` with the same local server and security headers as the zipped site                  |
+| `pnpm build:cloudflare`             | The live-site build: unit tests, build and size checks (run by Cloudflare on each push to `main`) |
+| `pnpm serve:cloudflare`             | Serve `dist/` with the Cloudflare Workers runtime (`wrangler dev`), as on the live site           |
+| `pnpm deploy:cloudflare`            | Build and deploy to Cloudflare by hand (after `pnpm exec wrangler login`)                         |
 
-This project has **no hosted CI/CD pipeline**. `pnpm verify` is the local equivalent of a CI build
-and should pass before every commit is pushed.
+This project has **no CI pipeline on GitHub**. `pnpm verify` is the local equivalent of a CI build
+and should pass before every commit is pushed. The live site is deployed by Cloudflare on every
+push to `main` (see [Deployment](#deployment)). That build runs the unit tests and size checks,
+not the end-to-end tests, so run `pnpm verify` before merging into `main`.
 
 ## Testing
 
@@ -193,6 +198,10 @@ generated on demand into `.cache/perf/`. The real A2.1 workbook is not in the re
 to internal files and carries the organisation's frequency data. Keep it with each project, in
 `templates/`.
 
+`E2E_SERVER=cloudflare pnpm test:e2e` runs the same suite against the build served by the
+Cloudflare Workers runtime (`wrangler dev`) instead of `vite preview`, with the live site's
+routing and headers.
+
 Playwright is pinned to the version whose Chromium build is installed. On a new machine, run
 `pnpm exec playwright install chromium` once. To use a different Chromium binary, set
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`.
@@ -211,7 +220,7 @@ Playwright is pinned to the version whose Chromium build is installed. On a new 
 │   └── user-guide.md           User guide
 ├── e2e/                        Playwright end-to-end tests
 ├── public/                     Static assets copied verbatim (icons, headers)
-├── scripts/                    Build helpers: JSON Schema, bundle-size budget, site packaging
+├── scripts/                    Build helpers: JSON Schema, size checks, site packaging
 └── src/
     ├── app/                    App shell: header, three-pane layout, status bar, dialogs
     ├── components/ui/          shadcn/ui components (code-owned)
@@ -222,6 +231,7 @@ Playwright is pinned to the version whose Chromium build is installed. On a new 
     ├── store/                  Zustand stores, undo/redo history, autosave
     ├── styles/                 Tailwind entry point and design tokens
     └── test/                   Test set-up and helpers
+wrangler.jsonc                  Cloudflare Workers configuration for the live site
 ```
 
 ## Working directory and project file
@@ -300,10 +310,12 @@ The app is designed for desktop use, with a minimum screen of 1366 × 768 and mo
 ## Deployment
 
 The build output in `dist/` is a set of static files with no backend. The same build is served in
-two ways:
+three ways:
 
-1. **Public URL**: host `dist/` on any static web host. Serve it over HTTPS.
-2. **Zipped static site**: `pnpm build && pnpm package:site` writes
+1. **Live site on Cloudflare Workers**: every push to `main` is built and published by Cloudflare
+   (see [below](#cloudflare-workers-live-site)).
+2. **Any other static web host**: host `dist/` over HTTPS and send the headers in `dist/_headers`.
+3. **Zipped static site**: `pnpm build && pnpm package:site` writes
    `release/qra-parts-count-tool-<version>.zip` (the app in `site/`, a README and `serve.mjs`).
    Unzip it and run `node serve.mjs` (Node.js 22 or later) to serve it on `http://localhost:8080`.
    The server listens on this computer only and sends the same security headers as the hosted
@@ -312,6 +324,41 @@ two ways:
 
 Browsers allow service workers and folder access only in a secure context, so the app must be
 served over `https://` or `http://localhost`. Opening `index.html` as `file://` will not work.
+
+### Cloudflare Workers (live site)
+
+[`wrangler.jsonc`](wrangler.jsonc) publishes `dist/` as the static assets of a Worker named
+`qra-parts-count-tool`, with no Worker script. Cloudflare applies `dist/_headers` to every
+response, so the live site sends the same Content Security Policy and security headers as the
+local server. `/index.html` redirects to `/`, and any path that is not a file is a 404.
+
+**Automatic deploys.** Cloudflare Workers Builds watches the GitHub repository. On every push to
+`main`, it installs the dependencies with pnpm, runs `pnpm build:cloudflare` (unit tests, build,
+bundle budget and Workers asset limits) and then `npx wrangler deploy`. If a step fails, nothing is
+deployed and the live site keeps the previous version. Nothing runs on GitHub itself. Node.js
+comes from `.nvmrc`; pnpm from `packageManager` in `package.json`.
+
+**One-time setup** (a Cloudflare account admin, in the Cloudflare dashboard):
+
+1. **Workers & Pages** › **Create application** › **Import a repository**. Connect GitHub and allow
+   the Cloudflare Workers and Pages app access to `abdullahmatani/qra-parts-count-tool`.
+2. Set the project name to `qra-parts-count-tool` (it must match `name` in `wrangler.jsonc`),
+   the build command to `pnpm build:cloudflare`, the deploy command to `npx wrangler deploy` and
+   the root directory to `/`. Then **Save and Deploy**. The first build publishes the current
+   `main`.
+3. In the Worker's **Settings** › **Build** › **Branch control**, keep `main` as the production
+   branch and turn off builds for non-production branches.
+
+The site is then at `https://qra-parts-count-tool.<account subdomain>.workers.dev`. To use your own
+domain, add it under **Settings** › **Domains & Routes**. On that domain's Cloudflare zone, keep
+Rocket Loader, Email Address Obfuscation and automatic Web Analytics off. They inject scripts,
+which the Content Security Policy blocks.
+
+**Other tasks.** To see a build or roll back, open the Worker's **Deployments** tab. To deploy by
+hand, run `pnpm exec wrangler login`, then `pnpm deploy:cloudflare`. To test the live site's
+setup locally, run `pnpm serve:cloudflare`, or `E2E_SERVER=cloudflare pnpm test:e2e`.
+
+### Source code for every copy
 
 Every copy of the app is a copy of GPL software: the build includes `LICENSE.txt` and
 `THIRD_PARTY_LICENSES.txt`, and the zip adds `SOURCE.md` and, from a git checkout,
@@ -346,8 +393,9 @@ re-run on the client's sample drawings.
 ² Checked against the A2.1 parts count sheet, the template in use: one sheet per segment, only
 the yellow input cells written, results recalculated.
 
-³ The acceptance test on a real QRA study (roadmap #44) and publishing to the public URL (#47) are
-steps for the project team; the synthetic 300-drawing test and the zipped site are done.
+³ The acceptance test on a real QRA study (roadmap #44) is a step for the project team, and so is
+connecting the repository to Cloudflare once for the live site (#47); the synthetic 300-drawing
+test, the zipped site and the Cloudflare deployment setup are done.
 
 ⁴ The Arabic interface text is a draft translation. It needs review by a native-speaking
 process-safety engineer before it is used on a client study.

@@ -7,6 +7,10 @@ const PORT = 4173;
 // browser is not installed (e.g. PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome).
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined;
 
+// E2E_SERVER=cloudflare serves the build with the Cloudflare Workers runtime
+// (`wrangler dev`, as on the live site) instead of `vite preview`.
+const cloudflare = process.env.E2E_SERVER === 'cloudflare';
+
 type WorkerOptions = { offlineMode: boolean };
 void (null as unknown as AppFixture);
 
@@ -59,9 +63,12 @@ export default defineConfig<object, WorkerOptions>({
   ],
   // E2E runs against the production build so the service worker and CSP are real.
   webServer: {
-    command: `pnpm exec vite preview --port ${PORT} --strictPort`,
+    command: cloudflare
+      ? `pnpm exec wrangler dev --port ${PORT} --ip localhost`
+      : `pnpm exec vite preview --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    // Never test a server left running from the other mode.
+    reuseExistingServer: !process.env.CI && !cloudflare,
     timeout: 60_000,
   },
 });

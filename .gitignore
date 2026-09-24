@@ -34,3 +34,6 @@ Thumbs.db
 
 # Local caches (spike sample drawings, etc.)
 .cache/
+
+# Wrangler local state (wrangler dev)
+.wrangler/
