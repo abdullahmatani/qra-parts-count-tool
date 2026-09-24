@@ -32,14 +32,32 @@ function isAbort(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-/** Shows the folder picker; returns null when the user cancels. */
+/** The browser allows one picker at a time; a second call throws until the first settles. */
+let pickerOpen = false;
+
+/**
+ * Shows the folder picker; returns null when the user cancels or the picker
+ * cannot be used (in which case the user is told why).
+ */
 export async function pickWorkingDirectory(): Promise<FsDirHandle | null> {
+  if (pickerOpen) {
+    toast.info(t('project.folderPicker.busy'));
+    return null;
+  }
+  pickerOpen = true;
   try {
     const handle = await window.showDirectoryPicker({ id: 'qrapc-workdir', mode: 'readwrite' });
     return fromNativeDirectory(handle);
   } catch (error) {
-    if (isAbort(error)) return null;
-    throw error;
+    if (!isAbort(error)) {
+      toast.error(t('project.folderPicker.failed'), {
+        description: `${error instanceof Error ? error.message : String(error)} ${t('project.folderPicker.failedHint')}`,
+        duration: 15_000,
+      });
+    }
+    return null;
+  } finally {
+    pickerOpen = false;
   }
 }
 
