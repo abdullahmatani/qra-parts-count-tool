@@ -1,0 +1,22 @@
+// Cloudflare Workers configuration for the live site (see README, Deployment).
+// The app is static files only: no Worker script runs, and `dist/` is served as
+// static assets with the headers from `dist/_headers` (the CSP and security
+// headers written by the Vite build).
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Must match the Worker's name in the Cloudflare dashboard, or Workers Builds fails.
+  "name": "qra-parts-count-tool",
+  "compatibility_date": "2026-09-24",
+  "assets": {
+    "directory": "./dist",
+    // The app has one page and no client-side routes: an unknown path is a 404,
+    // not index.html. `/index.html` redirects to `/` (the default html_handling).
+    "not_found_handling": "none",
+  },
+  // The public URL is https://qra-parts-count-tool.<account subdomain>.workers.dev.
+  "workers_dev": true,
+  // No preview URLs for versions: only main is published.
+  "preview_urls": false,
+  // No Wrangler usage telemetry from builds or local runs.
+  "send_metrics": false,
+}

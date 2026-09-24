@@ -26,6 +26,11 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
   LibreDWG. Builds include `LICENSE.txt` and `THIRD_PARTY_LICENSES.txt`, the start screen and
   Settings › About link to the source, and the zipped site adds `SOURCE.md` and a source archive.
 - Arabic: the new strings are translated (draft, still to be reviewed).
+- **Live site on Cloudflare Workers** (roadmap #47): `wrangler.jsonc` publishes the build as
+  static assets with the same security headers. Once the repository is connected in the
+  Cloudflare dashboard, every push to `main` is tested, built and deployed. `pnpm size` also
+  checks the Workers asset limits, and `E2E_SERVER=cloudflare pnpm test:e2e` runs the
+  end-to-end tests on the Workers runtime.
 
 ## 2.0.0 — assisted counting
 
