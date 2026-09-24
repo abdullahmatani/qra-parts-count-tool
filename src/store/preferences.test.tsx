@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
+import i18n from '@/i18n';
 import { resolveTheme, useApplyPreferences, usePreferences } from './preferences';
 
 describe('preferences', () => {
@@ -10,6 +11,7 @@ describe('preferences', () => {
       density: 'compact',
       initials: '',
       cadColorMode: 'monochrome',
+      language: 'en',
     });
     document.documentElement.className = '';
   });
@@ -33,7 +35,20 @@ describe('preferences', () => {
       density: 'compact',
       initials: 'abm',
       cadColorMode: 'monochrome',
+      language: 'en',
     });
+  });
+
+  it('switches the interface to Arabic, right to left, and back (NFR-08)', () => {
+    renderHook(() => useApplyPreferences());
+    act(() => usePreferences.getState().setLanguage('ar'));
+    expect(document.documentElement).toHaveAttribute('lang', 'ar');
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
+    expect(i18n.t('header.settings')).toBe('الإعدادات');
+
+    act(() => usePreferences.getState().setLanguage('en'));
+    expect(document.documentElement).toHaveAttribute('dir', 'ltr');
+    expect(i18n.t('header.settings')).toBe('Settings');
   });
 
   it('resolves explicit themes directly', () => {

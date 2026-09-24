@@ -14,6 +14,10 @@ a folder on your computer and are never uploaded anywhere.
   cannot, a project sent as a `.zip` opens read-only (section 11).
 - Open the app once while online. After that it works with no network: the header shows
   **Offline ready** when everything is cached.
+- **Language**: Settings › General › Language switches the interface between English and Arabic.
+  Arabic lays the interface out right to left; drawings, the template preview and fields such as
+  tags and file names stay left to right. Exported workbooks, CSV files and PDFs are always in
+  English, the language of client templates. The Arabic text is a draft awaiting review.
 - Make an empty folder for each study, for example on a project share. This is the **working
   directory**: the project file, the drawings, the exports and automatic backups all live in it, so
   you can zip it, archive it or hand it to a checker.
@@ -93,6 +97,10 @@ Click a drawing in the list to open it in a tab.
 - **Split view**: with two or more drawings open, the split button at the end of the tab bar shows
   two drawings side by side, for example at a match line. The pane you work in is the active
   drawing; a tab opens in that pane.
+- **Layers** (DWG and DXF only): the **Layers** button at the top of the drawing lists the layers
+  that hold linework or text. Untick one to hide it, for example a title-block or grid layer that
+  hides symbols; **Show all** brings every layer back. Hidden layers apply to this browser session
+  only; exported PDFs always show every layer.
 
 ## 5. Segments and ESDVs
 
@@ -185,6 +193,10 @@ Editing:
   (optionally with a saved view). With the Select tool, clicking the hotspot follows it; **Back**
   (`Alt+←`) returns to where you were. Links are for navigation only and are never exported. Hide
   them with the link button in the toolbar.
+- **Suggest drawing links** (Project menu): the app reads the text of every drawing and offers a
+  link wherever a drawing names another drawing in the register, such as an off-page connector
+  `TO PEFS-1002`. Text that already has a link is skipped. Untick any you do not want, then
+  **Add** them; they are one undo step. Check the hotspot size on dense drawings.
 
 ## 9. Map the client's Excel template
 

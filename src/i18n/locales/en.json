@@ -201,6 +201,7 @@
       "project": "Project",
       "about": "About"
     },
+    "language": "Language",
     "theme": "Theme",
     "themes": {
       "system": "System",
@@ -738,7 +739,18 @@
     },
     "back": "Back to {{drawing}}",
     "goTo": "Go to {{drawing}}",
-    "hint": "Drag a rectangle over an off-page connector to link it to another drawing."
+    "hint": "Drag a rectangle over an off-page connector to link it to another drawing.",
+    "suggest": {
+      "menu": "Suggest drawing links…",
+      "title": "Suggest drawing links",
+      "description": "Text on a drawing that names another drawing in the register, such as an off-page connector, is offered as a link. Review the list and add the ones you want.",
+      "scanning": "Reading drawing {{done}} of {{total}}…",
+      "none": "No new links found: every drawing number in the drawings is already linked, or none appear.",
+      "add_one": "Add {{count}} link",
+      "add_other": "Add {{count}} links",
+      "history_one": "add {{count}} suggested link",
+      "history_other": "add {{count}} suggested links"
+    }
   },
   "export": {
     "title": "Export",
@@ -985,5 +997,15 @@
     "downloadExports": "Download exports (.zip)",
     "exportsNotSaved": "This project is open from a .zip: download the exports to keep them.",
     "readOnlyExport": "Exports are written by the tab or window that has this project open for editing."
+  },
+  "layers": {
+    "button": "Layers",
+    "buttonHidden_one": "Layers ({{count}} hidden)",
+    "buttonHidden_other": "Layers ({{count}} hidden)",
+    "title": "Layers",
+    "showAll": "Show all",
+    "none": "No layers with content.",
+    "unnamed": "(no layer)",
+    "hint": "Hidden layers are not drawn in this session. Exports always show every layer."
   }
 }

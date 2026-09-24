@@ -1,11 +1,14 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { applyLanguage } from '@/i18n';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type Density = 'compact' | 'comfortable';
 /** How DWG/DXF drawings are coloured: like a monochrome plot, or with their CAD colours. */
 export type CadColorMode = 'monochrome' | 'color';
+/** Interface language (NFR-08); Arabic lays the interface out right to left. */
+export type Language = 'en' | 'ar';
 
 /**
  * Per-user interface preferences. These are stored in the browser (localStorage)
@@ -18,6 +21,8 @@ export interface PreferencesState {
   /** Author initials stamped on notes (NTE-02). */
   initials: string;
   cadColorMode: CadColorMode;
+  language: Language;
+  setLanguage: (language: Language) => void;
   setTheme: (theme: ThemePreference) => void;
   setCadColorMode: (mode: CadColorMode) => void;
   setDensity: (density: Density) => void;
@@ -31,6 +36,8 @@ export const usePreferences = create<PreferencesState>()(
       density: 'compact',
       initials: '',
       cadColorMode: 'monochrome',
+      language: 'en',
+      setLanguage: (language) => set({ language }),
       setTheme: (theme) => set({ theme }),
       setCadColorMode: (cadColorMode) => set({ cadColorMode }),
       setDensity: (density) => set({ density }),
@@ -40,11 +47,12 @@ export const usePreferences = create<PreferencesState>()(
       name: 'qrapc.preferences',
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ theme, density, initials, cadColorMode }) => ({
+      partialize: ({ theme, density, initials, cadColorMode, language }) => ({
         theme,
         density,
         initials,
         cadColorMode,
+        language,
       }),
     },
   ),
@@ -85,6 +93,11 @@ export function useApplyPreferences(): 'light' | 'dark' {
   useEffect(() => {
     document.documentElement.classList.toggle('density-comfortable', density === 'comfortable');
   }, [density]);
+
+  const language = usePreferences((s) => s.language);
+  useEffect(() => {
+    applyLanguage(language);
+  }, [language]);
 
   return resolved;
 }

@@ -22,8 +22,8 @@ const TEXT_FONT = 'Arial, "Helvetica Neue", Helvetica, sans-serif';
 
 interface PreparedGroup {
   clip: Path2D | null;
-  fills: { color: string; alpha: number; path: Path2D }[];
-  strokes: { color: string; width: number; dash: number[] | null; path: Path2D }[];
+  fills: { color: string; alpha: number; path: Path2D; layer: string }[];
+  strokes: { color: string; width: number; dash: number[] | null; path: Path2D; layer: string }[];
   texts: TextRun[];
 }
 
@@ -58,6 +58,7 @@ function prepare(group: DisplayGroup, mode: CadColorMode): PreparedGroup {
     fills: group.fills.map((fill) => ({
       color: fill.color === 0xffffff ? '#ffffff' : displayColor(fill.color, mode),
       alpha: fill.alpha,
+      layer: fill.layer ?? '',
       path: fill.shapes.reduce((path, loops) => {
         path.addPath(pathFrom(loops, true));
         return path;
@@ -68,6 +69,7 @@ function prepare(group: DisplayGroup, mode: CadColorMode): PreparedGroup {
       width: batch.width,
       dash: batch.dash,
       path: pathFrom(batch.paths),
+      layer: batch.layer ?? '',
     })),
     texts: group.texts,
   };
@@ -77,12 +79,24 @@ export class CadDrawingSource implements DrawingSource {
   readonly size: Size2D;
   private readonly list: DisplayList;
   private readonly mode: CadColorMode;
+  /** DRW-09: layers not drawn. */
+  private readonly hidden: ReadonlySet<string>;
   private prepared: PreparedGroup[] | null = null;
 
-  constructor(list: DisplayList, mode: CadColorMode = 'monochrome') {
+  constructor(
+    list: DisplayList,
+    mode: CadColorMode = 'monochrome',
+    hiddenLayers: readonly string[] = [],
+  ) {
     this.list = list;
     this.mode = mode;
+    this.hidden = new Set(hiddenLayers);
     this.size = { width: list.width, height: list.height };
+  }
+
+  /** Layers of the drawing, for the layer menu (DRW-09). */
+  get layers(): readonly string[] {
+    return this.list.layers ?? [];
   }
 
   private groups(): PreparedGroup[] {
@@ -105,12 +119,14 @@ export class CadDrawingSource implements DrawingSource {
       ctx.save();
       if (group.clip) ctx.clip(group.clip);
       for (const fill of group.fills) {
+        if (this.hidden.has(fill.layer)) continue;
         ctx.globalAlpha = fill.alpha;
         ctx.fillStyle = fill.color;
         ctx.fill(fill.path, 'evenodd');
       }
       ctx.globalAlpha = 1;
       for (const stroke of group.strokes) {
+        if (this.hidden.has(stroke.layer)) continue;
         ctx.strokeStyle = stroke.color;
         ctx.lineWidth = Math.max(stroke.width, MIN_STROKE_PX / k);
         ctx.setLineDash(stroke.dash ? stroke.dash.map((d) => Math.max(d, 1 / k)) : []);
@@ -131,6 +147,7 @@ export class CadDrawingSource implements DrawingSource {
     const base = ctx.getTransform();
     let font = '';
     for (const run of texts) {
+      if (this.hidden.has(run.layer ?? '')) continue;
       const unit = Math.hypot(run.c, run.d);
       const capPx = run.size * 0.72 * unit * k;
       if (capPx < MIN_TEXT_PX) continue;

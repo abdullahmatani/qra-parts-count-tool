@@ -1,3 +1,4 @@
+import { LayerMenu } from '@/features/cad/LayerMenu';
 import { ReviewBanner } from '@/features/drawings/ReviewBanner';
 import { SearchHitsLayer } from '@/features/search/SearchHitsLayer';
 import { DrawingViewer } from '@/features/viewer/DrawingViewer';
@@ -19,6 +20,7 @@ export function MarkupViewer({ drawingId }: { drawingId: string }) {
         screenOverlay={tools.screenOverlay}
         interaction={tools.interaction}
       />
+      <LayerMenu drawingId={drawingId} />
       <ReviewBanner drawingId={drawingId} />
     </>
   );

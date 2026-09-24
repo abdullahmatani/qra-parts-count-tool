@@ -18,7 +18,7 @@ export function MarkerTooltip({
   position: XY;
   bounds: { width: number; height: number };
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const segments = useProjectStore((s) => s.doc?.segments);
   const item = useProjectStore((s) =>
     Object.values(s.doc?.items ?? {}).find((i) => i.markerId === marker.id),
@@ -41,6 +41,7 @@ export function MarkerTooltip({
   return (
     <div
       role="tooltip"
+      dir={i18n.dir()}
       data-testid="marker-tooltip"
       className="pointer-events-none absolute z-20 rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md"
       style={{ left, top, width: WIDTH }}

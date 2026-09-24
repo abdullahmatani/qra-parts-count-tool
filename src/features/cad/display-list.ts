@@ -18,7 +18,8 @@ import {
 } from './model';
 import { decodePercentCodes, mtextToLines } from './text-codes';
 
-export const DISPLAY_LIST_VERSION = 1;
+/** Bumped when the format changes, so cached lists are rebuilt (2: layers, DRW-09). */
+export const DISPLAY_LIST_VERSION = 2;
 
 /** Default line weight (0.25 mm) in points. */
 const DEFAULT_WEIGHT_PT = (0.25 * 72) / 25.4;
@@ -37,6 +38,8 @@ export interface StrokeBatch {
   dash: number[] | null;
   /** Flat coordinate arrays [x0, y0, x1, y1, …], one per polyline. */
   paths: number[][];
+  /** CAD layer (DRW-09); missing in lists built before layers were kept. */
+  layer?: string;
 }
 
 export interface FillBatch {
@@ -44,6 +47,7 @@ export interface FillBatch {
   alpha: number;
   /** Polygons (flat coordinates); loops of one hatch are grouped for even-odd filling. */
   shapes: number[][][];
+  layer?: string;
 }
 
 export interface TextRun {
@@ -61,6 +65,7 @@ export interface TextRun {
   align: 'left' | 'center' | 'right';
   baseline: 'alphabetic' | 'bottom' | 'middle' | 'top';
   color: number;
+  layer?: string;
 }
 
 export interface DisplayGroup {
@@ -77,6 +82,8 @@ export interface DisplayList {
   width: number;
   height: number;
   groups: DisplayGroup[];
+  /** Layers with something drawn, sorted (DRW-09). */
+  layers?: string[];
   stats: { paths: number; segments: number; fills: number; texts: number; blocks: number };
 }
 
@@ -161,6 +168,9 @@ class Collector {
   current!: DisplayGroup;
   private strokeIndex = new Map<string, StrokeBatch>();
   private fillIndex = new Map<string, FillBatch>();
+  /** Layer of the entity being emitted; batches are kept per layer (DRW-09). */
+  layer = '';
+  readonly layers = new Set<string>();
   stats = { paths: 0, segments: 0, fills: 0, texts: 0, blocks: 0 };
   minX = Infinity;
   minY = Infinity;
@@ -187,10 +197,17 @@ class Collector {
 
   stroke(style: Style, points: Vec2[]): void {
     if (points.length < 2) return;
-    const key = `${style.color}|${style.width.toFixed(3)}|${style.dash?.join(',') ?? ''}`;
+    const key = `${this.layer}|${style.color}|${style.width.toFixed(3)}|${style.dash?.join(',') ?? ''}`;
     let batch = this.strokeIndex.get(key);
     if (!batch) {
-      batch = { color: style.color, width: style.width, dash: style.dash, paths: [] };
+      batch = {
+        color: style.color,
+        width: style.width,
+        dash: style.dash,
+        paths: [],
+        layer: this.layer,
+      };
+      this.layers.add(this.layer);
       this.strokeIndex.set(key, batch);
       this.current.strokes.push(batch);
     }
@@ -208,10 +225,11 @@ class Collector {
   fill(color: number, alpha: number, loops: Vec2[][]): void {
     const shapes = loops.filter((loop) => loop.length >= 3);
     if (shapes.length === 0) return;
-    const key = `${color}|${alpha}`;
+    const key = `${this.layer}|${color}|${alpha}`;
     let batch = this.fillIndex.get(key);
     if (!batch) {
-      batch = { color, alpha, shapes: [] };
+      batch = { color, alpha, shapes: [], layer: this.layer };
+      this.layers.add(this.layer);
       this.fillIndex.set(key, batch);
       this.current.fills.push(batch);
     }
@@ -227,7 +245,8 @@ class Collector {
   }
 
   text(run: TextRun): void {
-    this.current.texts.push(run);
+    this.current.texts.push({ ...run, layer: this.layer });
+    this.layers.add(this.layer);
     this.extend(run.x, run.y);
     this.stats.texts += 1;
   }
@@ -354,6 +373,7 @@ export function buildDisplayList(
     const resolved = resolveStyle(entity, ctx);
     if (!resolved) return;
     const { style } = resolved;
+    out.layer = resolved.layer;
     const tol = tolerance(ctx);
 
     switch (entity.type) {
@@ -699,6 +719,7 @@ export function buildDisplayList(
     width: round(worldW * s + 2 * margin),
     height: round(worldH * s + 2 * margin),
     groups,
+    layers: [...out.layers].sort((a, b) => a.localeCompare(b)),
     stats: out.stats,
   };
 }

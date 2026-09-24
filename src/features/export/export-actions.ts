@@ -17,7 +17,7 @@ import type { CheckKind } from '@/domain/export/pre-export-check';
 import type { ProjectDoc } from '@/domain/model';
 import type { Drawing, ItemField } from '@/domain/schema/types';
 import type { DisplayList } from '@/features/cad/display-list';
-import i18n from '@/i18n';
+import i18n, { tFile } from '@/i18n';
 import { readFile, sanitizeFileName, writeFile, writeTextAtomic } from '@/lib/fs/files';
 import { isNotFound, type FsDirHandle } from '@/lib/fs/types';
 import { requireWorkingDirectory } from '@/services/session';
@@ -38,46 +38,53 @@ export function exportFolderName(now: Date): string {
   return `${EXPORTS_DIR}/${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
 }
 
+/** Labels written into the workbook and CSV: always English (NFR-08). */
 export function excelLabels(): ExcelLabels {
   return {
-    notesSheet: t('export.sheets.notes'),
-    itemsSheet: t('export.sheets.items'),
-    unmappedSheet: t('export.sheets.unmapped'),
-    segment: t('export.columns.segment'),
-    author: t('export.columns.author'),
-    time: t('export.columns.time'),
-    note: t('export.columns.note'),
+    notesSheet: tFile('export.sheets.notes'),
+    itemsSheet: tFile('export.sheets.items'),
+    unmappedSheet: tFile('export.sheets.unmapped'),
+    segment: tFile('export.columns.segment'),
+    author: tFile('export.columns.author'),
+    time: tFile('export.columns.time'),
+    note: tFile('export.columns.note'),
     itemFields: Object.fromEntries(
-      ITEM_FIELD_ORDER.map((field) => [field, t(`export.itemFields.${field}`)]),
+      ITEM_FIELD_ORDER.map((field) => [field, tFile(`export.itemFields.${field}`)]),
     ) as Record<ItemField, string>,
-    typeName: t('export.columns.type'),
-    actuation: t('export.columns.actuation'),
-    bin: t('export.columns.bin'),
-    quantity: t('export.columns.quantity'),
-    unit: t('export.columns.unit'),
-    actuations: { manual: t('count.actuation.manual'), automated: t('count.actuation.automated') },
-    seeNotesSheet: t('export.columns.seeNotes'),
+    typeName: tFile('export.columns.type'),
+    actuation: tFile('export.columns.actuation'),
+    bin: tFile('export.columns.bin'),
+    quantity: tFile('export.columns.quantity'),
+    unit: tFile('export.columns.unit'),
+    actuations: {
+      manual: tFile('count.actuation.manual'),
+      automated: tFile('count.actuation.automated'),
+    },
+    seeNotesSheet: tFile('export.columns.seeNotes'),
   };
 }
 
+/** Labels drawn on the annotated PDFs: always English (NFR-08). */
 export function pdfLabels(): PdfLabels {
   return {
-    legendTitle: t('export.pdf.legend'),
-    esdv: t('export.pdf.esdv'),
-    unassigned: t('export.pdf.unassigned'),
-    warning: t('export.pdf.warning'),
+    legendTitle: tFile('export.pdf.legend'),
+    esdv: tFile('export.pdf.esdv'),
+    unassigned: tFile('export.pdf.unassigned'),
+    warning: tFile('export.pdf.warning'),
     drawing: (drawing) => {
       const name = [
         drawingName(drawing),
-        drawing.revision && t('export.pdf.rev', { rev: drawing.revision }),
+        drawing.revision && tFile('export.pdf.rev', { rev: drawing.revision }),
       ]
         .filter(Boolean)
         .join(' ');
-      return drawing.sheet ? `${name}, ${t('export.pdf.sheet', { sheet: drawing.sheet })}` : name;
+      return drawing.sheet
+        ? `${name}, ${tFile('export.pdf.sheet', { sheet: drawing.sheet })}`
+        : name;
     },
-    segment: (label) => t('export.pdf.segment', { label }),
-    countRevision: (revision) => t('export.pdf.countRevision', { revision }),
-    exported: (date) => t('export.pdf.exported', { date }),
+    segment: (label) => tFile('export.pdf.segment', { label }),
+    countRevision: (revision) => tFile('export.pdf.countRevision', { revision }),
+    exported: (date) => tFile('export.pdf.exported', { date }),
   };
 }
 
@@ -325,7 +332,7 @@ export async function runExport(options: ExportOptions, now = new Date()): Promi
     });
     applyPlan(workbook, plan);
     const buffer = (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
-    const name = `${base}_${t('export.fileSuffix')}.xlsx`;
+    const name = `${base}_${tFile('export.fileSuffix')}.xlsx`;
     await writeFile(dir, `${folder}/${name}`, new Blob([buffer]));
     files.push(name);
     unmapped = plan.unmapped.length;
@@ -333,7 +340,7 @@ export async function runExport(options: ExportOptions, now = new Date()): Promi
 
   if (options.csv) {
     const headers = Object.fromEntries(
-      ITEM_FIELD_ORDER.map((field) => [field, t(`export.itemFields.${field}`)]),
+      ITEM_FIELD_ORDER.map((field) => [field, tFile(`export.itemFields.${field}`)]),
     ) as Record<ItemField, string>;
     const csv = itemListCsv(
       itemRows(project, entries, { actuations: excelLabels().actuations }),

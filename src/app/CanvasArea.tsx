@@ -101,7 +101,7 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
                 onFocusCapture={() => focusPane(side)}
               >
                 {renderDrawing(drawing.id)}
-                <span className="pointer-events-none absolute start-2 top-2 z-10 rounded bg-background/90 px-1.5 py-0.5 font-mono text-xs shadow-sm">
+                <span className="pointer-events-none absolute top-2 left-1/2 z-10 -translate-x-1/2 rounded bg-background/90 px-1.5 py-0.5 font-mono text-xs shadow-sm">
                   {drawingDisplayName(drawing)}
                 </span>
               </div>

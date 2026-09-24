@@ -136,7 +136,12 @@ function PreviewGrid({
   const { t } = useTranslation();
   const columns = sheet.rows[0]?.length ?? 0;
   return (
-    <div className="max-h-[60vh] overflow-auto rounded-md border" data-testid="template-preview">
+    // The sheet reads left to right, column A first, as in Excel.
+    <div
+      dir="ltr"
+      className="max-h-[60vh] overflow-auto rounded-md border"
+      data-testid="template-preview"
+    >
       <table className="border-collapse font-mono text-[11px]">
         <thead className="sticky top-0 z-10 bg-muted">
           <tr>

@@ -75,6 +75,9 @@ export function Header({ onCloseProject }: HeaderProps) {
             <DropdownMenuItem onSelect={() => openDialog('templateMapper')}>
               <Grid3x3 /> {t('header.templateMapper')}
             </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => openDialog('linkSuggestions')}>
+              {t('links.suggest.menu')}
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => void exportProjectZip()}>
               {t('zip.menu')}
             </DropdownMenuItem>

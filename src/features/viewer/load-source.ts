@@ -9,10 +9,14 @@ import { PdfDocumentCache } from './pdf/pdf-source';
 export const pdfCache = new PdfDocumentCache(4);
 
 /** Loaded lazily so the CAD pipeline is only fetched when a DWG/DXF drawing is opened. */
-async function loadCad(dir: FsDirHandle, drawing: Drawing): Promise<DrawingSource> {
+async function loadCad(
+  dir: FsDirHandle,
+  drawing: Drawing,
+  hiddenLayers: readonly string[],
+): Promise<DrawingSource> {
   const { loadCadDisplayList } = await import('@/features/cad/cad-drawings');
   const list = await loadCadDisplayList(dir, drawing);
-  return new CadDrawingSource(list, usePreferences.getState().cadColorMode);
+  return new CadDrawingSource(list, usePreferences.getState().cadColorMode, hiddenLayers);
 }
 
 export class UnsupportedDrawingError extends Error {
@@ -31,6 +35,7 @@ async function readDrawingBytes(dir: FsDirHandle, drawing: Drawing): Promise<Arr
 export async function loadDrawingSource(
   dir: FsDirHandle,
   drawing: Drawing,
+  options: { hiddenLayers?: readonly string[] } = {},
 ): Promise<DrawingSource> {
   if (drawing.fileType === 'pdf') {
     return pdfCache.openPage(
@@ -39,6 +44,8 @@ export async function loadDrawingSource(
       drawing.page ?? 1,
     );
   }
-  if (drawing.fileType === 'dwg' || drawing.fileType === 'dxf') return loadCad(dir, drawing);
+  if (drawing.fileType === 'dwg' || drawing.fileType === 'dxf') {
+    return loadCad(dir, drawing, options.hiddenLayers ?? []);
+  }
   throw new UnsupportedDrawingError(drawing.fileType);
 }

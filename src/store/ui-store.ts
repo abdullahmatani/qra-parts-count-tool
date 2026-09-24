@@ -39,6 +39,7 @@ export type DialogName =
   | 'backups'
   | 'shortcuts'
   | 'openZip'
+  | 'linkSuggestions'
   | 'newSegment'
   | null;
 
@@ -57,6 +58,8 @@ export interface UiState {
   /** Markers highlighted from the count table (CNT-06). */
   highlighted: string[];
   viewports: Record<string, Viewport>;
+  /** DRW-09: CAD layers hidden per drawing, for this session. */
+  hiddenLayers: Record<string, string[]>;
   cursor: { x: number; y: number } | null;
   showLabels: boolean;
   showLinks: boolean;
@@ -88,6 +91,7 @@ export interface UiState {
   setSelection: (ids: string[]) => void;
   setHighlighted: (ids: string[]) => void;
   setViewport: (drawingId: string, viewport: Viewport) => void;
+  setHiddenLayers: (drawingId: string, layers: string[]) => void;
   setCursor: (cursor: { x: number; y: number } | null) => void;
   toggleLabels: () => void;
   toggleLinks: () => void;
@@ -128,6 +132,7 @@ const initial = {
   selection: [],
   highlighted: [],
   viewports: {},
+  hiddenLayers: {},
   cursor: null,
   showLabels: true,
   showLinks: true,
@@ -192,6 +197,8 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setSelection: (selection) =>
     set(selection.length ? { selection, selectedLinkId: null } : { selection }),
   setHighlighted: (highlighted) => set({ highlighted }),
+  setHiddenLayers: (drawingId, layers) =>
+    set((state) => ({ hiddenLayers: { ...state.hiddenLayers, [drawingId]: [...layers].sort() } })),
   setViewport: (drawingId, viewport) =>
     set((state) => ({ viewports: { ...state.viewports, [drawingId]: viewport } })),
   setCursor: (cursor) => set({ cursor }),

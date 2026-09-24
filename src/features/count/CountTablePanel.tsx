@@ -95,7 +95,7 @@ function Table({ table }: { table: CountTable }) {
                   {shortBinLabel(bin)}
                 </th>
               ))}
-              <th scope="col" className="py-1 text-end font-semibold">
+              <th scope="col" className="w-12 py-1 text-end font-semibold">
                 {t('count.table.total')}
               </th>
             </tr>
@@ -154,7 +154,7 @@ function Table({ table }: { table: CountTable }) {
                   {shortBinLabel(bin)}
                 </th>
               ))}
-              <th className="py-1 text-end font-semibold">{t('count.table.total')}</th>
+              <th className="w-12 py-1 text-end font-semibold">{t('count.table.total')}</th>
             </tr>
           </thead>
           <tbody>
@@ -283,7 +283,7 @@ export function CountTablePanel() {
                       onClick={() => unacceptDuplicateCommand(duplicate.tag)}
                       disabled={readOnly}
                     >
-                      <Undo2 className="size-3" /> {t('count.duplicates.undo')}
+                      <Undo2 className="size-3 rtl:-scale-x-100" /> {t('count.duplicates.undo')}
                     </Button>
                   ) : (
                     <Button

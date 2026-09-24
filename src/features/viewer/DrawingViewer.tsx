@@ -429,6 +429,9 @@ function ViewerSurface({
   return (
     <div
       ref={surfaceRef}
+      // Drawings are laid out left to right whatever the interface language:
+      // canvas text and SVG anchors follow the element's direction (NFR-08).
+      dir="ltr"
       tabIndex={0}
       role="application"
       aria-roledescription="drawing canvas"

@@ -3,6 +3,17 @@
 Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 [functional design specification](docs/FDS.md).
 
+## 1.3.0 — navigation aids
+
+- **Suggested drawing links** (LNK-06): **Project › Suggest drawing links…** reads the text of
+  every drawing, finds the drawing numbers of other drawings in the register (such as off-page
+  connectors) and lists them for review. The chosen links are added as one undo step.
+- **Layer toggles** (DRW-09): a **Layers** menu on DWG and DXF drawings hides and shows layers for
+  the session. Exports always show every layer. DWG/DXF caches are rebuilt once to record layers.
+- **Arabic interface** (NFR-08): Settings › General › Language. The interface is mirrored right to
+  left; drawings, the template preview and technical fields stay left to right. Exported files are
+  always in English. The Arabic text is a draft that needs review by a native speaker.
+
 ## 1.2.0 — revisions, search and portability
 
 - **Revision replacement** (DRW-07, LNK-05): replace a drawing's file with its next revision from

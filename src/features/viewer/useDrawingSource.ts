@@ -4,6 +4,7 @@ import { isNotFound } from '@/lib/fs/types';
 import { getWorkingDirectory } from '@/services/session';
 import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
+import { useUiStore } from '@/store/ui-store';
 import type { DrawingSource } from './drawing-source';
 import { loadDrawingSource } from './load-source';
 import { previewCachePath, readCachedPreview, writeCachedPreview } from './preview-cache';
@@ -27,8 +28,11 @@ export function useDrawingSource(drawing: Drawing | null): SourceState {
   });
   // CAD drawings are re-rendered when the colour mode changes.
   const cadColorMode = usePreferences((s) => s.cadColorMode);
+  // …and when layers are hidden or shown (DRW-09).
+  const hidden = useUiStore((s) => (drawing ? s.hiddenLayers[drawing.id] : undefined));
+  const hiddenKey = hidden?.join('\u0000') ?? '';
   const key = drawing
-    ? `${drawing.id}:${drawing.fileHash}:${drawing.page ?? ''}:${drawing.layout ?? ''}:${drawing.fileType === 'pdf' ? '' : cadColorMode}`
+    ? `${drawing.id}:${drawing.fileHash}:${drawing.page ?? ''}:${drawing.layout ?? ''}:${drawing.fileType === 'pdf' ? '' : `${cadColorMode}:${hiddenKey}`}`
     : null;
 
   useEffect(() => {
@@ -43,9 +47,10 @@ export function useDrawingSource(drawing: Drawing | null): SourceState {
         PREVIEW_MAX_DIMENSION,
         drawing.fileType === 'pdf' ? '' : cadColorMode,
       );
+      // Previews with hidden layers are not cached: the cache holds the full drawing.
       const [source, cached] = await Promise.all([
-        loadDrawingSource(dir, drawing),
-        readCachedPreview(dir, cachePath).catch(() => null),
+        loadDrawingSource(dir, drawing, { hiddenLayers: hidden ?? [] }),
+        hiddenKey ? null : readCachedPreview(dir, cachePath).catch(() => null),
       ]);
       loaded = source;
       if (cancelled) return;
@@ -53,7 +58,7 @@ export function useDrawingSource(drawing: Drawing | null): SourceState {
       if (cancelled) return;
       setState({ key, value: { status: 'ready', source, preview } });
       if (cached) source.prepare?.();
-      else if (!useProjectStore.getState().readOnly) {
+      else if (!useProjectStore.getState().readOnly && !hiddenKey) {
         void writeCachedPreview(dir, cachePath, preview);
       }
     })().catch((error: unknown) => {
