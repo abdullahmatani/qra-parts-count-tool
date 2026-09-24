@@ -6,8 +6,10 @@ import {
   countRowKeys,
   defaultMapping,
   duplicateCells,
+  formatCellList,
   fromPortableMapping,
   isCellRef,
+  parseCellList,
   toPortableMapping,
 } from './mapping';
 
@@ -28,16 +30,15 @@ describe('template mapping helpers', () => {
   it('auto-fills a block: types down, bins across', () => {
     const library = starterLibrary();
     const cells = autoFillCountCells(library, 'C10');
-    expect(cells.slice(0, 7).map((c) => c.cell)).toEqual([
+    expect(cells.slice(0, 6).map((c) => c.cell)).toEqual([
       'C10',
       'D10',
       'E10',
       'F10',
       'G10',
-      'H10',
       'C11',
     ]);
-    expect(cells[6]!.actuation).toBe('manual');
+    expect(cells[5]!.actuation).toBe('manual');
   });
 
   it('finds cells mapped twice', () => {
@@ -106,5 +107,43 @@ describe('portable mapping file (#39)', () => {
     expect(() =>
       fromPortableMapping({ kind: 'other' } as never, starterLibrary(), 'x.xlsx'),
     ).toThrow();
+  });
+});
+
+describe('cell lists for notes lines', () => {
+  it('reads a range down one column or a list, and shows runs as a range', () => {
+    expect(parseCellList('b72:b77')).toEqual(['B72', 'B73', 'B74', 'B75', 'B76', 'B77']);
+    expect(parseCellList('B72, $B$74')).toEqual(['B72', 'B74']);
+    expect(parseCellList('')).toEqual([]);
+    expect(parseCellList('B72:C77')).toBeNull();
+    expect(parseCellList('B77:B72')).toBeNull();
+    expect(parseCellList('notes')).toBeNull();
+    expect(formatCellList(['B72', 'B73', 'B74'])).toBe('B72:B74');
+    expect(formatCellList(['B72', 'B74'])).toBe('B72, B74');
+    expect(formatCellList(['B72'])).toBe('B72');
+  });
+
+  it('keeps notes lines in the portable mapping file', () => {
+    const library = starterLibrary();
+    const source = {
+      ...defaultMapping('t.xlsx', 'Sheet1'),
+      notesLines: ['B72', 'B73'],
+      notesLineLength: 80,
+    };
+    const { mapping } = fromPortableMapping(toPortableMapping(source, library), library, 't.xlsx');
+    expect(mapping.notesLines).toEqual(['B72', 'B73']);
+    expect(mapping.notesLineLength).toBe(80);
+    const old = { ...toPortableMapping(source, library) } as Partial<
+      ReturnType<typeof toPortableMapping>
+    >;
+    delete old.notesLines;
+    delete old.notesLineLength;
+    const fromOld = fromPortableMapping(
+      old as ReturnType<typeof toPortableMapping>,
+      library,
+      't.xlsx',
+    );
+    expect(fromOld.mapping.notesLines).toEqual([]);
+    expect(fromOld.mapping.notesLineLength).toBe(90);
   });
 });

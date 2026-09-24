@@ -16,14 +16,16 @@ same list is in the app under **Project › Keyboard shortcuts**. On a Mac, use 
 
 ## Equipment types
 
-Keys set the type of the selected item and of the next circle. The starter library uses:
+Keys set the type of the selected item and of the next circle. The starter library (the
+equipment of the A2.1 parts count sheet) uses:
 
 | Key | Type                             |
 | --- | -------------------------------- |
 | `1` | Valve                            |
 | `2` | Flange                           |
 | `3` | Small-bore instrument connection |
-| `4` | Pump                             |
+| `4` | Pressure vessel                  |
+| `5` | Pump, centrifugal (single seal)  |
 
 Change or add keys in **Project › Equipment library** (column **Key**).
 

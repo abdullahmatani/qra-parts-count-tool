@@ -67,11 +67,18 @@ describe('zipped static site (roadmap #47)', () => {
     await writeFile(join(dist, 'index.html'), '<!doctype html><title>QRA</title>');
     await writeFile(join(dist, 'assets/app.js'), 'console.log(1)');
     await writeFile(join(dist, 'assets/app.js.map'), '{}');
-    const zipPath = await packageSite({ distDir: dist, outDir: await tempDir(), version: '9.9.9' });
+    const zipPath = await packageSite({
+      distDir: dist,
+      outDir: await tempDir(),
+      version: '9.9.9',
+      sourceArchive: false,
+    });
     expect(zipPath).toMatch(/qra-parts-count-tool-9\.9\.9\.zip$/);
     const files = readZip(await readFile(zipPath));
     expect([...files.keys()].sort()).toEqual([
+      'qra-parts-count-tool-9.9.9/LICENSE.txt',
       'qra-parts-count-tool-9.9.9/README.txt',
+      'qra-parts-count-tool-9.9.9/SOURCE.md',
       'qra-parts-count-tool-9.9.9/csp.mjs',
       'qra-parts-count-tool-9.9.9/serve.mjs',
       'qra-parts-count-tool-9.9.9/site/assets/app.js',
@@ -80,6 +87,14 @@ describe('zipped static site (roadmap #47)', () => {
     expect(files.get('qra-parts-count-tool-9.9.9/README.txt')!.toString()).toContain(
       'node serve.mjs',
     );
+    // GPL-3.0: the licence and where the source is go with every copy.
+    expect(files.get('qra-parts-count-tool-9.9.9/LICENSE.txt')!.toString()).toContain(
+      'GNU GENERAL PUBLIC LICENSE',
+    );
+    const source = files.get('qra-parts-count-tool-9.9.9/SOURCE.md')!.toString();
+    expect(source).toContain('https://github.com/abdullahmatani/qra-parts-count-tool');
+    expect(source).toMatch(/@mlightcad\/libredwg-web` \d+\.\d+\.\d+/);
+    expect(source).toContain('git.savannah.gnu.org/git/libredwg.git');
   });
 
   it('refuses to package without a build', async () => {

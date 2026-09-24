@@ -1,18 +1,17 @@
 /**
- * Applies an Excel export plan to the client's template with ExcelJS (EXP-02).
- * Only mapped cells are written: formatting, formulas, named ranges and other
- * sheets are kept, and the template file itself is never changed. ExcelJS is
- * loaded on first use so it stays out of the initial bundle.
+ * Reads client templates with ExcelJS for the template mapper (EXP-02): checks
+ * that a file is a usable .xlsx and previews its sheets. Exports are written
+ * by xlsx-writer.ts, which changes only the mapped cells. ExcelJS is loaded
+ * on first use so it stays out of the initial bundle.
  */
-import type { Workbook, Worksheet } from 'exceljs';
-import type { CellValue, ExcelPlan } from '@/domain/export/excel-plan';
+import type { Workbook } from 'exceljs';
 
 export async function loadExcelJs() {
   const module = await import('exceljs');
   return (module as unknown as { default?: typeof module }).default ?? module;
 }
 
-export type TemplateErrorKind = 'unreadable' | 'macro' | 'missingSheet';
+export type TemplateErrorKind = 'unreadable' | 'macro' | 'missingSheet' | 'formulaCell';
 
 export class TemplateError extends Error {
   readonly kind: TemplateErrorKind;
@@ -35,74 +34,6 @@ export async function openTemplate(bytes: ArrayBuffer, fileName = ''): Promise<W
     throw new TemplateError('unreadable', error instanceof Error ? error.message : String(error));
   }
   return workbook;
-}
-
-/** A copy of a worksheet with its cells, styles, merges, widths and page setup. */
-function copySheet(workbook: Workbook, source: Worksheet, name: string): Worksheet {
-  const copy = workbook.addWorksheet(name);
-  const model = source.model as unknown as Record<string, unknown>;
-  (copy as unknown as { model: unknown }).model = {
-    ...model,
-    name,
-    id: copy.id,
-    // The model getter calls merges `merges`, the setter reads `mergeCells`.
-    mergeCells: model.merges,
-    // Excel table names must be unique in a workbook, so tables are not copied.
-    tables: [],
-  };
-  return copy;
-}
-
-function sheetOrThrow(workbook: Workbook, name: string): Worksheet {
-  const sheet = workbook.getWorksheet(name);
-  if (!sheet) throw new TemplateError('missingSheet', name);
-  return sheet;
-}
-
-function setValue(sheet: Worksheet, address: string, value: CellValue): void {
-  sheet.getCell(address).value = value;
-}
-
-/** Applies the plan to an open workbook. */
-export function applyPlan(workbook: Workbook, plan: ExcelPlan): void {
-  for (const copy of plan.copies) {
-    copySheet(workbook, sheetOrThrow(workbook, copy.source), copy.name);
-  }
-  for (const write of plan.writes) {
-    const sheet = sheetOrThrow(workbook, write.sheet);
-    if (write.styleFrom) {
-      const style = sheet.getCell(write.styleFrom).style;
-      sheet.getCell(write.address).style = JSON.parse(JSON.stringify(style ?? {}));
-    }
-    setValue(sheet, write.address, write.value);
-  }
-  for (const name of plan.removeSheets) {
-    const sheet = workbook.getWorksheet(name);
-    if (sheet) workbook.removeWorksheet(sheet.id);
-  }
-  for (const extra of plan.extraSheets) {
-    const sheet = workbook.addWorksheet(extra.name, { views: [{ state: 'frozen', ySplit: 1 }] });
-    sheet.columns = extra.columns.map((c) => ({ header: c.header, width: c.width }));
-    sheet.getRow(1).font = { bold: true };
-    for (const row of extra.rows) sheet.addRow(row);
-    for (const column of sheet.columns) {
-      if ((column.width ?? 0) >= 40) column.alignment = { wrapText: true, vertical: 'top' };
-    }
-  }
-}
-
-/** Builds the output workbook: the template filled per the plan, or a new workbook. */
-export async function buildWorkbook(
-  template: { bytes: ArrayBuffer; fileName: string } | null,
-  plan: ExcelPlan,
-): Promise<ArrayBuffer> {
-  const ExcelJS = await loadExcelJs();
-  const workbook = template
-    ? await openTemplate(template.bytes, template.fileName)
-    : new ExcelJS.Workbook();
-  workbook.creator = 'QRA Parts Count Tool';
-  applyPlan(workbook, plan);
-  return (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
 }
 
 export interface SheetPreview {

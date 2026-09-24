@@ -120,12 +120,19 @@
       "temperature": "Operating temperature ({{unit}})",
       "status": "Status",
       "countedBy": "Counted by",
-      "checkedBy": "Checked by"
+      "checkedBy": "Checked by",
+      "equipment": "Object / equipment",
+      "streamNumber": "Stream number",
+      "h2s": "H2S (mole fraction)",
+      "molecularWeightOrDensity": "Mol. weight (gas) or density, kg/m³ (liquid)",
+      "phasePlaceholder": "Liquid or Gas"
     },
     "errors": {
       "labelRequired": "Enter a label, e.g. IS-01.",
       "labelTaken": "Another segment already uses this label.",
-      "number": "Enter a number."
+      "number": "Enter a number.",
+      "fraction": "Enter a mole fraction between 0 and 1.",
+      "positive": "Enter a number above zero."
     },
     "details": {
       "process": "Process data",
@@ -225,7 +232,12 @@
     "cadColorModes": {
       "monochrome": "Monochrome, like a plot",
       "color": "CAD colours"
-    }
+    },
+    "licenceTitle": "Licence",
+    "licence": "Free software: you can redistribute and change it under the GNU General Public License, version 3 or later. It comes with no warranty.",
+    "sourceCode": "Source code",
+    "licenceText": "GNU GPL v3",
+    "thirdParty": "Third-party licences"
   },
   "start": {
     "newProject": "New project",
@@ -241,7 +253,8 @@
     "noRecent": "No recent projects.",
     "unsupported": "This browser cannot write to local folders. Use a current version of Microsoft Edge or Google Chrome.",
     "privacyNote": "Your drawings and counts stay on this computer.",
-    "forget": "Remove {{name}} from recent projects"
+    "forget": "Remove {{name}} from recent projects",
+    "licence": "Free software under the GNU GPL v3 or later."
   },
   "project": {
     "form": {
@@ -829,7 +842,8 @@
       "unreadable": "The template could not be read as an Excel workbook.",
       "macro": "Macro-enabled templates (.xlsm) are not supported. Save an .xlsx copy and use that.",
       "missingSheet": "The template has no sheet called {{sheet}}.",
-      "missingTemplate": "The template file {{file}} is missing from templates/."
+      "missingTemplate": "The template file {{file}} is missing from templates/.",
+      "formulaCell": "Cell {{cell}} of the template holds a formula. Map input cells only: the template's formulas are never overwritten."
     },
     "pdf": {
       "legend": "Legend",
@@ -870,7 +884,9 @@
         "unmappedCounts_one": "{{count}} count has no cell in the template",
         "unmappedCounts_other": "{{count}} counts have no cell in the template",
         "drawingsToReview_one": "{{count}} drawing has a new revision with another sheet size: check its markers",
-        "drawingsToReview_other": "{{count}} drawings have a new revision with another sheet size: check their markers"
+        "drawingsToReview_other": "{{count}} drawings have a new revision with another sheet size: check their markers",
+        "unconvertedValues_one": "{{count}} segment value cannot be given in the template's units",
+        "unconvertedValues_other": "{{count}} segment values cannot be given in the template's units"
       }
     }
   },
@@ -917,7 +933,14 @@
       "date": "Date",
       "countedBy": "Counted by",
       "checkedBy": "Checked by",
-      "countRevision": "Count revision"
+      "countRevision": "Count revision",
+      "equipment": "Object / equipment",
+      "streamNumber": "Stream number",
+      "phaseLiquidGas": "Phase (Liquid or Gas)",
+      "pressureBara": "Pressure (bara)",
+      "temperatureC": "Temperature (°C)",
+      "h2sMoleFraction": "H2S (mole fraction)",
+      "molecularWeightOrDensity": "Mol. weight or density"
     },
     "cellPlaceholder": "e.g. D14",
     "cellInvalid": "Enter a cell such as D14.",
@@ -938,7 +961,20 @@
     "remove": "Remove mapping",
     "preview": "Preview of {{sheet}}",
     "mapped": "Mapped: {{what}}",
-    "history": "edit template mapping"
+    "history": "edit template mapping",
+    "notesLines": "Notes, one line per cell",
+    "notesLinesPlaceholder": "e.g. B72:B77",
+    "notesLinesInvalid": "Enter a range in one column, such as B72:B77.",
+    "notesLinesHint": "Notes are split into lines of {{width}} characters, one line per cell; what does not fit is on the Notes sheet.",
+    "a21": {
+      "title": "A2.1 parts count sheet",
+      "detected": "This template is the A2.1 parts count sheet. Its yellow input cells can be mapped in one step, with one copy of the sheet per segment, named by the segment ID.",
+      "apply": "Use the A2.1 mapping",
+      "applied": "A2.1 mapping applied.",
+      "typesAdded_one": "A2.1 mapping applied; {{count}} equipment type was added to the library.",
+      "typesAdded_other": "A2.1 mapping applied; {{count}} equipment types were added to the library.",
+      "history": "apply the A2.1 mapping"
+    }
   },
   "revision": {
     "title": "New revision of {{drawing}}",

@@ -78,7 +78,7 @@ test.describe('parts count', () => {
     await expect(flangeSize).toBeFocused();
     await flangeSize.fill('4');
     await flangeSize.press('Enter');
-    await expect(cell(page, 'Flange 3" < x ≤ 6": 1')).toBeVisible();
+    await expect(cell(page, 'Flange 3" < x ≤ 11": 1')).toBeVisible();
     await clickCanvas(page, 0.7, 0.3);
     await page.getByLabel('Size', { exact: true }).press('Escape');
     await expect(page.getByTestId('count-incomplete')).toHaveText('1 incomplete item');
@@ -92,7 +92,7 @@ test.describe('parts count', () => {
 
     // CNT-07: the project summary has the same layout.
     await table.getByRole('radio', { name: 'All segments' }).click();
-    await expect(cell(page, 'Flange 3" < x ≤ 6": 1')).toBeVisible();
+    await expect(cell(page, 'Flange 3" < x ≤ 11": 1')).toBeVisible();
 
     // The totals are saved as items only, never as bins (NFR-09).
     await expect(page.getByTestId('save-status')).toHaveAttribute('data-status', 'saved', {
@@ -179,7 +179,7 @@ test.describe('parts count', () => {
     );
     await library.getByRole('tab', { name: 'Equipment types' }).click();
     await library.getByRole('button', { name: 'Add type' }).click();
-    await expect(library.getByTestId('library-type')).toHaveCount(12);
+    await expect(library.getByTestId('library-type')).toHaveCount(19);
     await page.keyboard.press('Escape');
 
     // Pipe length counting on (project settings).

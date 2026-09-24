@@ -13,7 +13,8 @@ export type CheckKind =
   | 'segmentsWithoutDrawings'
   | 'duplicateTags'
   | 'drawingsToReview'
-  | 'unmappedCounts';
+  | 'unmappedCounts'
+  | 'unconvertedValues';
 
 export interface CheckResult {
   kind: CheckKind;
@@ -31,6 +32,8 @@ export interface CheckResult {
 export interface CheckExtras {
   /** Counts with no cell in the mapped template (section 7), as "IS-01: Valve …" lines. */
   unmappedCounts?: string[];
+  /** Segment values the template needs in units they cannot be given in, as "IS-01: …" lines. */
+  unconvertedValues?: string[];
 }
 
 export function preExportCheck(
@@ -109,6 +112,15 @@ export function preExportCheck(
       markerIds: [],
       segmentIds: [],
       names: extras.unmappedCounts,
+    });
+  }
+  if (extras.unconvertedValues) {
+    results.push({
+      kind: 'unconvertedValues',
+      count: extras.unconvertedValues.length,
+      markerIds: [],
+      segmentIds: [],
+      names: extras.unconvertedValues,
     });
   }
   return results;

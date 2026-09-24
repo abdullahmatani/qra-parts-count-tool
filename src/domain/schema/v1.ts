@@ -176,6 +176,14 @@ export const Segment = z
     pressure: z.number().finite().nullable().default(null),
     /** Operating temperature in `settings.units.temperature`. */
     temperature: z.number().finite().nullable().default(null),
+    /** Main equipment item or object of the segment, e.g. "V-100 inlet separator". */
+    equipment: ShortText,
+    /** Heat and mass balance stream number. */
+    streamNumber: ShortText,
+    /** H2S concentration as a mole fraction (0–1). */
+    h2sMoleFraction: z.number().finite().min(0).max(1).nullable().default(null),
+    /** Molecular weight (kg/kmol) for a gas, or density (kg/m³) for a liquid. */
+    molecularWeightOrDensity: z.number().finite().positive().nullable().default(null),
     status: SegmentStatus.default('notStarted'),
     /** SEG-03: ESDV marker ids that bound this segment. */
     boundingEsdvIds: z.array(Id).default([]),
@@ -450,10 +458,20 @@ export const HeaderField = z.enum([
   'studyRef',
   'segmentLabel',
   'segmentDescription',
+  'equipment',
+  'streamNumber',
   'fluid',
   'phase',
+  /** "Liquid" or "Gas", as the A2.1 parts count sheet asks. */
+  'phaseLiquidGas',
   'pressure',
+  /** Pressure converted to bara from the project's pressure unit. */
+  'pressureBara',
   'temperature',
+  /** Temperature converted to °C from the project's temperature unit. */
+  'temperatureC',
+  'h2sMoleFraction',
+  'molecularWeightOrDensity',
   'boundingEsdvTags',
   'linkedDrawingNumbers',
   'date',
@@ -511,6 +529,10 @@ export const TemplateMapping = z
     countCells: z.array(CountCell).default([]),
     pipeLengthCells: z.array(PipeLengthCell).default([]),
     notesCell: CellRef.nullable().default(null),
+    /** Notes written one line per cell (e.g. B72 … B77) instead of in one cell. */
+    notesLines: z.array(CellRef).max(200).default([]),
+    /** Characters per line when notes are split over `notesLines`. */
+    notesLineLength: z.number().int().min(20).max(1000).default(90),
     /** Flat item list: column for each item field. */
     itemColumns: z.partialRecord(ItemField, CellRef).default({}),
   })

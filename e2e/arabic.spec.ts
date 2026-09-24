@@ -38,9 +38,9 @@ test('switches to Arabic, mirrors the layout and exports in English (NFR-08)', a
   await expect(page.getByRole('application')).toHaveAttribute('dir', 'ltr');
   await expect(page.getByTestId('marker')).toHaveCount(17);
 
-  // Size bins read left to right inside Arabic text: 6" < x ≤ 11", not mirrored.
+  // Size bins read left to right inside Arabic text: 3" < x ≤ 11", not mirrored.
   await clickDrawing(page, 280, 300);
-  await expect(page.getByTestId('item-bin')).toHaveText('فئة الحجم: \u20666" < x ≤ 11"\u2069');
+  await expect(page.getByTestId('item-bin')).toHaveText('فئة الحجم: \u20663" < x ≤ 11"\u2069');
 
   // The language is remembered and applied before the first render.
   await page.reload();

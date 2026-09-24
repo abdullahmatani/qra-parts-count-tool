@@ -1,8 +1,14 @@
 {
   "name": "qra-parts-count-tool",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Offline-first web app for marking up PEFS/P&ID drawings, defining isolatable segments and counting leak-source equipment for QRA studies.",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdullahmatani/qra-parts-count-tool.git"
+  },
+  "homepage": "https://github.com/abdullahmatani/qra-parts-count-tool",
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "engines": {

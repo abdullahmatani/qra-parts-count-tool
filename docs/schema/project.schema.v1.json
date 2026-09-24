@@ -384,6 +384,41 @@
             "null"
           ]
         },
+        "equipment": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "streamNumber": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "h2sMoleFraction": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "molecularWeightOrDensity": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "status": {
           "default": "notStarted",
           "type": "string",
@@ -1231,10 +1266,17 @@
               "studyRef",
               "segmentLabel",
               "segmentDescription",
+              "equipment",
+              "streamNumber",
               "fluid",
               "phase",
+              "phaseLiquidGas",
               "pressure",
+              "pressureBara",
               "temperature",
+              "temperatureC",
+              "h2sMoleFraction",
+              "molecularWeightOrDensity",
               "boundingEsdvTags",
               "linkedDrawingNumbers",
               "date",
@@ -1324,6 +1366,21 @@
               "type": "null"
             }
           ]
+        },
+        "notesLines": {
+          "default": [],
+          "maxItems": 200,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\$?[A-Za-z]{1,3}\\$?(\\d{1,7})?$"
+          }
+        },
+        "notesLineLength": {
+          "default": 90,
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 1000
         },
         "itemColumns": {
           "default": {},

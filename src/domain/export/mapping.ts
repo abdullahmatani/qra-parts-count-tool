@@ -32,8 +32,40 @@ export function defaultMapping(templateFile: string, sheet: string): TemplateMap
     countCells: [],
     pipeLengthCells: [],
     notesCell: null,
+    notesLines: [],
+    notesLineLength: 90,
     itemColumns: {},
   };
+}
+
+/** Cells as the mapper shows them: "B72:B77" when they run down one column, else a list. */
+export function formatCellList(refs: readonly string[]): string {
+  if (refs.length === 0) return '';
+  const cells = refs.map((ref) => splitCellRef(ref));
+  const column = cells[0]!.column;
+  const first = cells[0]!.row ?? 0;
+  const run = cells.every((c, i) => c.column === column && c.row === first + i);
+  return run && refs.length > 1
+    ? `${column}${first}:${column}${first + refs.length - 1}`
+    : refs.join(', ');
+}
+
+/** Cells from "B72:B77" (one column) or "B72, B73"; null when the text is not that. */
+export function parseCellList(text: string): string[] | null {
+  const trimmed = text.trim().toUpperCase();
+  if (!trimmed) return [];
+  const range = /^\$?([A-Z]{1,3})\$?(\d{1,7}):\$?([A-Z]{1,3})\$?(\d{1,7})$/.exec(trimmed);
+  if (range) {
+    const [, c1, r1, c2, r2] = range;
+    const from = Number(r1);
+    const to = Number(r2);
+    if (c1 !== c2 || to < from || to - from >= 200) return null;
+    return Array.from({ length: to - from + 1 }, (_, i) => `${c1}${from + i}`);
+  }
+  const refs = trimmed.split(/[\s,;]+/).filter(Boolean);
+  return refs.every((ref) => /^\$?[A-Z]{1,3}\$?\d{1,7}$/.test(ref))
+    ? refs.map((ref) => ref.replace(/\$/g, ''))
+    : null;
 }
 
 /** A row of the count table as the mapper lists it: a type, and an actuation for valves. */
@@ -87,19 +119,24 @@ export function autoFillCountCells(
   );
 }
 
-/** Cells used more than once in the mapping, which would overwrite each other. */
+/**
+ * Cells used more than once in the mapping, which would overwrite each other.
+ * Several counts may share a cell, as their totals are added up (for example
+ * bins 3"–6" and 6"–11" into one 3"–11" row), and so may pipe lengths.
+ */
 export function duplicateCells(mapping: TemplateMapping): string[] {
+  const key = (ref: string) => ref.replace(/\$/g, '').toUpperCase();
+  const uses = [
+    ...Object.values(mapping.headerFields)
+      .filter((r): r is string => !!r)
+      .map(key),
+    ...(mapping.notesCell ? [key(mapping.notesCell)] : []),
+    ...mapping.notesLines.map(key),
+    ...new Set(mapping.countCells.map((c) => key(c.cell))),
+    ...new Set(mapping.pipeLengthCells.map((c) => key(c.cell))),
+  ];
   const seen = new Map<string, number>();
-  const refs = [
-    ...Object.values(mapping.headerFields),
-    ...mapping.countCells.map((c) => c.cell),
-    ...mapping.pipeLengthCells.map((c) => c.cell),
-    ...(mapping.notesCell ? [mapping.notesCell] : []),
-  ].filter((r): r is string => !!r);
-  for (const ref of refs) {
-    const key = ref.replace(/\$/g, '').toUpperCase();
-    seen.set(key, (seen.get(key) ?? 0) + 1);
-  }
+  for (const use of uses) seen.set(use, (seen.get(use) ?? 0) + 1);
   return [...seen].filter(([, n]) => n > 1).map(([ref]) => ref);
 }
 
@@ -123,6 +160,9 @@ export interface PortableMapping {
   countCells: { type: string; actuation: Actuation | null; bin: string; cell: string }[];
   pipeLengthCells: { bin: string; cell: string }[];
   notesCell: string | null;
+  /** Added in 2.1; absent in older mapping files. */
+  notesLines?: string[];
+  notesLineLength?: number;
   itemColumns: Partial<Record<ItemField, string>>;
 }
 
@@ -153,6 +193,8 @@ export function toPortableMapping(mapping: TemplateMapping, library: Library): P
       cell: c.cell,
     })),
     notesCell: mapping.notesCell,
+    notesLines: mapping.notesLines,
+    notesLineLength: mapping.notesLineLength,
     itemColumns: mapping.itemColumns,
   };
 }
@@ -213,6 +255,8 @@ export function fromPortableMapping(
       countCells,
       pipeLengthCells,
       notesCell: portable.notesCell && isCellRef(portable.notesCell) ? portable.notesCell : null,
+      notesLines: (portable.notesLines ?? []).filter((ref) => isCellRef(ref)),
+      notesLineLength: Math.min(1000, Math.max(20, Math.round(portable.notesLineLength ?? 90))),
       itemColumns: refs(portable.itemColumns ?? {}),
     },
     unresolved,

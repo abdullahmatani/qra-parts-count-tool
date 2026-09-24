@@ -33,6 +33,7 @@ or exports) ever leaves the browser.
 - [Browser support](#browser-support)
 - [Deployment](#deployment)
 - [Roadmap status](#roadmap-status)
+- [Licence](#licence)
 - [Contributing](#contributing)
 
 ---
@@ -48,7 +49,7 @@ or exports) ever leaves the browser.
 | Parts count   | User-defined equipment library and bin sets, reusable as files; quick item entry and bulk edit; similar-symbol suggestions to accept or reject; automatic size binning; live count tables; duplicate-tag check; pipe lengths      | CNT     |
 | Notes         | Formatted segment notes with timestamps and author initials                                                                                                                                                                       | NTE     |
 | Drawing links | Hotspots that jump between drawings, with Back history, suggested from off-page connector text; never exported                                                                                                                    | LNK     |
-| Export        | Pre-export checks; populate the client's Excel template (four layout modes); annotated vector PDFs with legend and stamp; CSV item list; export log                                                                               | EXP     |
+| Export        | Pre-export checks; fill the client's Excel template (four layout modes, one-step mapping for the A2.1 parts count sheet) touching only its input cells; annotated vector PDFs with legend and stamp; CSV item list; export log    | EXP     |
 | Interface     | English or Arabic with a right-to-left layout (exported files stay in English); light and dark themes; keyboard shortcuts                                                                                                         | NFR-08  |
 
 ## How it works
@@ -79,20 +80,20 @@ autosaves:
 
 ### Technology
 
-| Layer        | Choice                                                                                        |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| App shell    | React 19 + TypeScript (strict), built with Vite                                               |
-| Offline      | Service worker (Workbox via `vite-plugin-pwa`) that precaches every asset                     |
-| Styling / UI | Tailwind CSS 4 with CSS-variable design tokens, shadcn/ui on Radix UI, lucide-react icons     |
-| State        | Zustand + Immer, with command-pattern (patch-based) undo/redo                                 |
-| Validation   | Zod schemas for the project file; JSON Schema generated from them                             |
-| File access  | File System Access API; IndexedDB for remembered folder handles                               |
-| PDF viewing  | PDF.js (code-split, loaded on first use)                                                      |
-| CAD viewing  | Own DXF parser; LibreDWG (WebAssembly) for native DWG, in an isolated worker; canvas renderer |
-| Excel        | ExcelJS (writes into the client template, keeping its formatting and formulas)                |
-| PDF export   | pdf-lib (draws markers as vector content onto copies of the originals)                        |
-| i18n         | i18next; English and Arabic (right to left); exported files are always written in English     |
-| Tests        | Vitest + React Testing Library (unit), Playwright on Chromium (end-to-end, including offline) |
+| Layer        | Choice                                                                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App shell    | React 19 + TypeScript (strict), built with Vite                                                                                                                       |
+| Offline      | Service worker (Workbox via `vite-plugin-pwa`) that precaches every asset                                                                                             |
+| Styling / UI | Tailwind CSS 4 with CSS-variable design tokens, shadcn/ui on Radix UI, lucide-react icons                                                                             |
+| State        | Zustand + Immer, with command-pattern (patch-based) undo/redo                                                                                                         |
+| Validation   | Zod schemas for the project file; JSON Schema generated from them                                                                                                     |
+| File access  | File System Access API; IndexedDB for remembered folder handles                                                                                                       |
+| PDF viewing  | PDF.js (code-split, loaded on first use)                                                                                                                              |
+| CAD viewing  | Own DXF parser; LibreDWG (WebAssembly) for native DWG, in an isolated worker; canvas renderer                                                                         |
+| Excel        | Own XML-level writer: only the mapped input cells change, so formulas, protection, links and named ranges stay intact; ExcelJS reads templates for the mapper preview |
+| PDF export   | pdf-lib (draws markers as vector content onto copies of the originals)                                                                                                |
+| i18n         | i18next; English and Arabic (right to left); exported files are always written in English                                                                             |
+| Tests        | Vitest + React Testing Library (unit), Playwright on Chromium (end-to-end, including offline)                                                                         |
 
 ## Getting started
 
@@ -185,9 +186,12 @@ Chromium. It includes:
   [`docs/performance.md`](docs/performance.md).
 
 Test files are generated, not hand-made: `node scripts/generate-fixtures.mjs` (PDF),
-`node scripts/generate-cad-fixtures.mjs` (DXF) and `node scripts/generate-excel-fixtures.mjs`
-(a client-style Excel template) write `e2e/fixtures/`; the heavy performance sheets are
-generated on demand into `.cache/perf/`.
+`node scripts/generate-cad-fixtures.mjs` (DXF), `node scripts/generate-excel-fixtures.mjs`
+(a client-style Excel template) and `node scripts/generate-a21-fixture.mjs` (a synthetic stand-in
+for the A2.1 parts count sheet) write `e2e/fixtures/`; the heavy performance sheets are
+generated on demand into `.cache/perf/`. The real A2.1 workbook is not in the repository: it links
+to internal files and carries the organisation's frequency data. Keep it with each project, in
+`templates/`.
 
 Playwright is pinned to the version whose Chromium build is installed. On a new machine, run
 `pnpm exec playwright install chromium` once. To use a different Chromium binary, set
@@ -279,11 +283,10 @@ folder copies the whole study.
 
 The selection is documented in [`docs/spikes/dwg-renderer.md`](docs/spikes/dwg-renderer.md).
 
-> **Licence note.** LibreDWG and `@mlightcad/libredwg-web` are licensed under **GPL-3.0**.
-> Distributing a build that includes them has licence obligations; whether the worker boundary
-> is sufficient is a decision for the product owner. `VITE_DWG_READER=none pnpm build` produces a
-> build without any GPL code: native `.dwg` import then reports that the reader is not included,
-> and DXF and PDF plots still work.
+> **Licence.** LibreDWG and `@mlightcad/libredwg-web` are licensed under **GPL-3.0**. Native DWG
+> support is required, so the whole app is released under the GPL (see [Licence](#licence)).
+> `VITE_DWG_READER=none pnpm build` still produces a build without LibreDWG, with DXF and PDF
+> plots only.
 
 ## Browser support
 
@@ -310,6 +313,12 @@ two ways:
 Browsers allow service workers and folder access only in a secure context, so the app must be
 served over `https://` or `http://localhost`. Opening `index.html` as `file://` will not work.
 
+Every copy of the app is a copy of GPL software: the build includes `LICENSE.txt` and
+`THIRD_PARTY_LICENSES.txt`, and the zip adds `SOURCE.md` and, from a git checkout,
+`qra-parts-count-tool-<version>-source.zip` with the source of the same commit. Whoever
+publishes the URL or passes the zip on keeps that source available, including the LibreDWG
+sources that `SOURCE.md` names.
+
 ## Roadmap status
 
 Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is kept in that file.
@@ -331,11 +340,11 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 1.3.0   | Navigation aids                                 | Done ⁴ |
 | 2.0.0   | Assisted counting                               | Done ⁵ |
 
-¹ The DWG reader choice is provisional until it is re-run on the client's sample drawings and the
-GPL question is decided (see the licence note above).
+¹ The DWG reader is licensed under the GPL, and the app with it; the reader choice is still to be
+re-run on the client's sample drawings.
 
-² Checked against a synthetic client-style template; to be re-checked with the client's own
-template when it is provided.
+² Checked against the A2.1 parts count sheet, the template in use: one sheet per segment, only
+the yellow input cells written, results recalculated.
 
 ³ The acceptance test on a real QRA study (roadmap #44) and publishing to the public URL (#47) are
 steps for the project team; the synthetic 300-drawing test and the zipped site are done.
@@ -345,6 +354,21 @@ process-safety engineer before it is used on a client study.
 
 ⁵ Symbol suggestions match by example (no trained model). A trained detector needs a labelled
 set of the client's drawings; see [the research note](docs/spikes/symbol-detection.md).
+
+## Licence
+
+Copyright (C) 2026 the QRA Parts Count Tool contributors.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the
+GNU General Public License as published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version. It is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
+
+The GPL was chosen because native DWG reading, a requirement, uses GNU LibreDWG, which is
+GPL-3.0; see [`docs/spikes/dwg-renderer.md`](docs/spikes/dwg-renderer.md). The licence covers the
+program only: drawings, project files and exported workbooks and PDFs belong to their owners.
+Components and their licences are listed in `THIRD_PARTY_LICENSES.txt` in every build.
 
 ## Contributing
 

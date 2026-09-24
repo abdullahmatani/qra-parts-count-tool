@@ -57,7 +57,7 @@ describe('library files (CNT-11)', () => {
     expect(LibrarySchema.parse(library)).toEqual(library);
     expect(summary).toEqual({
       typesAdded: 1,
-      typesUpdated: 11,
+      typesUpdated: 18,
       binSetsAdded: 0,
       binSetsUpdated: 6,
     });

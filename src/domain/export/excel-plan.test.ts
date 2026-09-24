@@ -18,6 +18,7 @@ import {
   columnLetters,
   columnNumber,
   itemListCsv,
+  notesToLines,
   planExcelExport,
   sheetName,
   splitCellRef,
@@ -110,7 +111,7 @@ function setup() {
     valve,
     flange,
     valve2: bin(manualBins, '1" < x ≤ 2"'),
-    flange6: bin(flangeBins, '3" < x ≤ 6"'),
+    flange6: bin(flangeBins, '3" < x ≤ 11"'),
   };
 }
 
@@ -126,6 +127,8 @@ function mapping(overrides: Partial<TemplateMapping>): TemplateMapping {
     countCells: [],
     pipeLengthCells: [],
     notesCell: null,
+    notesLines: [],
+    notesLineLength: 90,
     itemColumns: {},
     ...overrides,
   };
@@ -334,5 +337,68 @@ describe('CSV item list (EXP-06)', () => {
     expect(header!.split(',')[0]).toBe('seq');
     expect(row).toContain('"Needs ""check"", later"');
     expect(row!.startsWith('3,')).toBe(true);
+  });
+});
+
+describe('A2.1 details (section 7)', () => {
+  it('splits notes into lines at spaces and says where the rest is', () => {
+    expect(notesToLines('one two three four', 3, 9, 'see Notes')).toEqual([
+      'one two',
+      'three',
+      'four',
+    ]);
+    expect(notesToLines('a\n\nb', 3, 20, 'see Notes')).toEqual(['a', 'b']);
+    expect(notesToLines('abcdefghijklmnop', 3, 6, 'x')).toEqual(['abcdef', 'ghijkl', 'mnop']);
+    const cut = notesToLines('alpha beta gamma delta epsilon zeta eta theta', 2, 20, 'see Notes');
+    expect(cut).toHaveLength(2);
+    expect(cut[1]).toMatch(/… \(see Notes\)$/);
+    expect(cut[1]!.length).toBeLessThanOrEqual(20);
+  });
+
+  it('writes converted process data, notes one line per cell, and adds up shared count cells', () => {
+    const { project, entries, valve, valve2 } = setup();
+    project.settings.units = { ...project.settings.units, pressure: 'barg', temperature: '°C' };
+    const s1 = project.segments[0]!;
+    Object.assign(s1, { phase: 'Gas', temperature: 60, equipment: 'V-100', streamNumber: '101' });
+    const plan = planExcelExport({
+      project,
+      entries,
+      now,
+      labels,
+      templateSheets: ['Master'],
+      mapping: mapping({
+        headerFields: {
+          equipment: 'B6',
+          streamNumber: 'B8',
+          pressureBara: 'B9',
+          temperatureC: 'B10',
+          phaseLiquidGas: 'B11',
+        },
+        // Two bins into one cell: their totals add up.
+        countCells: [
+          { equipmentTypeId: valve.id, actuation: 'manual', binId: valve2, cell: 'C23' },
+          {
+            equipmentTypeId: valve.id,
+            actuation: 'manual',
+            binId: project.library.binSets.find((b) => b.name === 'Valves, manual')!.bins[0]!.id,
+            cell: 'C23',
+          },
+        ],
+        notesLines: ['B72', 'B73', 'B74'],
+        notesLineLength: 30,
+      }),
+    });
+    const value = (sheet: string, address: string) =>
+      plan.writes.filter((w) => w.sheet === sheet && w.address === address).map((w) => w.value);
+    expect(value('IS-01', 'B6')).toEqual(['V-100']);
+    expect(value('IS-01', 'B8')).toEqual(['101']);
+    expect(value('IS-01', 'B9')).toEqual([46.01325]);
+    expect(value('IS-01', 'B10')).toEqual([60]);
+    expect(value('IS-01', 'B11')).toEqual(['Gas']);
+    expect(value('IS-01', 'C23')).toEqual([1]);
+    expect(value('IS-02', 'C23')).toEqual([1]);
+    expect(value('IS-01', 'B72')[0]).toMatch(/^\[/);
+    expect(value('IS-01', 'B74')).toEqual([null]);
+    expect(value('IS-02', 'B72')).toEqual([null]);
   });
 });

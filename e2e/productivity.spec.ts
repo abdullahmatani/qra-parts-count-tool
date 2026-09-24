@@ -104,7 +104,7 @@ test('exports the equipment library and imports it back, merged (CNT-11)', async
   const edited = test.info().outputPath('client.library.json');
   await writeFile(edited, JSON.stringify(file));
   await dialog.getByTestId('library-file-input').setInputFiles(edited);
-  await expect(page.getByText(/Library imported\. Types: 1 added, 11 updated\./)).toBeVisible();
+  await expect(page.getByText(/Library imported\. Types: 1 added, 18 updated\./)).toBeVisible();
   await expect
     .poll(() =>
       dialog.locator('input').evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value)),

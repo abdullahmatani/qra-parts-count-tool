@@ -79,7 +79,7 @@ describe('count entries (CNT-01, CNT-03, CNT-05)', () => {
     add({ equipmentTypeId: null, nominalSize: 2 });
     add({ equipmentTypeId: type('Valve'), nominalSize: 2 });
     add({ equipmentTypeId: type('Flange') });
-    add({ equipmentTypeId: type('Pump') });
+    add({ equipmentTypeId: type('Pump, centrifugal (single seal)') });
     const entries = countEntries(doc);
     expect(entries.map((e) => e.issues)).toEqual([['noType'], ['noActuation'], ['noSize'], []]);
     const t = table(doc, 'seg_a');
@@ -121,9 +121,9 @@ describe('count entries (CNT-01, CNT-03, CNT-05)', () => {
 
   it('builds the project summary across all segments but not unassigned items (CNT-07)', () => {
     const { doc, type, add } = setup();
-    add({ equipmentTypeId: type('Pump') });
-    add({ equipmentTypeId: type('Pump'), segmentId: 'seg_b' });
-    add({ equipmentTypeId: type('Pump'), segmentId: null });
+    add({ equipmentTypeId: type('Pump, centrifugal (single seal)') });
+    add({ equipmentTypeId: type('Pump, centrifugal (single seal)'), segmentId: 'seg_b' });
+    add({ equipmentTypeId: type('Pump, centrifugal (single seal)'), segmentId: null });
     expect(table(doc, null).total).toBe(2);
     expect(table(doc, 'seg_b').total).toBe(1);
   });
@@ -205,7 +205,7 @@ describe('duplicate tags (CNT-08)', () => {
 describe('marker warnings', () => {
   it('collects unassigned and incomplete markers', () => {
     const { doc, type, add } = setup();
-    add({ equipmentTypeId: type('Pump'), segmentId: null });
+    add({ equipmentTypeId: type('Pump, centrifugal (single seal)'), segmentId: null });
     add({ equipmentTypeId: null });
     const warnings = markerWarningMap(doc);
     expect(warnings.get('mkr_1')).toEqual(['unassigned']);

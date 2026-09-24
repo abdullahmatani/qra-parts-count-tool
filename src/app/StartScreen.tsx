@@ -2,6 +2,7 @@ import { FileArchive, FolderOpen, FolderPlus, GraduationCap, ShieldCheck } from 
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { useUiStore } from '@/store/ui-store';
 import { AppMark } from './AppMark';
 import { OfflineIndicator } from './OfflineIndicator';
 
@@ -127,6 +128,19 @@ export function StartScreen({
 
         <p className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="size-4" /> {t('start.privacyNote')}
+        </p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>{t('start.licence')}</span>
+          <a className="underline" href={__SOURCE_URL__} target="_blank" rel="noreferrer">
+            {t('settings.sourceCode')}
+          </a>
+          <button
+            type="button"
+            className="underline"
+            onClick={() => useUiStore.getState().openDialog('settings')}
+          >
+            {t('header.settings')}
+          </button>
         </p>
       </div>
     </main>
