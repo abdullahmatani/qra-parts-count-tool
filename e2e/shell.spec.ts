@@ -27,4 +27,32 @@ test.describe('app shell', () => {
     expect(await app.list('e2e-harness')).toEqual(['probe.txt']);
     await app.removeDirectory('e2e-harness');
   });
+
+  test('says it is free software under the GPL, with its source and licences (GPL-3.0)', async ({
+    app,
+  }) => {
+    await app.open();
+    const page = app.page;
+    await expect(page.getByTestId('start-screen')).toContainText(
+      'Free software under the GNU GPL v3 or later.',
+    );
+    await page.getByRole('button', { name: 'Settings' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Settings' });
+    await dialog.getByRole('tab', { name: 'About' }).click();
+    const licence = dialog.getByTestId('about-licence');
+    await expect(licence).toContainText('GNU General Public License, version 3 or later');
+    await expect(licence.getByRole('link', { name: 'Source code' })).toHaveAttribute(
+      'href',
+      'https://github.com/abdullahmatani/qra-parts-count-tool',
+    );
+    // The licence texts are part of the app, so they are there offline too.
+    for (const [name, text] of [
+      ['GNU GPL v3', 'GNU GENERAL PUBLIC LICENSE'],
+      ['Third-party licences', '@mlightcad/libredwg-web'],
+    ] as const) {
+      const href = await licence.getByRole('link', { name }).getAttribute('href');
+      const body = await page.evaluate(async (url) => (await fetch(url!)).text(), href);
+      expect(body).toContain(text);
+    }
+  });
 });

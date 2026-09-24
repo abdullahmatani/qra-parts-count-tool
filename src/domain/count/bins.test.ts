@@ -31,9 +31,9 @@ describe('size bins (CNT-04, CNT-05)', () => {
       '1" < x ≤ 2"',
       '1" < x ≤ 2"',
       '2" < x ≤ 3"',
-      '3" < x ≤ 6"',
-      '6" < x ≤ 11"',
-      '6" < x ≤ 11"',
+      '3" < x ≤ 11"',
+      '3" < x ≤ 11"',
+      '3" < x ≤ 11"',
       '> 11"',
     ]);
     expect(checkBinSet(valves)).toEqual([]);
@@ -63,26 +63,30 @@ describe('size bins (CNT-04, CNT-05)', () => {
 });
 
 describe('starter library (CNT-02)', () => {
-  it('covers the FDS equipment list without naming a dataset', () => {
+  it('matches the rows of the A2.1 parts count sheet without naming a dataset', () => {
     const library = starterLibrary();
     expect(library.datasetName).toBe('');
-    expect(library.equipmentTypes.map((t) => t.category)).toEqual([
+    expect(library.equipmentTypes.map((t) => t.excelKey)).toEqual([
       'valve',
       'flange',
       'smallBore',
-      'pump',
-      'compressor',
+      'compressorCentrifugal',
+      'compressorReciprocating',
+      'finFanCooler',
+      'heatExchangerShell',
+      'heatExchangerTube',
       'vessel',
-      'heatExchanger',
-      'filter',
+      'pumpDoubleSeal',
+      'pumpSingleSeal',
+      'pumpReciprocating',
+      'pipeline',
       'pigTrap',
-      'other',
+      'xmasTreeLow',
+      'xmasTreeHigh',
+      'plateHeatExchanger',
       'pipe',
     ]);
-    const valve = library.equipmentTypes[0]!;
-    expect(valve.hasActuation).toBe(true);
-    expect(library.esdvEquipmentTypeId).toBe(valve.id);
-    const binSetIds = new Set(library.binSets.map((b) => b.id));
-    for (const type of library.equipmentTypes) expect(binSetIds.has(type.binSetId!)).toBe(true);
+    const smallBore = library.binSets.find((b) => b.name === 'Small-bore connections')!;
+    expect(smallBore.bins.map((b) => b.label)).toEqual(['≤ 1/2"', '1/2" < x ≤ 1"', '> 1"']);
   });
 });

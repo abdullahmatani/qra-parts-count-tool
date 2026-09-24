@@ -120,12 +120,19 @@
       "temperature": "درجة حرارة التشغيل ({{unit}})",
       "status": "الحالة",
       "countedBy": "حصره",
-      "checkedBy": "دققه"
+      "checkedBy": "دققه",
+      "equipment": "الجسم / المعدة",
+      "streamNumber": "رقم التيار",
+      "h2s": "H2S (كسر مولي)",
+      "molecularWeightOrDensity": "الوزن الجزيئي (غاز) أو الكثافة كغ/م³ (سائل)",
+      "phasePlaceholder": "Liquid أو Gas"
     },
     "errors": {
       "labelRequired": "أدخل تسمية، مثل IS-01.",
       "labelTaken": "هذه التسمية مستخدمة لمقطع آخر.",
-      "number": "أدخل رقمًا."
+      "number": "أدخل رقمًا.",
+      "fraction": "أدخل كسرًا موليًا بين 0 و1.",
+      "positive": "أدخل عددًا أكبر من الصفر."
     },
     "details": {
       "process": "بيانات العملية",
@@ -245,7 +252,12 @@
     "cadColorModes": {
       "monochrome": "أحادية اللون، مثل الطباعة",
       "color": "ألوان CAD"
-    }
+    },
+    "licenceTitle": "الترخيص",
+    "licence": "برنامج حر: يمكنك إعادة توزيعه وتعديله بموجب رخصة جنو العمومية العامة، الإصدار 3 أو أحدث. ويُقدَّم دون أي ضمان.",
+    "sourceCode": "الشيفرة المصدرية",
+    "licenceText": "GNU GPL v3",
+    "thirdParty": "تراخيص الجهات الخارجية"
   },
   "start": {
     "newProject": "مشروع جديد",
@@ -261,7 +273,8 @@
     "noRecent": "لا توجد مشاريع أخيرة.",
     "unsupported": "لا يستطيع هذا المتصفح الكتابة في المجلدات المحلية. استخدم إصدارًا حديثًا من Microsoft Edge أو Google Chrome.",
     "privacyNote": "تبقى مخططاتك وعمليات الحصر على هذا الحاسوب.",
-    "forget": "إزالة {{name}} من المشاريع الأخيرة"
+    "forget": "إزالة {{name}} من المشاريع الأخيرة",
+    "licence": "برنامج حر بموجب رخصة GNU GPL الإصدار 3 أو أحدث."
   },
   "project": {
     "form": {
@@ -933,7 +946,8 @@
       "unreadable": "تعذّرت قراءة القالب بوصفه مصنف Excel.",
       "macro": "القوالب التي تحتوي على وحدات ماكرو (‎.xlsm) غير مدعومة. احفظ نسخة ‎.xlsx واستخدمها.",
       "missingSheet": "لا يحتوي القالب على ورقة باسم {{sheet}}.",
-      "missingTemplate": "ملف القالب {{file}} مفقود من templates/."
+      "missingTemplate": "ملف القالب {{file}} مفقود من templates/.",
+      "formulaCell": "الخلية {{cell}} في القالب تحتوي على صيغة. طابق خلايا الإدخال فقط: لا تُستبدل صيغ القالب أبدًا."
     },
     "pdf": {
       "legend": "مفتاح الرموز",
@@ -1006,7 +1020,13 @@
         "drawingsToReview_two": "{{count}} مخططات لها مراجعة جديدة بحجم ورقة مختلف: تحقق من علاماتها",
         "drawingsToReview_few": "{{count}} مخططات لها مراجعة جديدة بحجم ورقة مختلف: تحقق من علاماتها",
         "drawingsToReview_many": "{{count}} مخططات لها مراجعة جديدة بحجم ورقة مختلف: تحقق من علاماتها",
-        "drawingsToReview_other": "{{count}} مخططات لها مراجعة جديدة بحجم ورقة مختلف: تحقق من علاماتها"
+        "drawingsToReview_other": "{{count}} مخططات لها مراجعة جديدة بحجم ورقة مختلف: تحقق من علاماتها",
+        "unconvertedValues_zero": "{{count}} قيم لمقاطع لا يمكن التعبير عنها بوحدات القالب",
+        "unconvertedValues_one": "قيمة واحدة ({{count}}) لمقطع لا يمكن التعبير عنها بوحدات القالب",
+        "unconvertedValues_two": "{{count}} قيم لمقاطع لا يمكن التعبير عنها بوحدات القالب",
+        "unconvertedValues_few": "{{count}} قيم لمقاطع لا يمكن التعبير عنها بوحدات القالب",
+        "unconvertedValues_many": "{{count}} قيم لمقاطع لا يمكن التعبير عنها بوحدات القالب",
+        "unconvertedValues_other": "{{count}} قيم لمقاطع لا يمكن التعبير عنها بوحدات القالب"
       }
     }
   },
@@ -1053,7 +1073,14 @@
       "date": "التاريخ",
       "countedBy": "أعدّه",
       "checkedBy": "دقّقه",
-      "countRevision": "مراجعة الحصر"
+      "countRevision": "مراجعة الحصر",
+      "equipment": "الجسم / المعدة",
+      "streamNumber": "رقم التيار",
+      "phaseLiquidGas": "الطور (Liquid أو Gas)",
+      "pressureBara": "الضغط (bara)",
+      "temperatureC": "درجة الحرارة (°C)",
+      "h2sMoleFraction": "H2S (كسر مولي)",
+      "molecularWeightOrDensity": "الوزن الجزيئي أو الكثافة"
     },
     "cellPlaceholder": "مثل D14",
     "cellInvalid": "أدخل خلية مثل D14.",
@@ -1078,7 +1105,24 @@
     "remove": "إزالة المطابقة",
     "preview": "معاينة {{sheet}}",
     "mapped": "مُطابَق: {{what}}",
-    "history": "تعديل مطابقة القالب"
+    "history": "تعديل مطابقة القالب",
+    "notesLines": "الملاحظات، سطر واحد لكل خلية",
+    "notesLinesPlaceholder": "مثل B72:B77",
+    "notesLinesInvalid": "أدخل نطاقًا في عمود واحد، مثل B72:B77.",
+    "notesLinesHint": "تُقسَّم الملاحظات إلى أسطر من {{width}} حرفًا، سطر واحد لكل خلية؛ وما لا يتسع يكون في ورقة Notes.",
+    "a21": {
+      "title": "ورقة حصر المكونات A2.1",
+      "detected": "هذا القالب هو ورقة حصر المكونات A2.1. يمكن مطابقة خلايا الإدخال الصفراء فيه بخطوة واحدة، مع نسخة من الورقة لكل مقطع تحمل اسم معرّف المقطع.",
+      "apply": "استخدام مطابقة A2.1",
+      "applied": "طُبّقت مطابقة A2.1.",
+      "typesAdded_zero": "طُبّقت مطابقة A2.1؛ وأُضيفت {{count}} أنواع معدات إلى المكتبة.",
+      "typesAdded_one": "طُبّقت مطابقة A2.1؛ وأُضيف نوع معدة واحد ({{count}}) إلى المكتبة.",
+      "typesAdded_two": "طُبّقت مطابقة A2.1؛ وأُضيفت {{count}} أنواع معدات إلى المكتبة.",
+      "typesAdded_few": "طُبّقت مطابقة A2.1؛ وأُضيفت {{count}} أنواع معدات إلى المكتبة.",
+      "typesAdded_many": "طُبّقت مطابقة A2.1؛ وأُضيفت {{count}} أنواع معدات إلى المكتبة.",
+      "typesAdded_other": "طُبّقت مطابقة A2.1؛ وأُضيفت {{count}} أنواع معدات إلى المكتبة.",
+      "history": "تطبيق مطابقة A2.1"
+    }
   },
   "revision": {
     "title": "مراجعة جديدة لـ {{drawing}}",

@@ -18,6 +18,7 @@ import type {
 } from '../schema/types';
 import { formatSize, sizeInInches } from '../sizes';
 import type { ExportableProject } from './exportable';
+import { liquidOrGas, pressureToBara, temperatureToCelsius } from './process-units';
 
 export type CellValue = string | number | null;
 
@@ -141,6 +142,7 @@ export function headerValues(
   const esdvTags = segment
     ? segment.boundingEsdvIds.map((id) => markers.get(id)?.esdv?.tag || '').filter(Boolean)
     : [];
+  const units = project.settings.units;
   return {
     projectName: project.name,
     client: project.client,
@@ -148,10 +150,17 @@ export function headerValues(
     studyRef: project.studyRef,
     segmentLabel: segment?.label ?? null,
     segmentDescription: segment?.description ?? null,
+    equipment: segment?.equipment ?? null,
+    streamNumber: segment?.streamNumber ?? null,
     fluid: segment?.fluid ?? null,
     phase: segment?.phase ?? null,
+    phaseLiquidGas: segment ? liquidOrGas(segment.phase) : null,
     pressure: segment?.pressure ?? null,
+    pressureBara: segment ? pressureToBara(segment.pressure, units.pressure) : null,
     temperature: segment?.temperature ?? null,
+    temperatureC: segment ? temperatureToCelsius(segment.temperature, units.temperature) : null,
+    h2sMoleFraction: segment?.h2sMoleFraction ?? null,
+    molecularWeightOrDensity: segment?.molecularWeightOrDensity ?? null,
     boundingEsdvTags: segment ? esdvTags.join(', ') : null,
     linkedDrawingNumbers: segment ? linked.join(', ') : null,
     date: isoDate(now),
@@ -171,6 +180,39 @@ export function segmentNotesText(project: ExportableProject, segmentId: string):
       return `[${head}] ${noteToPlainText(n.text)}`;
     })
     .join('\n\n');
+}
+
+/**
+ * Notes as lines of at most `width` characters, broken at spaces, for a
+ * template with one cell per note line. When they do not fit in `lines`
+ * cells, the last cell says where the rest is.
+ */
+export function notesToLines(text: string, lines: number, width: number, more: string): string[] {
+  const out: string[] = [];
+  for (const paragraph of text.split('\n')) {
+    if (!paragraph.trim()) continue;
+    let line = '';
+    for (const word of paragraph.split(/\s+/).filter(Boolean)) {
+      if (line && line.length + 1 + word.length > width) {
+        out.push(line);
+        line = '';
+      }
+      // A word longer than a line is cut across lines.
+      let rest = line ? `${line} ${word}` : word;
+      while (rest.length > width) {
+        out.push(rest.slice(0, width));
+        rest = rest.slice(width);
+      }
+      line = rest;
+    }
+    if (line) out.push(line);
+  }
+  if (out.length <= lines) return out;
+  const suffix = ` … (${more})`;
+  const kept = out.slice(0, lines);
+  const last = kept[lines - 1]!;
+  kept[lines - 1] = `${last.slice(0, Math.max(0, width - suffix.length))}${suffix}`;
+  return kept;
 }
 
 const countKey = (typeId: string, actuation: Actuation | null, binId: string) =>
@@ -351,18 +393,26 @@ export function planExcelExport(input: PlanInput): ExcelPlan {
         write(sheet, at.address, headers[field], at.styleFrom);
       }
       const totals = allTotals.get(segment.id)!;
+      // Counts mapped to the same cell are added up (several bins in one template row).
+      const sums = new Map<string, { address: string; styleFrom?: string; value: number }>();
+      const add = (ref: string, value: number) => {
+        const at = place(ref, index);
+        const key = at.address.replace(/\$/g, '').toUpperCase();
+        const sum = sums.get(key);
+        if (sum) sum.value += value;
+        else sums.set(key, { ...at, value });
+      };
       for (const cell of mapping.countCells) {
-        const at = place(cell.cell, index);
-        write(
-          sheet,
-          at.address,
+        add(
+          cell.cell,
           totals.counts.get(countKey(cell.equipmentTypeId, cell.actuation, cell.binId)) ?? 0,
-          at.styleFrom,
         );
       }
       for (const cell of mapping.pipeLengthCells) {
-        const at = place(cell.cell, index);
-        write(sheet, at.address, totals.lengths.get(cell.binId) ?? 0, at.styleFrom);
+        add(cell.cell, totals.lengths.get(cell.binId) ?? 0);
+      }
+      for (const sum of sums.values()) {
+        write(sheet, sum.address, Number(sum.value.toPrecision(12)), sum.styleFrom);
       }
       if (mapping.notesCell) {
         const notes = segmentNotesText(project, segment.id);
@@ -372,6 +422,18 @@ export function planExcelExport(input: PlanInput): ExcelPlan {
             ? `${notes.slice(0, NOTES_CELL_LIMIT)}… (${labels.seeNotesSheet})`
             : notes;
         write(sheet, at.address, cut, at.styleFrom);
+      }
+      if (mapping.notesLines.length > 0) {
+        const lines = notesToLines(
+          segmentNotesText(project, segment.id),
+          mapping.notesLines.length,
+          mapping.notesLineLength,
+          labels.seeNotesSheet,
+        );
+        mapping.notesLines.forEach((ref, i) => {
+          const at = place(ref, index);
+          write(sheet, at.address, lines[i] ?? null, at.styleFrom);
+        });
       }
     });
     if (mapping.layoutMode === 'sheetPerSegment' && segments.length > 0) {

@@ -14,6 +14,7 @@ import {
 import { exportableProject } from '@/domain/export/exportable';
 import { drawingName, planPdfExport, type PdfLabels } from '@/domain/export/pdf-plan';
 import type { CheckKind } from '@/domain/export/pre-export-check';
+import { unconvertedValues } from '@/domain/export/process-units';
 import type { ProjectDoc } from '@/domain/model';
 import type { Drawing, ItemField } from '@/domain/schema/types';
 import type { DisplayList } from '@/features/cad/display-list';
@@ -23,7 +24,8 @@ import { isNotFound, type FsDirHandle } from '@/lib/fs/types';
 import { requireWorkingDirectory } from '@/services/session';
 import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
-import { TemplateError, applyPlan, loadExcelJs, openTemplate } from './excel-writer';
+import { TemplateError } from './excel-writer';
+import { templateSheetNames, writeWorkbook } from './xlsx-writer';
 import { PdfSourceError, type BuildPage, type PageSource } from './pdf-export-protocol';
 import { PdfExportClient } from './pdf-export-client';
 
@@ -112,6 +114,21 @@ export function unmappedCountNames(
   });
 }
 
+/** Segment values the mapped template needs in units they cannot be given in (EXP-01). */
+export function unconvertedValueNames(doc: ProjectDoc): string[] | null {
+  const fields = doc.templateMapping?.headerFields;
+  if (!fields || doc.templateMapping?.layoutMode === 'flatItemList') return null;
+  return unconvertedValues(
+    doc.segmentOrder.map((id) => doc.segments[id]!).filter(Boolean),
+    doc.settings.units,
+    {
+      phaseLiquidGas: !!fields.phaseLiquidGas,
+      pressureBara: !!fields.pressureBara,
+      temperatureC: !!fields.temperatureC,
+    },
+  );
+}
+
 /** Commits the annotated PDF file name pattern (EXP-05) as one undo step. */
 export function setFilenamePatternCommand(pattern: string): boolean {
   return useProjectStore.getState().apply(t('export.patternHistory'), (draft) => {
@@ -163,9 +180,11 @@ async function readTemplate(dir: FsDirHandle, fileName: string): Promise<ArrayBu
 /** Turns template problems into messages for the user. */
 export function exportErrorMessage(error: unknown): string {
   if (error instanceof TemplateError) {
-    return error.kind === 'missingSheet'
-      ? t('export.errors.missingSheet', { sheet: error.message })
-      : t(`export.errors.${error.kind}`);
+    if (error.kind === 'missingSheet')
+      return t('export.errors.missingSheet', { sheet: error.message });
+    if (error.kind === 'formulaCell')
+      return t('export.errors.formulaCell', { cell: error.message });
+    return t(`export.errors.${error.kind}`);
   }
   return error instanceof Error ? error.message : String(error);
 }
@@ -317,21 +336,19 @@ export async function runExport(options: ExportOptions, now = new Date()): Promi
 
   if (options.excel) {
     const mapping = doc.templateMapping;
-    const ExcelJS = await loadExcelJs();
-    const workbook = mapping
-      ? await openTemplate(await readTemplate(dir, mapping.templateFile), mapping.templateFile)
-      : new ExcelJS.Workbook();
-    workbook.creator = 'QRA Parts Count Tool';
+    const template = mapping
+      ? { bytes: await readTemplate(dir, mapping.templateFile), fileName: mapping.templateFile }
+      : null;
     const plan = planExcelExport({
       project,
       entries,
       mapping,
-      templateSheets: workbook.worksheets.map((s) => s.name),
+      templateSheets: template ? await templateSheetNames(template) : [],
       now,
       labels: excelLabels(),
     });
-    applyPlan(workbook, plan);
-    const buffer = (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
+    // Only the mapped cells change; the rest of the template is kept as it is.
+    const buffer = await writeWorkbook(template, plan);
     const name = `${base}_${tFile('export.fileSuffix')}.xlsx`;
     await writeFile(dir, `${folder}/${name}`, new Blob([buffer]));
     files.push(name);

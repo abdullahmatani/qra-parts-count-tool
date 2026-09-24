@@ -1,6 +1,8 @@
 # Spike: native DWG rendering in the browser (roadmap #12, risk R1)
 
-**Status:** provisional decision, pending the client's 10 sample PEFS/P&IDs.
+**Status:** licence decided (2026-09-24): native DWG is mandatory, so the app is released under
+GPL-3.0-or-later with LibreDWG. The fidelity check on the client's 10 sample PEFS/P&IDs is still
+pending.
 **Date:** 2026-09-23
 **Requirements:** DRW-02 (native .dwg, Must), DRW-10 (DXF and PDF plots as alternatives, Must),
 DRW-09 (layer toggles, Could), NFR-01 (offline), NFR-02 (open an A1 drawing in < 3 s), FDS §2
@@ -138,16 +140,19 @@ obligations:
 2. **DXF: the app's own parser**, always available whatever the DWG decision (DRW-10).
 3. **PDF plots:** imported like any PDF and flagged as CAD plots (DRW-10). This is the fallback
    for drawings that use entities the readers cannot show.
-4. **Revisit before v1.0**, once the client's 10 samples are available and the product owner
-   has decided on the GPL question. If GPL distribution is not acceptable, either license the
-   ODA SDK and implement it behind the same worker interface, or ship with
-   `VITE_DWG_READER=none`.
+4. **Licence (decided 2026-09-24):** native DWG is mandatory, and the product owner chose to
+   release the whole app as free software under **GPL-3.0-or-later** rather than license the
+   ODA SDK. Every build carries `LICENSE.txt` and `THIRD_PARTY_LICENSES.txt`; the About tab
+   links to the source; the zipped site adds `SOURCE.md` and a source archive of the same
+   commit. `VITE_DWG_READER=none` remains for a build without LibreDWG.
+5. **Revisit the reader** once the client's 10 samples are available.
 
 ## Follow-ups
 
 - Run the harness on the client's 10 PEFS/P&IDs, and compare each rendered sheet with its PDF
   plot.
-- Decide the GPL question (product owner / legal).
+- ~~Decide the GPL question~~: GPL-3.0-or-later for the whole app (2026-09-24).
+- Keep the LibreDWG and libredwg-web sources available wherever the app is published (GPL-3.0 §6).
 - Consider converting MULTILEADER and ACAD_TABLE from their proxy graphics or generated blocks.
 - SHX fonts are drawn with a sans-serif font. This is fine for reading tags, but the text
   widths differ from AutoCAD's.

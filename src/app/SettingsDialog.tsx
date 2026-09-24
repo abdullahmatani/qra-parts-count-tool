@@ -160,6 +160,36 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
               <p className="font-medium">{t('settings.storageTitle')}</p>
               <p className="text-muted-foreground">{t('settings.storage')}</p>
             </div>
+            <div data-testid="about-licence">
+              <p className="font-medium">{t('settings.licenceTitle')}</p>
+              <p className="text-muted-foreground">{t('settings.licence')}</p>
+              <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                <a
+                  className="text-primary underline"
+                  href={__SOURCE_URL__}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('settings.sourceCode')}
+                </a>
+                <a
+                  className="text-primary underline"
+                  href={`${import.meta.env.BASE_URL}LICENSE.txt`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('settings.licenceText')}
+                </a>
+                <a
+                  className="text-primary underline"
+                  href={`${import.meta.env.BASE_URL}THIRD_PARTY_LICENSES.txt`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('settings.thirdParty')}
+                </a>
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>

@@ -108,7 +108,10 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
 
 1. Click **+ Segment** in the left pane and give it a label (for example `IS-01`), a colour, the
    fluid and the operating conditions. The new segment becomes the **active segment**: new markers
-   go to it. The toolbar shows which segment is active.
+   go to it. The toolbar shows which segment is active. The segment panel on the right also holds
+   what the A2.1 parts count sheet asks for: the object or equipment, the H&MB stream number, the
+   phase (**Liquid** or **Gas**), the H2S mole fraction, and the molecular weight (gas) or density
+   in kg/m³ (liquid).
 2. Select the **ESDV** tool (`E`) and click each ESD valve on the drawing. In the inspector on the
    right, enter its tag and size, and choose the segment **upstream** and **downstream** of it. The
    boundary rule decides which of the two counts the valve itself; an ESDV can override the project
@@ -223,6 +226,34 @@ Editing:
 
 Save the mapping as a file to reuse it for other projects with the same client template.
 
+### The A2.1 parts count sheet
+
+Choose the A2.1 workbook (`A2.1 - PartsCountSheet`) as the template and the app recognises it: the
+whole mapping is made in one step. If the project already had a mapping, click **Use the A2.1
+mapping** in the banner instead. Each segment gets its own copy of the sheet, named by the segment
+ID (`IS-01`, `IS-02`, …), and only the yellow input cells are filled:
+
+| Cells   | What goes in                                                                                                                                            |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B4:B13  | Segment ID, description, object/equipment, PEFS numbers, stream, pressure, temperature, phase, H2S, MW/density                                          |
+| B19:B21 | Small-bore instrument connections, ≤ ½", ½"–1", > 1"                                                                                                    |
+| C22:D26 | Manual and actuated valves (ESDVs count as actuated), by size                                                                                           |
+| E or F  | Flanges per flange face (E) or flanged joints (F), following the project's flange convention                                                            |
+| G22:G26 | Pipe length (m), when pipe length counting is on                                                                                                        |
+| E28:E41 | Equipment: compressors, fin fan coolers, heat exchangers, pressure vessels, pumps, pipeline (m), pig traps, Xmas trees, plate and frame heat exchangers |
+| B72:B77 | Segment notes, one line per row (the rest is on the Notes sheet)                                                                                        |
+
+Pressure is written in **bara** and temperature in **°C**, converted from the project's units
+(barg is converted to bara). Everything else in the workbook, including the formulas, the leak
+frequency data, the sheet protection and the links, stays exactly as it is, and Excel recalculates
+the results when the file is opened. The starter library of a new project matches the sheet's
+equipment rows and size bins. Older projects get the missing A2.1 types added when the mapping is
+applied; finer bins (for example 3"–6" and 6"–11") are added together into the A2.1 row that
+contains them.
+
+In LibreOffice, set **Tools › Options › LibreOffice Calc › Formula › Recalculation on file load**
+to **Always** so the results rows are recalculated.
+
 ## 10. Check and export
 
 Click **Export**. The dialog starts with the **pre-export check**:
@@ -231,7 +262,9 @@ Click **Export**. The dialog starts with the **pre-export check**:
 - items missing their type or size,
 - segments with no counted items or no linked drawing,
 - tags that appear more than once,
-- counts with no cell in the mapped template.
+- counts with no cell in the mapped template,
+- segment values the template needs in units they cannot be given in (for example a phase of
+  "Two-phase" where the A2.1 sheet takes Liquid or Gas, or a pressure unit the app does not know).
 
 **Show** takes you to the markers or the segment concerned. You can fix them, or **Export anyway**:
 the export log records what you accepted.
@@ -274,3 +307,10 @@ was exported, from which revision of the project, and which warnings were accept
 | A PDF is reported as encrypted on export               | Ask for an unprotected copy of the drawing; password-protected PDFs cannot be annotated.      |
 | Save shows an error                                    | The folder may be read-only or full. The app keeps retrying; your edits stay in the open tab. |
 | Something went wrong after an edit                     | **Undo** (`Ctrl+Z`), or restore a snapshot from **Project › Backups**.                        |
+
+## Licence
+
+The QRA Parts Count Tool is free software under the GNU General Public License, version 3 or later.
+**Settings › About** links to the source code, the licence and the licences of the components it
+includes. The licence covers the program, not your work: drawings, counts and exported workbooks
+and PDFs are yours.

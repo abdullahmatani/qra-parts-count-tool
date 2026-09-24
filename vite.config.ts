@@ -13,6 +13,7 @@ import {
   WORKERS_DIR,
   headersForPath,
 } from './scripts/csp.mjs';
+import { licenseFiles } from './scripts/vite-plugin-licenses.ts';
 import { pdfjsAssets } from './scripts/vite-plugin-pdfjs-assets.ts';
 
 /**
@@ -80,6 +81,8 @@ export default defineConfig({
   base: './',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    // GPL-3.0: the About tab points to the source code.
+    __SOURCE_URL__: JSON.stringify(pkg.repository.url.replace(/^git\+|\.git$/g, '')),
   },
   plugins: [
     react(),
@@ -87,6 +90,7 @@ export default defineConfig({
     contentSecurityPolicy(),
     previewSecurityHeaders(),
     pdfjsAssets(),
+    licenseFiles(fileURLToPath(new URL('.', import.meta.url))),
     VitePWA({
       // A new version waits for the user to accept it, so an update never reloads
       // the page in the middle of an edit.
@@ -118,7 +122,7 @@ export default defineConfig({
         // Precache everything the app can ever need, including lazily loaded chunks,
         // workers, WASM and fonts, so every feature works offline (NFR-01).
         globPatterns: [
-          '**/*.{js,mjs,css,html,svg,png,ico,woff,woff2,ttf,wasm,json,webmanifest,bcmap,pfb,icc}',
+          '**/*.{js,mjs,css,html,svg,png,ico,woff,woff2,ttf,wasm,json,webmanifest,bcmap,pfb,icc,txt}',
         ],
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         navigateFallback: 'index.html',

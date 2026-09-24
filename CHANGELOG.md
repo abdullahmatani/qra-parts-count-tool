@@ -3,6 +3,30 @@
 Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 [functional design specification](docs/FDS.md).
 
+## 2.1.0 — A2.1 parts count sheet, free software
+
+- **A2.1 parts count sheet** (section 7, roadmap #39): choose the A2.1 workbook in the template
+  mapper and it is mapped in one step. The export has one copy of the sheet per segment, named by
+  the segment ID, with only the yellow input cells filled: segment data (pressure in bara,
+  temperature in °C, phase Liquid or Gas), small-bore connections, manual and actuated valves,
+  flanges or flanged joints (by the project's flange convention), pipe lengths, equipment rows and
+  six note lines.
+- **Templates are left untouched**: exports are now written at the XML level. Formulas, leak
+  frequency data, sheet protection and protected ranges, data validation, external links, named
+  ranges and custom XML all stay as they were, and Excel recalculates on opening.
+- **Starter library** matches the A2.1 sheet: its size bins (≤ 1", 1"–2", 2"–3", 3"–11", > 11";
+  small bore ≤ ½", ½"–1", > 1") and its 14 equipment rows. Existing projects keep their library;
+  applying the A2.1 mapping adds what is missing, and finer bins add up into the A2.1 row that
+  contains them.
+- **Segment data**: object/equipment, stream number, H2S mole fraction and molecular weight or
+  density. A new pre-export check lists values the template cannot take (for example a
+  two-phase segment for a Liquid/Gas cell).
+- **Notes over several cells**: a mapping can split notes into lines, one per cell.
+- **Licence**: the app is free software under **GPL-3.0-or-later**, as native DWG reading uses GNU
+  LibreDWG. Builds include `LICENSE.txt` and `THIRD_PARTY_LICENSES.txt`, the start screen and
+  Settings › About link to the source, and the zipped site adds `SOURCE.md` and a source archive.
+- Arabic: the new strings are translated (draft, still to be reviewed).
+
 ## 2.0.0 — assisted counting
 
 - **Find similar symbols** (roadmap #59, #60): select a counted circle and the app searches the

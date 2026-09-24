@@ -112,10 +112,11 @@ test('maps the client template and exports a filled copy (EXP-02)', async ({ app
   await wb.xlsx.load(
     (await app.readBytes(dir, `${folder}/Plant A QRA_PartsCount.xlsx`)).buffer as ArrayBuffer,
   );
+  // The segment sheets take the master's place.
   expect(wb.worksheets.map((s) => s.name)).toEqual([
-    'Frequencies',
     'IS-01',
     'IS-02',
+    'Frequencies',
     'Notes',
     'Item List',
     'Unmapped',
@@ -130,7 +131,7 @@ test('maps the client template and exports a filled copy (EXP-02)', async ({ app
   expect(String(is01.getCell('B40').value)).toContain('Scope: inlet to separator');
   const is02 = wb.getWorksheet('IS-02')!;
   expect(is02.getCell('B4').value).toBe('Oil');
-  expect(is02.getCell('G15').value).toBe(1); // manual valve 6"–11"
+  expect(is02.getCell('F15').value).toBe(1); // manual valve 3"–11"
   expect(is02.getCell('D15').value).toBe(0);
   expect(wb.getWorksheet('Frequencies')!.getCell('B1').value).toBe('Client scheme 2024');
   expect(wb.getWorksheet('Item List')!.rowCount).toBe(4);

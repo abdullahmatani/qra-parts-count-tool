@@ -61,6 +61,10 @@ export function createSegment(doc: ProjectDoc, input: SegmentInput): string {
     phase: input.phase ?? '',
     pressure: input.pressure ?? null,
     temperature: input.temperature ?? null,
+    equipment: input.equipment ?? '',
+    streamNumber: input.streamNumber ?? '',
+    h2sMoleFraction: input.h2sMoleFraction ?? null,
+    molecularWeightOrDensity: input.molecularWeightOrDensity ?? null,
     status: input.status ?? 'notStarted',
     boundingEsdvIds: [],
     drawingIds: input.drawingIds ? [...input.drawingIds] : [],
@@ -226,6 +230,9 @@ export function splitSegment(
     phase: source.phase,
     pressure: source.pressure,
     temperature: source.temperature,
+    streamNumber: source.streamNumber,
+    h2sMoleFraction: source.h2sMoleFraction,
+    molecularWeightOrDensity: source.molecularWeightOrDensity,
     status: 'inProgress',
   });
   moveSegment(doc, id, doc.segmentOrder.indexOf(segmentId) + 1);

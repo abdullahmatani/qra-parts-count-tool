@@ -28,6 +28,7 @@ import {
   exportErrorMessage,
   runExport,
   setFilenamePatternCommand,
+  unconvertedValueNames,
   unmappedCountNames,
   type ExportResult,
 } from './export-actions';
@@ -171,9 +172,11 @@ export function ExportDialog() {
   const issues = useMemo(() => {
     if (!open || !doc) return [];
     const unmapped = excel ? unmappedCountNames(doc, entries) : null;
-    return preExportCheck(doc, entries, unmapped ? { unmappedCounts: unmapped } : {}).filter(
-      (c) => c.count > 0,
-    );
+    const unconverted = excel ? unconvertedValueNames(doc) : null;
+    return preExportCheck(doc, entries, {
+      ...(unmapped ? { unmappedCounts: unmapped } : {}),
+      ...(unconverted ? { unconvertedValues: unconverted } : {}),
+    }).filter((c) => c.count > 0);
   }, [open, doc, entries, excel]);
 
   const close = (next: boolean) => {

@@ -116,7 +116,7 @@ describe('starter library', () => {
       binSets: [],
       esdvEquipmentTypeId: null,
     });
-    expect(addStarterLibrary(doc)).toBe(11);
+    expect(addStarterLibrary(doc)).toBe(18);
     expect(doc.library.esdvEquipmentTypeId).not.toBeNull();
     expect(addStarterLibrary(doc)).toBe(0);
     expect(checkIntegrity(docToProject(doc)).filter((i) => i.code !== 'danglingType')).toEqual([]);

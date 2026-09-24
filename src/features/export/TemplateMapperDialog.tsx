@@ -20,14 +20,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { addStarterLibrary } from '@/domain/actions/library';
+import { a21Mapping, findA21Sheet } from '@/domain/export/a21';
 import { ITEM_FIELD_ORDER, columnLetters, splitCellRef } from '@/domain/export/excel-plan';
 import {
   autoFillCountCells,
   countRowKeys,
   defaultMapping,
   duplicateCells,
+  formatCellList,
   fromPortableMapping,
   isCellRef,
+  parseCellList,
   rowBins,
   toPortableMapping,
   type CountRowKey,
@@ -59,6 +63,71 @@ function setMapping(mapping: TemplateMapping | null, coalesce = true): void {
       draft.templateMapping = mapping;
     },
     coalesce ? { coalesceKey: 'template-mapping' } : undefined,
+  );
+}
+
+/**
+ * Maps the A2.1 parts count sheet in one step: the A2.1 equipment types and
+ * bins the library lacks are added, then every yellow input cell is mapped.
+ * Returns how many equipment types were added.
+ */
+function applyA21Mapping(templateFile: string, sheet: string): number {
+  let added = 0;
+  useProjectStore.getState().apply(i18n.t('mapper.a21.history'), (draft) => {
+    added = addStarterLibrary(draft);
+    draft.templateMapping = a21Mapping(
+      draft.library,
+      draft.settings.flangeConvention,
+      templateFile,
+      sheet,
+    );
+  });
+  return added;
+}
+
+function a21Applied(added: number): void {
+  toast.success(
+    added > 0 ? i18n.t('mapper.a21.typesAdded', { count: added }) : i18n.t('mapper.a21.applied'),
+  );
+}
+
+/** Notes cells as a range ("B72:B77"), committed when valid. */
+function NotesLinesInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string[];
+  onChange: (refs: string[]) => void;
+  disabled: boolean;
+}) {
+  const { t } = useTranslation();
+  const formatted = formatCellList(value);
+  const [text, setText] = useState(formatted);
+  const [shown, setShown] = useState(formatted);
+  if (shown !== formatted) {
+    setShown(formatted);
+    setText(formatted);
+  }
+  const parsed = parseCellList(text);
+  const commit = () => {
+    if (parsed) onChange(parsed);
+  };
+  return (
+    <Input
+      aria-label={t('mapper.notesLines')}
+      title={parsed ? t('mapper.notesLines') : t('mapper.notesLinesInvalid')}
+      value={text}
+      placeholder={t('mapper.notesLinesPlaceholder')}
+      onChange={(event) => setText(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') commit();
+      }}
+      aria-invalid={parsed ? undefined : true}
+      disabled={disabled}
+      className="h-7 w-32 font-mono text-xs uppercase"
+    />
   );
 }
 
@@ -343,6 +412,14 @@ export function TemplateMapperDialog() {
       const templates = await getDirectory(dir, TEMPLATES_DIR, { create: true });
       const name = await uniqueFileName(templates, file.name);
       await writeFile(dir, `${TEMPLATES_DIR}/${name}`, file);
+      setSheets(preview);
+      setError(null);
+      // A2.1: map every input cell at once, unless the project already has a mapping.
+      const a21 = findA21Sheet(preview);
+      if (a21 && !mapping) {
+        a21Applied(applyA21Mapping(name, a21));
+        return;
+      }
       const firstSheet = preview[0]?.name ?? 'Sheet1';
       const next = mapping
         ? {
@@ -352,8 +429,6 @@ export function TemplateMapperDialog() {
           }
         : defaultMapping(name, firstSheet);
       setMapping(next, false);
-      setSheets(preview);
-      setError(null);
       toast.success(t('mapper.uploaded', { file: name }));
     } catch (e) {
       setError(exportErrorMessage(e));
@@ -407,10 +482,12 @@ export function TemplateMapperDialog() {
     }
     for (const c of mapping.pipeLengthCells) add(c.cell, `Pipe ${bins.get(c.binId) ?? ''}`);
     add(mapping.notesCell, t('mapper.notesCell'));
+    for (const ref of mapping.notesLines) add(ref, t('mapper.notesLines'));
     return out;
   }, [mapping, library, t]);
 
   const sheet = sheets?.find((s) => s.name === mapping?.sheet) ?? sheets?.[0] ?? null;
+  const a21Sheet = sheets ? findA21Sheet(sheets) : null;
   const duplicates = mapping ? duplicateCells(mapping) : [];
   const disabled = readOnly || !mapping;
   const focus = (next: Target) => setTarget(next);
@@ -488,6 +565,24 @@ export function TemplateMapperDialog() {
           <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
+        )}
+        {mapping && a21Sheet && (
+          <div
+            className="flex flex-wrap items-center gap-2 rounded-md border border-sky-500/40 bg-sky-500/5 p-2 text-sm"
+            data-testid="a21-callout"
+          >
+            <p className="min-w-0 flex-1">
+              <span className="font-medium">{t('mapper.a21.title')}.</span>{' '}
+              {t('mapper.a21.detected')}
+            </p>
+            <Button
+              size="sm"
+              onClick={() => a21Applied(applyA21Mapping(mapping.templateFile, a21Sheet))}
+              disabled={readOnly}
+            >
+              {t('mapper.a21.apply')}
+            </Button>
+          </div>
         )}
         {mapping && library && (
           <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
@@ -695,6 +790,17 @@ export function TemplateMapperDialog() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">{t('mapper.notesHint')}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs">{t('mapper.notesLines')}</span>
+                    <NotesLinesInput
+                      value={mapping.notesLines}
+                      onChange={(notesLines) => update({ notesLines })}
+                      disabled={disabled}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('mapper.notesLinesHint', { width: mapping.notesLineLength })}
+                  </p>
                 </TabsContent>
                 <TabsContent value="items" className="max-h-[42vh] space-y-1 overflow-y-auto pt-2">
                   {ITEM_FIELD_ORDER.map((field) => {

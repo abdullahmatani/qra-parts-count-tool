@@ -79,16 +79,32 @@ function SegmentForm({ segment }: { segment: Segment }) {
     .filter((m) => m?.esdv)
     .map((m) => m!);
 
-  const numberField = (key: 'pressure' | 'temperature') => (
+  const numberField = (
+    key: 'pressure' | 'temperature' | 'h2sMoleFraction' | 'molecularWeightOrDensity',
+    check: (value: number) => string | null = () => null,
+  ) => (
     <CommitInput
       id={`segment-${key}`}
       inputMode="decimal"
       value={segment[key] === null ? '' : String(segment[key])}
-      validate={(text) =>
-        parseOptionalNumber(text) === 'invalid' ? 'segments.errors.number' : null
-      }
+      validate={(text) => {
+        const value = parseOptionalNumber(text);
+        if (value === 'invalid') return 'segments.errors.number';
+        return value === null ? null : check(value);
+      }}
       onCommit={(text) => update({ [key]: parseOptionalNumber(text) as number | null })}
       disabled={readOnly}
+    />
+  );
+  const textField = (key: 'fluid' | 'phase' | 'equipment' | 'streamNumber') => (
+    <CommitInput
+      id={`segment-${key}`}
+      value={segment[key]}
+      onCommit={(value) => update({ [key]: value })}
+      disabled={readOnly}
+      {...(key === 'phase'
+        ? { list: 'segment-phases', placeholder: t('segments.fields.phasePlaceholder') }
+        : {})}
     />
   );
 
@@ -146,28 +162,29 @@ function SegmentForm({ segment }: { segment: Segment }) {
       />
 
       <Heading>{t('segments.details.process')}</Heading>
+      {/* The A2.1 sheet takes "Liquid" or "Gas"; other text is kept but flagged on export. */}
+      <datalist id="segment-phases">
+        <option value="Gas" />
+        <option value="Liquid" />
+      </datalist>
       <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2 space-y-1">
+          <Label htmlFor="segment-equipment" className="text-xs">
+            {t('segments.fields.equipment')}
+          </Label>
+          {textField('equipment')}
+        </div>
         <div className="space-y-1">
           <Label htmlFor="segment-fluid" className="text-xs">
             {t('segments.fields.fluid')}
           </Label>
-          <CommitInput
-            id="segment-fluid"
-            value={segment.fluid}
-            onCommit={(fluid) => update({ fluid })}
-            disabled={readOnly}
-          />
+          {textField('fluid')}
         </div>
         <div className="space-y-1">
           <Label htmlFor="segment-phase" className="text-xs">
             {t('segments.fields.phase')}
           </Label>
-          <CommitInput
-            id="segment-phase"
-            value={segment.phase}
-            onCommit={(phase) => update({ phase })}
-            disabled={readOnly}
-          />
+          {textField('phase')}
         </div>
         <div className="space-y-1">
           <Label htmlFor="segment-pressure" className="text-xs">
@@ -180,6 +197,28 @@ function SegmentForm({ segment }: { segment: Segment }) {
             {t('segments.fields.temperature', { unit: units?.temperature ?? '' })}
           </Label>
           {numberField('temperature')}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="segment-streamNumber" className="text-xs">
+            {t('segments.fields.streamNumber')}
+          </Label>
+          {textField('streamNumber')}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="segment-h2sMoleFraction" className="text-xs">
+            {t('segments.fields.h2s')}
+          </Label>
+          {numberField('h2sMoleFraction', (v) =>
+            v < 0 || v > 1 ? 'segments.errors.fraction' : null,
+          )}
+        </div>
+        <div className="col-span-2 space-y-1">
+          <Label htmlFor="segment-molecularWeightOrDensity" className="text-xs">
+            {t('segments.fields.molecularWeightOrDensity')}
+          </Label>
+          {numberField('molecularWeightOrDensity', (v) =>
+            v <= 0 ? 'segments.errors.positive' : null,
+          )}
         </div>
       </div>
 
