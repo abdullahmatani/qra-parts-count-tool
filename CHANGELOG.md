@@ -3,6 +3,29 @@
 Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 [functional design specification](docs/FDS.md).
 
+## Unreleased
+
+- **Highlighter** (`H`): drag over a segment's pipework and equipment to paint it in the active
+  segment's colour, like a highlighter pen on a print; `Shift` draws a straight stroke. While the
+  tool is in use, the bar under the toolbar shows the segment being highlighted and the pen
+  (**Fine**, **Medium**, **Broad**, sized to the sheet). Strokes are not counted; they can be
+  selected, moved, repainted with another pen, reassigned and deleted, and they are drawn on the
+  annotated PDFs. They are stored as `highlighter` markers with `stroke` geometry.
+- **Equipment bar** under the markup toolbar: choose what the next markers count as (**Valve
+  (automated)**, **Valve (manual)**, **Flange**, any library type, or **Any type**) and the Circle
+  tool is ready to place it. Pipe stays on dashed line runs.
+- **Marker shapes**: equipment markers can be drawn as a **dot**, **circle**, **square** or a
+  **free-form** outline dragged around the symbol, chosen in the equipment bar and changed later in
+  the right pane. The shape is presentation only and is exported to the annotated PDFs; the
+  project file keeps it in `marker.style.symbol` (older files read as circles). Find similar
+  symbols gives accepted matches the example's shape.
+- **Esc** cancels a shape being drawn and returns to the Select tool; pressed again it clears the
+  selection (and the selected link).
+- **Deleting drawing links**: with the Select tool, a link without a target is selected instead of
+  followed, so it can be deleted with `Delete`. Deleting a link that leads to a drawing asks for
+  confirmation first.
+- The active tool is highlighted in the toolbar again (the tooltip wrapper had hidden it).
+
 ## 2.1.0 — A2.1 parts count sheet, free software
 
 - **A2.1 parts count sheet** (section 7, roadmap #39): choose the A2.1 workbook in the template

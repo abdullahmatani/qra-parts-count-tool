@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { TOOLS } from '@/app/tools';
 import { itemForMarker } from '@/domain/actions/items';
 import { updateItemCommand } from '@/features/count/item-commands';
-import { deleteLinkCommand, goBack } from '@/features/links/link-commands';
+import { goBack, requestDeleteLink } from '@/features/links/link-commands';
 import { useSearchStore } from '@/features/search/search-store';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
@@ -38,7 +38,7 @@ export type ShortcutAction =
   | { kind: 'copy' }
   | { kind: 'paste' }
   | { kind: 'selectAll' }
-  | { kind: 'clearSelection' }
+  | { kind: 'escape' }
   | { kind: 'equipmentType'; typeId: string }
   | { kind: 'back' }
   | { kind: 'find' };
@@ -64,7 +64,7 @@ export function shortcutFor(
     return null;
   }
   if (event.key === 'Delete' || event.key === 'Backspace') return { kind: 'delete' };
-  if (event.key === 'Escape') return { kind: 'clearSelection' };
+  if (event.key === 'Escape') return { kind: 'escape' };
   if (event.shiftKey) return null;
   const typeId = typeKeys.get(key);
   if (typeId) return { kind: 'equipmentType', typeId };
@@ -90,7 +90,7 @@ export function runShortcut(action: ShortcutAction): boolean {
       return !project.readOnly && project.redo() !== null;
     case 'delete':
       if (project.readOnly) return false;
-      if (ui.selectedLinkId) return deleteLinkCommand(ui.selectedLinkId);
+      if (ui.selectedLinkId) return requestDeleteLink(ui.selectedLinkId);
       return deleteMarkerIds(selectedMarkerIds());
     case 'back':
       return goBack();
@@ -128,10 +128,19 @@ export function runShortcut(action: ShortcutAction): boolean {
       }
       return true;
     }
-    case 'clearSelection':
-      if (ui.selection.length === 0 && ui.highlighted.length === 0) return false;
+    case 'escape':
+      // Esc returns to the Select tool first (a drawing in progress is
+      // cancelled by the canvas); pressed again, it clears the selection.
+      if (ui.tool !== 'select') {
+        ui.setTool('select');
+        return true;
+      }
+      if (ui.selection.length === 0 && ui.highlighted.length === 0 && !ui.selectedLinkId) {
+        return false;
+      }
       ui.setSelection([]);
       ui.setHighlighted([]);
+      ui.setSelectedLink(null);
       return true;
   }
 }

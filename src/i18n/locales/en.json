@@ -54,6 +54,7 @@
     "select": "Select",
     "circle": "Circle",
     "dashed": "Dashed highlight",
+    "highlighter": "Highlighter",
     "link": "Drawing link",
     "esdv": "ESDV",
     "stamp": "Stamp",
@@ -67,6 +68,38 @@
     "links": "Show drawing links",
     "activeSegment": "New markers go to {{segment}}",
     "noActiveSegment": "No active segment: new markers are unassigned"
+  },
+  "equipmentBar": {
+    "label": "Equipment for new markers",
+    "shape": "Shape",
+    "type": "Equipment",
+    "any": "Any type",
+    "anyHint": "Place markers without a type and choose it in the panel.",
+    "withActuation": "{{type}} ({{actuation}})",
+    "actuation": {
+      "manual": "manual",
+      "automated": "automated"
+    },
+    "choiceHint": "Count new markers as {{name}}",
+    "empty": "No equipment types yet: add them in Project › Equipment library.",
+    "hints": {
+      "dot": "Click a symbol to mark it with a dot.",
+      "circle": "Click a symbol, or drag out the size of the ring.",
+      "square": "Click a symbol, or drag out the size of the square.",
+      "freeform": "Drag around a symbol to outline it."
+    }
+  },
+  "highlighter": {
+    "label": "Highlighter options",
+    "segment": "Highlighting {{segment}}",
+    "noSegment": "No active segment: highlights are unassigned",
+    "pen": "Pen",
+    "pens": {
+      "fine": "Fine",
+      "medium": "Medium",
+      "broad": "Broad"
+    },
+    "hint": "Drag over the segment's pipework and equipment. Hold Shift for a straight stroke."
   },
   "drawings": {
     "title": "Drawings",
@@ -427,9 +460,14 @@
     "history": {
       "addCircle": "add circle",
       "addHighlight": "add dashed highlight",
+      "addHighlighter": "add highlighter stroke",
       "move_one": "move marker",
       "move_other": "move {{count}} markers",
       "resize": "resize marker",
+      "symbol_one": "change marker shape",
+      "symbol_other": "change the shape of {{count}} markers",
+      "highlighterPen_one": "change highlighter pen",
+      "highlighterPen_other": "change the pen of {{count}} highlighter strokes",
       "delete_one": "delete marker",
       "delete_other": "delete {{count}} markers",
       "paste_one": "paste marker",
@@ -441,8 +479,12 @@
     },
     "shapes": {
       "circle": "Circle",
+      "dot": "Dot",
+      "square": "Square",
+      "freeform": "Free-form",
       "rect": "Dashed rectangle",
       "polyline": "Dashed line run",
+      "stroke": "Highlighter stroke",
       "esdv": "ESDV"
     },
     "unassigned": "Unassigned",
@@ -465,11 +507,13 @@
       "selected_one": "{{count}} marker selected",
       "selected_other": "{{count}} markers selected",
       "shape": "Shape",
+      "freeformHint": "Free-form outlines are drawn: choose Free-form in the equipment bar and drag around the symbol.",
       "segment": "Segment",
       "delete": "Delete",
       "position": "Position",
       "radius": "Radius",
       "size": "Size",
+      "width": "Width",
       "points": "{{count}} points",
       "split": "Split into a new segment",
       "splitHint": "Moves the selected markers of {{label}} into a new segment."
@@ -480,6 +524,8 @@
     "pasted_other": "Pasted {{count}} markers.",
     "readOnly": "The project is read-only.",
     "polylineHint": "Click to add points. Double-click or press Enter to finish, Esc to cancel.",
+    "freeformHint": "Drag around a symbol to draw a free-form outline.",
+    "highlighterHint": "Drag over the pipework and equipment to highlight them.",
     "filters": {
       "button": "Marker filters",
       "segments": "Segments",
@@ -521,8 +567,8 @@
     "copy": "Copy selected markers",
     "paste": "Paste (at the pointer when it is over the drawing)",
     "selectAll": "Select all markers on the drawing",
-    "delete": "Delete selected markers",
-    "deselect": "Cancel drawing, or clear the selection",
+    "delete": "Delete selected markers, or the selected link (asks first if it has a target)",
+    "deselect": "Cancel drawing and return to Select; press again to clear the selection",
     "nudge": "Nudge selected markers (Shift: 10 px)",
     "finish": "Finish a dashed line run",
     "addToSelection": "Add to or remove from the selection",
@@ -754,6 +800,12 @@
       "open": "Open target",
       "delete": "Delete link",
       "hint": "Links help you navigate. They are never exported."
+    },
+    "deleteDialog": {
+      "title": "Delete this drawing link?",
+      "description": "It opens {{drawing}}. You can undo this with Ctrl+Z.",
+      "descriptionLabel": "“{{label}}” opens {{drawing}}. You can undo this with Ctrl+Z.",
+      "confirm": "Delete link"
     },
     "back": "Back to {{drawing}}",
     "goTo": "Go to {{drawing}}",

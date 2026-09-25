@@ -55,6 +55,8 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
   markers: [
     {
       geometry: { type: 'circle', cx: x, cy: y, r: 10 },
+      symbol: 'circle',
+      outline: null,
       colour: '#dc2626',
       dash: [],
       label,
@@ -63,11 +65,57 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
     },
     {
       geometry: { type: 'rect', x: x - 40, y: y + 30, width: 80, height: 40 },
+      symbol: 'circle',
+      outline: null,
       colour: '#2563eb',
       dash: [],
       label: 'ESDV-1',
       esdv: true,
       warning: true,
+    },
+    // The other equipment shapes, unlabelled so the label checks stay exact.
+    ...(['dot', 'square'] as const).map((symbol, i) => ({
+      geometry: { type: 'circle' as const, cx: x + 30 * (i + 1), cy: y, r: 6 },
+      symbol,
+      outline: null,
+      colour: '#16a34a',
+      dash: [],
+      label: '',
+      esdv: false,
+      warning: i === 1,
+    })),
+    // Highlighter strokes, one flagged (unassigned).
+    ...[false, true].map((warning, i) => ({
+      geometry: {
+        type: 'stroke' as const,
+        points: [
+          [x - 60, y + 90 + 20 * i],
+          [x + 60, y + 95 + 20 * i],
+        ] as [number, number][],
+        width: 12,
+      },
+      symbol: 'circle' as const,
+      outline: null,
+      colour: warning ? '#64748b' : '#16a34a',
+      dash: [],
+      label: '',
+      esdv: false,
+      warning,
+    })),
+    {
+      geometry: { type: 'circle', cx: x + 90, cy: y, r: 8 },
+      symbol: 'freeform',
+      outline: [
+        [0, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 0],
+      ],
+      colour: '#16a34a',
+      dash: [4, 2],
+      label: '',
+      esdv: false,
+      warning: false,
     },
   ],
   legendTitle: 'Segments',

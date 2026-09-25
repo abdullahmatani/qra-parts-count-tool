@@ -7,6 +7,8 @@ import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { SuggestionBar } from '@/features/assist/SuggestionBar';
 import { FindBar } from '@/features/search/FindBar';
+import { EquipmentBar } from './EquipmentBar';
+import { HighlighterBar } from './HighlighterBar';
 import { Toolbar } from './Toolbar';
 
 export interface CanvasAreaProps {
@@ -22,6 +24,7 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
   const openDrawing = useUiStore((s) => s.openDrawing);
   const closeDrawing = useUiStore((s) => s.closeDrawing);
   const split = useUiStore((s) => s.split);
+  const tool = useUiStore((s) => s.tool);
   const toggleSplit = useUiStore((s) => s.toggleSplit);
   const focusPane = useUiStore((s) => s.focusPane);
   const drawings = useProjectStore((s) => s.doc?.drawings);
@@ -31,6 +34,8 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
   return (
     <div className="flex h-full min-w-0 flex-col">
       <Toolbar />
+      {/* The bar under the toolbar holds the options of what is being placed. */}
+      {tool === 'highlighter' ? <HighlighterBar /> : <EquipmentBar />}
       {tabs.length > 0 && (
         <div
           role="tablist"

@@ -118,6 +118,13 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    rule if the study needs it.
 3. Segments list the drawings they span. Markers link their drawing automatically; you can also link
    a drawing by hand, and open any linked drawing zoomed to the segment.
+4. To show the extent of a segment, pick the **Highlighter** (`H`) and drag over its pipework and
+   equipment, like a highlighter pen on a paper print. Strokes are painted in the active segment's
+   colour (click a segment in the list to make it active); hold `Shift` for a straight stroke
+   along a line. The bar under the toolbar shows which segment you are highlighting and sets the
+   pen: **Fine**, **Medium** or **Broad**. Highlights are not counted. Select a stroke to move it,
+   change its pen, move it to another segment or delete it; `Ctrl+Z` takes back the last stroke.
+   Strokes appear on the annotated PDFs.
 
 To change the segment of markers, select them and pick another segment in the inspector. To reshape
 segments as the study firms up:
@@ -159,7 +166,13 @@ mappings keep working.
    field ready: type the size (`2`, `1-1/2`, `DN50`) and press Enter.
 2. Set the **equipment type** from the list or with its key (`1` valve, `2` flange, …). The type,
    actuation and unit you last used carry over to the next circle, so a run of manual 2" valves is
-   one click each.
+   one click each. The **equipment bar** under the toolbar chooses them before you click: pick
+   **Valve (automated)**, **Flange** or any other type (valves come once per actuation) and the
+   Circle tool is ready to count that equipment. **Any type** places markers without a type.
+   The same bar sets the **shape** new markers are drawn with: a **dot** (smaller, filled), a
+   **circle**, a **square**, or a **free-form** outline you drag around an odd-shaped symbol. The
+   shape is only how the marker looks; it counts the same. Change a placed marker's shape under
+   **Shape** in the right pane (dot, circle or square; a free-form outline is always drawn).
 3. Add the **tag** where the drawing shows one. Tags are checked across the whole project: a tag that
    appears twice is flagged as a possible double count at a match line. Accept the duplicate with a
    note if both are genuinely separate items.
@@ -195,6 +208,8 @@ Editing:
   sized types only.
 - `Delete` removes the selection. `Ctrl+Z` / `Ctrl+Y` undo and redo any change, including edits in
   panels and dialogs.
+- `Esc` cancels a shape you are drawing and returns to the **Select** tool; press it again to clear
+  the selection.
 
 ## 8. Notes and drawing links
 
@@ -205,6 +220,9 @@ Editing:
   (optionally with a saved view). With the Select tool, clicking the hotspot follows it; **Back**
   (`Alt+←`) returns to where you were. Links are for navigation only and are never exported. Hide
   them with the link button in the toolbar.
+- To delete a link, select it (a click with the Link tool; with the Select tool, a link that has no
+  target yet is selected instead of followed) and press `Delete` or **Delete link**. A link without
+  a target goes at once; one that leads to a drawing asks first. Either can be undone.
 - **Suggest drawing links** (Project menu): the app reads the text of every drawing and offers a
   link wherever a drawing names another drawing in the register, such as an off-page connector
   `TO PEFS-1002`. Text that already has a link is skipped. Untick any you do not want, then

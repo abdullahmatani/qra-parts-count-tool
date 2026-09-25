@@ -3,39 +3,50 @@
  *
  * - Circle and ESDV: click to place a circle of the last-used size, or drag out
  *   its radius. A new ESDV opens in the panel for its tag, size and segments.
+ *   Circles are drawn with the shape chosen in the equipment bar: a ring, a
+ *   dot, a square, or a free-form outline dragged around the symbol.
  * - Dashed highlight: drag a rectangle around an area, or click points along a
  *   line run and double-click (or press Enter) to finish.
+ * - Highlighter: drag to paint over a segment's pipework and equipment in its
+ *   colour; hold Shift for a straight stroke.
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
+ * - Esc cancels a shape being drawn and returns to Select.
  *
  * Pan stays on the middle button or Space + drag; the wheel zooms.
  */
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import {
+  DOT_SCALE,
   boxFromPoints,
   dedupePoints,
+  freeformSymbol,
   geometryCentre,
   geometryHandles,
   markersInBox,
   pickMarker,
   rectGeometry,
   resizeGeometry,
+  simplifyPath,
   type Handle,
   type HandleId,
   type XY,
 } from '@/domain/markup/geometry';
 import { moveMarkers } from '@/domain/actions/markers';
+import { penWidth } from '@/domain/markup/highlighter';
+import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
-import type { Marker, MarkerGeometry } from '@/domain/schema/types';
+import type { Marker, MarkerGeometry, MarkerSymbol } from '@/domain/schema/types';
 import type { ViewerContext, ViewerInteraction } from '@/features/viewer/viewer-context';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { MarkerCanvas, MarkerList, type MarkerPreview } from './MarkerLayer';
 import { useMarkerEntries } from './useMarkerEntries';
 import { MarkerTooltip } from './MarkerTooltip';
-import { linkAt } from '@/domain/actions/links';
+import { linkAt, linkStatus } from '@/domain/actions/links';
 import { LinkLayer } from '@/features/links/LinkLayer';
 import { BackButton } from '@/features/links/BackButton';
 import { createLinkCommand, followLink } from '@/features/links/link-commands';
@@ -51,6 +62,16 @@ const HANDLE_TOLERANCE = 8;
 type Gesture =
   | { kind: 'none' }
   | { kind: 'circle'; centre: XY; start: XY; radius: number | null }
+  | { kind: 'freeform'; points: XY[]; startScreen: XY; lastScreen: XY; dragging: boolean }
+  | {
+      kind: 'stroke';
+      points: XY[];
+      startScreen: XY;
+      lastScreen: XY;
+      dragging: boolean;
+      /** Width in drawing units, fixed when the stroke starts. */
+      width: number;
+    }
   | { kind: 'rect'; start: XY; startScreen: XY; current: XY; dragging: boolean }
   | { kind: 'polyPoint'; point: XY }
   | {
@@ -81,6 +102,14 @@ function screenDistance(a: XY, b: XY): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+/** Pointer travel (CSS px) between the points kept for a free-form outline. */
+const FREEFORM_STEP = 2;
+
+/** The symbol a circle-drawing tool places: ESDVs are always rings. */
+function placedSymbol(tool: string, symbol: MarkerSymbol): MarkerSymbol {
+  return tool === 'esdv' ? 'circle' : symbol;
+}
+
 const HANDLE_CURSORS: Record<string, string> = {
   n: 'ns-resize',
   s: 'ns-resize',
@@ -101,6 +130,8 @@ export interface MarkupTools {
 export function useMarkupTools(drawingId: string): MarkupTools {
   const { t, i18n } = useTranslation();
   const tool = useUiStore((s) => s.tool);
+  const markerSymbol = useUiStore((s) => s.markerSymbol);
+  const symbol = placedSymbol(tool, markerSymbol);
   const filters = useUiStore((s) => s.filters);
   const selection = useUiStore((s) => s.selection);
   const readOnly = useProjectStore((s) => s.readOnly);
@@ -111,6 +142,11 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const showLinks = useUiStore((s) => s.showLinks);
   const selectedLinkId = useUiStore((s) => s.selectedLinkId);
   const canGoBack = useUiStore((s) => s.navHistory.length > 0);
+  // Highlighter strokes are painted in the colour of the segment they go to.
+  const activeSegmentId = useUiStore((s) => s.activeSegmentId);
+  const activeSegment = useProjectStore((s) =>
+    activeSegmentId ? s.doc?.segments[activeSegmentId] : undefined,
+  );
 
   const [gesture, setGestureState] = useState<Gesture>(NONE);
   const gestureRef = useRef<Gesture>(NONE);
@@ -157,7 +193,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
   // The ESDV tool (SEG-01) and stamp mode (ANN-09) draw circles like the circle tool.
   const circleLike = tool === 'circle' || tool === 'esdv' || tool === 'stamp';
-  const selectLike = !circleLike && tool !== 'dashed' && tool !== 'link';
+  const selectLike = !circleLike && tool !== 'dashed' && tool !== 'highlighter' && tool !== 'link';
   const editable = !readOnly;
 
   const handlesOf = (marker: Marker | null, geometry?: MarkerGeometry): Handle[] =>
@@ -207,7 +243,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
   const interaction: ViewerInteraction = {
     cursor:
-      circleLike || tool === 'dashed' || tool === 'link'
+      circleLike || tool === 'dashed' || tool === 'highlighter' || tool === 'link'
         ? 'crosshair'
         : gesture.kind === 'move' && gesture.dragging
           ? 'grabbing'
@@ -228,7 +264,29 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       const additive = event.native.shiftKey || event.native.ctrlKey || event.native.metaKey;
 
       if (circleLike && editable) {
-        setGesture({ kind: 'circle', centre: point, start: screen, radius: null });
+        if (symbol === 'freeform') {
+          setGesture({
+            kind: 'freeform',
+            points: [point],
+            startScreen: screen,
+            lastScreen: screen,
+            dragging: false,
+          });
+        } else {
+          setGesture({ kind: 'circle', centre: point, start: screen, radius: null });
+        }
+        return;
+      }
+      if (tool === 'highlighter' && editable) {
+        const pen = useUiStore.getState().highlighterPen;
+        setGesture({
+          kind: 'stroke',
+          points: [point],
+          startScreen: screen,
+          lastScreen: screen,
+          dragging: false,
+          width: penWidth(pen, context.drawingSize),
+        });
         return;
       }
       if (tool === 'dashed' && editable) {
@@ -290,7 +348,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         }
         return;
       }
-      // LNK-02: a click on a link (not on a marker) follows it.
+      // LNK-02: a click on a link (not on a marker) follows it, or selects it
+      // when it leads nowhere yet (see onPointerUp).
       const link = showLinks ? linkAt(linksHere, point, 0) : null;
       if (link && !additive) {
         setGesture({ kind: 'follow', linkId: link.id, startScreen: screen });
@@ -313,6 +372,26 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         case 'circle':
           if (screenDistance(screen, g.start) > DRAG_THRESHOLD) {
             setGesture({ ...g, radius: Math.hypot(point.x - g.centre.x, point.y - g.centre.y) });
+          }
+          return;
+        case 'stroke': {
+          const dragging = g.dragging || screenDistance(screen, g.startScreen) > DRAG_THRESHOLD;
+          // Shift draws a straight stroke from where it started, as along a pipe.
+          if (event.native.shiftKey) {
+            setGesture({ ...g, points: [g.points[0]!, point], lastScreen: screen, dragging });
+          } else if (screenDistance(screen, g.lastScreen) >= FREEFORM_STEP) {
+            setGesture({ ...g, points: [...g.points, point], lastScreen: screen, dragging });
+          }
+          return;
+        }
+        case 'freeform':
+          if (screenDistance(screen, g.lastScreen) >= FREEFORM_STEP) {
+            setGesture({
+              ...g,
+              points: [...g.points, point],
+              lastScreen: screen,
+              dragging: g.dragging || screenDistance(screen, g.startScreen) > DRAG_THRESHOLD,
+            });
           }
           return;
         case 'rect':
@@ -369,18 +448,53 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       }
     },
 
-    onPointerUp(event) {
+    onPointerUp(event, context) {
       const g = gestureRef.current;
       setGesture(NONE);
       const { point } = event;
       switch (g.kind) {
         case 'circle': {
           const ui = useUiStore.getState();
-          const radius = g.radius ?? ui.circleRadiusFraction * longSide;
-          if (g.radius !== null) ui.setCircleRadiusFraction(g.radius / longSide);
+          // A dot is smaller than a ring; the remembered size is the ring's.
+          const scale = symbol === 'dot' ? DOT_SCALE : 1;
+          const radius = g.radius ?? ui.circleRadiusFraction * longSide * scale;
+          if (g.radius !== null) ui.setCircleRadiusFraction(g.radius / scale / longSide);
           const circle = { type: 'circle' as const, cx: g.centre.x, cy: g.centre.y, r: radius };
           if (tool === 'esdv') placeEsdv(drawingId, circle);
-          else placeMarker(drawingId, circle, { stamp: tool === 'stamp' });
+          else placeMarker(drawingId, circle, { stamp: tool === 'stamp', symbol });
+          return;
+        }
+        case 'stroke': {
+          const end = event.native.shiftKey ? [g.points[0]!, point] : [...g.points, point];
+          const path = dedupePoints(
+            simplifyPath(end, context.unitsPerPixel),
+            context.unitsPerPixel,
+          );
+          if (!g.dragging || path.length < 2) {
+            toast(t('markup.highlighterHint'), { duration: 2500 });
+            return;
+          }
+          placeMarker(drawingId, {
+            type: 'stroke',
+            points: path.map((p) => [p.x, p.y]),
+            width: g.width,
+          });
+          return;
+        }
+        case 'freeform': {
+          // Points closer than a screen pixel to the line through their
+          // neighbours add nothing to a hand-drawn outline.
+          const path = simplifyPath([...g.points, point], context.unitsPerPixel);
+          const shape = g.dragging ? freeformSymbol(path) : null;
+          if (!shape) {
+            toast(t('markup.freeformHint'), { duration: 2500 });
+            return;
+          }
+          placeMarker(drawingId, shape.geometry, {
+            stamp: tool === 'stamp',
+            symbol: 'freeform',
+            outline: shape.outline,
+          });
           return;
         }
         case 'rect':
@@ -418,9 +532,18 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           }
           return;
         }
-        case 'follow':
-          followLink(g.linkId);
+        case 'follow': {
+          // A link without a (live) target cannot be followed: select it, so
+          // the panel shows why and it can be given a target or deleted.
+          const doc = useProjectStore.getState().doc;
+          const link = doc?.links[g.linkId];
+          if (doc && link && linkStatus(link, doc) !== 'ok') {
+            useUiStore.getState().setSelectedLink(link.id);
+          } else {
+            followLink(g.linkId);
+          }
           return;
+        }
         case 'box': {
           const ui = useUiStore.getState();
           if (!g.dragging) {
@@ -451,11 +574,11 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
     onKeyDown(event, context) {
       if (event.key === 'Escape') {
-        if (cancel()) {
-          event.preventDefault();
-          return true;
-        }
-        return false;
+        // Otherwise the workspace shortcut handles it: Select tool, then deselect.
+        if (!cancel()) return false;
+        useUiStore.getState().setTool('select');
+        event.preventDefault();
+        return true;
       }
       if (polylineRef.current) {
         if (event.key === 'Enter') {
@@ -512,8 +635,14 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
   let draft: DraftShape | null = null;
   if (gesture.kind === 'circle') {
-    const r = gesture.radius ?? useUiStore.getState().circleRadiusFraction * longSide;
-    draft = { type: 'circle', cx: gesture.centre.x, cy: gesture.centre.y, r };
+    const scale = symbol === 'dot' ? DOT_SCALE : 1;
+    const r = gesture.radius ?? useUiStore.getState().circleRadiusFraction * longSide * scale;
+    draft = { type: 'circle', cx: gesture.centre.x, cy: gesture.centre.y, r, symbol };
+  } else if (gesture.kind === 'freeform') {
+    draft = { type: 'outline', points: gesture.points };
+  } else if (gesture.kind === 'stroke') {
+    const colour = activeSegment ? segmentAppearance(activeSegment.colour).hex : UNASSIGNED_COLOUR;
+    draft = { type: 'stroke', points: gesture.points, width: gesture.width, colour };
   } else if ((gesture.kind === 'rect' || gesture.kind === 'link') && gesture.dragging) {
     draft = rectGeometry(gesture.start, gesture.current);
   } else if (polyline) {

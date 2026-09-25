@@ -8,10 +8,14 @@ import {
   copyMarkers,
   deleteMarkers,
   moveMarkers,
+  newMarkerStyle,
   pasteMarkers,
+  setHighlighterPen,
   setMarkerGeometry,
+  setMarkerSymbol,
   type MarkerClip,
 } from '@/domain/actions/markers';
+import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { Draft } from 'immer';
 import { addItem, type ItemDefaults } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
@@ -19,7 +23,13 @@ import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { ProjectDoc } from '@/domain/model';
-import type { CircleGeometry, Marker, MarkerGeometry } from '@/domain/schema/types';
+import type {
+  CircleGeometry,
+  Marker,
+  MarkerGeometry,
+  MarkerStyle,
+  MarkerSymbol,
+} from '@/domain/schema/types';
 import i18n from '@/i18n';
 import { newId } from '@/lib/ids';
 import { useProjectStore } from '@/store/project-store';
@@ -52,7 +62,7 @@ export function placeEsdv(drawingId: string, geometry: MarkerGeometry): string |
     segmentId: null,
     shape: 'circle',
     geometry,
-    style: { labelOffset: null },
+    style: newMarkerStyle(),
     esdv: newEsdvData(doc.settings.units.size),
   };
   if (!apply(t('markup.history.addEsdv'), (draft) => addMarker(draft, marker))) return null;
@@ -70,7 +80,6 @@ export function updateEsdvCommand(markerId: string, patch: EsdvPatch): boolean {
     });
 }
 
-/** Places a circle or dashed highlight in the active segment (ANN-01, ANN-03, SEG-06). */
 /**
  * ANN-09: what a stamp click repeats: the type, actuation, size and unit of the
  * item placed or edited last, or null when there is none yet.
@@ -87,10 +96,15 @@ export function stampTemplate(doc: ProjectDoc): ItemDefaults | null {
   };
 }
 
+/**
+ * Places a circle, dashed highlight or highlighter stroke in the active
+ * segment (ANN-01, ANN-03, SEG-06). A circle is drawn with `symbol` (a ring
+ * unless given); a free-form symbol needs its `outline`.
+ */
 export function placeMarker(
   drawingId: string,
   geometry: MarkerGeometry,
-  options: { stamp?: boolean } = {},
+  options: { stamp?: boolean; symbol?: MarkerSymbol; outline?: MarkerStyle['outline'] } = {},
 ): string | null {
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId]) return null;
@@ -100,9 +114,17 @@ export function placeMarker(
     id: newId('mkr'),
     drawingId,
     segmentId,
-    shape: geometry.type === 'circle' ? 'circle' : 'dashedHighlight',
+    shape:
+      geometry.type === 'circle'
+        ? 'circle'
+        : geometry.type === 'stroke'
+          ? 'highlighter'
+          : 'dashedHighlight',
     geometry,
-    style: { labelOffset: null },
+    style:
+      geometry.type === 'circle'
+        ? newMarkerStyle(options.symbol, options.outline ?? null)
+        : newMarkerStyle(),
     esdv: null,
   };
   // Circles carry a count item with the last-used type (FDS section 6); line runs
@@ -118,7 +140,11 @@ export function placeMarker(
       ? useUiStore.getState().itemDefaults
       : { equipmentTypeId: pipeType?.id ?? null, actuation: null });
   const label =
-    geometry.type === 'circle' ? t('markup.history.addCircle') : t('markup.history.addHighlight');
+    geometry.type === 'circle'
+      ? t('markup.history.addCircle')
+      : geometry.type === 'stroke'
+        ? t('markup.history.addHighlighter')
+        : t('markup.history.addHighlight');
   let itemId: string | null = null;
   const done = apply(label, (draft) => {
     addMarker(draft, marker);
@@ -129,8 +155,19 @@ export function placeMarker(
   if (itemId) ui.setLastItem(itemId);
   // A stamped item is complete: select it without taking the keyboard focus.
   if (withItem && !stamp) ui.requestEdit(marker.id);
+  // Highlighting is painting: the stroke is not selected, so the next one
+  // starts from a clean slate (Ctrl+Z takes back a stroke that went wrong).
+  else if (geometry.type === 'stroke') ui.setSelection([]);
   else ui.setSelection([marker.id]);
   return marker.id;
+}
+
+/** Repaints the highlighter strokes among `ids` with another pen, as one undo step. */
+export function setHighlighterPenCommand(ids: readonly string[], pen: HighlighterPen): boolean {
+  if (ids.length === 0) return false;
+  return apply(t('markup.history.highlighterPen', { count: ids.length }), (draft) =>
+    setHighlighterPen(draft, ids, pen),
+  );
 }
 
 /**
@@ -141,6 +178,7 @@ export function placeSuggestedMarkers(
   drawingId: string,
   geometries: readonly CircleGeometry[],
   defaults: ItemDefaults,
+  symbol: Exclude<MarkerSymbol, 'freeform'> = 'circle',
 ): string[] {
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId] || geometries.length === 0) return [];
@@ -152,7 +190,7 @@ export function placeSuggestedMarkers(
     segmentId,
     shape: 'circle',
     geometry,
-    style: { labelOffset: null },
+    style: newMarkerStyle(symbol),
     esdv: null,
   }));
   const done = apply(t('assist.history', { count: markers.length }), (draft) => {
@@ -175,6 +213,17 @@ export function moveMarkerIds(ids: readonly string[], dx: number, dy: number): b
 
 export function resizeMarker(id: string, geometry: MarkerGeometry): boolean {
   return apply(t('markup.history.resize'), (draft) => setMarkerGeometry(draft, id, geometry));
+}
+
+/** Draws the equipment circles among `ids` as rings, dots or squares, as one undo step. */
+export function setMarkerSymbolCommand(
+  ids: readonly string[],
+  symbol: Exclude<MarkerSymbol, 'freeform'>,
+): boolean {
+  if (ids.length === 0) return false;
+  return apply(t('markup.history.symbol', { count: ids.length }), (draft) =>
+    setMarkerSymbol(draft, ids, symbol),
+  );
 }
 
 export function deleteMarkerIds(ids: readonly string[]): boolean {

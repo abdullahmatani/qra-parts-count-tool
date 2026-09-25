@@ -154,7 +154,7 @@ export class MarkerRenderer {
     if (!options.hoveredId) return;
     const entry = entries.find((e) => e.id === options.hoveredId);
     if (entry && !entry.selected) {
-      drawHoverHalo(ctx, previewGeometry(entry, options.preview), options);
+      drawHoverHalo(ctx, [entry, previewGeometry(entry, options.preview)], options);
     }
   }
 

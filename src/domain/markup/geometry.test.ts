@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { MarkerGeometry } from '../schema/types';
 import {
+  DOT_SCALE,
+  MAX_OUTLINE_POINTS,
   boxFromPoints,
   dedupePoints,
+  freeformSymbol,
   geometryBounds,
   geometryHandles,
   hitsGeometry,
   markersInBox,
   pickMarker,
+  radiusForSymbol,
   rectGeometry,
   resizeGeometry,
+  simplifyPath,
+  symbolPolygon,
   translateGeometry,
 } from './geometry';
 
@@ -136,5 +142,132 @@ describe('drawing helpers', () => {
       { x: 0, y: 0 },
       { x: 10, y: 0 },
     ]);
+  });
+});
+
+describe('marker shapes: ring, dot, square and free-form', () => {
+  const g = { type: 'circle' as const, cx: 100, cy: 100, r: 10 };
+  const diamond = {
+    symbol: 'freeform' as const,
+    outline: [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 0],
+    ] as [number, number][],
+  };
+
+  it('outlines a square on the circle and a free-form shape scaled by the radius', () => {
+    expect(symbolPolygon(g, { symbol: 'circle', outline: null })).toBeNull();
+    expect(symbolPolygon(g, { symbol: 'dot', outline: null })).toBeNull();
+    expect(symbolPolygon(g, { symbol: 'square', outline: null })).toEqual([
+      { x: 90, y: 90 },
+      { x: 110, y: 90 },
+      { x: 110, y: 110 },
+      { x: 90, y: 110 },
+    ]);
+    expect(symbolPolygon(g, diamond)).toEqual([
+      { x: 100, y: 90 },
+      { x: 110, y: 100 },
+      { x: 100, y: 110 },
+      { x: 90, y: 100 },
+    ]);
+  });
+
+  it('hits a square in its corners and a free-form shape only inside or near it', () => {
+    const corner = { x: 109, y: 109 };
+    expect(hitsGeometry(g, corner, 0)).toBe(false);
+    expect(hitsGeometry(g, corner, 0, { symbol: 'square', outline: null })).toBe(true);
+    expect(hitsGeometry(g, { x: 104, y: 104 }, 0, diamond)).toBe(true);
+    expect(hitsGeometry(g, { x: 108, y: 108 }, 0, diamond)).toBe(false);
+    // (108, 108) is 6/√2 ≈ 4.2 from the edge x + y = 210.
+    expect(hitsGeometry(g, { x: 108, y: 108 }, 4, diamond)).toBe(false);
+    expect(hitsGeometry(g, { x: 108, y: 108 }, 5, diamond)).toBe(true);
+    const markers = [
+      { id: 'sq', geometry: g, style: { symbol: 'square' as const, outline: null } },
+    ];
+    expect(pickMarker(markers, corner, 0)?.id).toBe('sq');
+  });
+
+  it('keeps a dot at a fraction of the ring around the same symbol', () => {
+    expect(radiusForSymbol(10, 'circle', 'dot')).toBeCloseTo(10 * DOT_SCALE);
+    expect(radiusForSymbol(10 * DOT_SCALE, 'dot', 'square')).toBeCloseTo(10);
+    expect(radiusForSymbol(10, 'freeform', 'circle')).toBe(10);
+  });
+
+  it('simplifies a hand-drawn path to the points that shape it', () => {
+    const wobbly = [
+      { x: 0, y: 0 },
+      { x: 5, y: 0.1 },
+      { x: 10, y: -0.1 },
+      { x: 10, y: 10 },
+    ];
+    expect(simplifyPath(wobbly, 0.5)).toEqual([
+      { x: 0, y: 0 },
+      { x: 10, y: -0.1 },
+      { x: 10, y: 10 },
+    ]);
+  });
+
+  it('turns a traced path into its bounding circle and a unit outline', () => {
+    const path = [
+      { x: 90, y: 100 },
+      { x: 100, y: 90 },
+      { x: 110, y: 100 },
+      { x: 100, y: 110 },
+    ];
+    const shape = freeformSymbol(path)!;
+    expect(shape.geometry).toEqual({ type: 'circle', cx: 100, cy: 100, r: 10 });
+    expect(shape.outline).toEqual([
+      [-1, 0],
+      [0, -1],
+      [1, 0],
+      [0, 1],
+    ]);
+    // A straight stroke encloses nothing.
+    expect(
+      freeformSymbol([
+        { x: 0, y: 0 },
+        { x: 5, y: 0 },
+        { x: 10, y: 0 },
+      ]),
+    ).toBeNull();
+    // Long paths are thinned to the most points an outline keeps.
+    const circle = Array.from({ length: 2000 }, (_, i) => ({
+      x: Math.cos((i / 2000) * 2 * Math.PI) * 50,
+      y: Math.sin((i / 2000) * 2 * Math.PI) * 50,
+    }));
+    expect(freeformSymbol(circle)!.outline).toHaveLength(MAX_OUTLINE_POINTS);
+  });
+});
+
+describe('highlighter strokes', () => {
+  const stroke: MarkerGeometry = {
+    type: 'stroke',
+    points: [
+      [0, 0],
+      [100, 0],
+    ],
+    width: 10,
+  };
+
+  it('covers half its width either side of its path', () => {
+    expect(geometryBounds(stroke)).toEqual({ minX: -5, minY: -5, maxX: 105, maxY: 5 });
+    expect(hitsGeometry(stroke, { x: 50, y: 4 }, 0)).toBe(true);
+    expect(hitsGeometry(stroke, { x: 50, y: 7 }, 0)).toBe(false);
+    expect(hitsGeometry(stroke, { x: 50, y: 7 }, 3)).toBe(true);
+  });
+
+  it('moves with its points and has no resize handles', () => {
+    expect(translateGeometry(stroke, 5, 5)).toEqual({
+      type: 'stroke',
+      points: [
+        [5, 5],
+        [105, 5],
+      ],
+      width: 10,
+    });
+    expect(geometryHandles(stroke)).toEqual([]);
+    expect(resizeGeometry(stroke, 'e', { x: 0, y: 0 })).toBe(stroke);
   });
 });

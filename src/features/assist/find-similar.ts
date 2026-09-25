@@ -6,7 +6,8 @@
  */
 import { itemForMarker } from '@/domain/actions/items';
 import { inkFromRgba, type SymbolMatch } from '@/domain/symbol-match';
-import type { CircleGeometry, Drawing } from '@/domain/schema/types';
+import { radiusForSymbol } from '@/domain/markup/geometry';
+import type { CircleGeometry, Drawing, Marker } from '@/domain/schema/types';
 import type { DrawingSource } from '@/features/viewer/drawing-source';
 import type { PdfPageSource } from '@/features/viewer/pdf/pdf-source';
 import { BASE_SCALE } from '@/features/viewer/view-transform';
@@ -84,7 +85,8 @@ export async function findSimilarSymbols(exampleId: string): Promise<void> {
   const example = doc?.markers[exampleId];
   const drawing = example ? doc?.drawings[example.drawingId] : undefined;
   if (!doc || !dir || !example || !drawing || example.geometry.type !== 'circle') return;
-  const { cx, cy, r } = example.geometry;
+  const { cx, cy } = example.geometry;
+  const r = symbolRadius(example);
   const store = useAssistStore.getState();
   current?.cancel();
   const token = ++run;
@@ -125,11 +127,20 @@ export async function findSimilarSymbols(exampleId: string): Promise<void> {
   }
 }
 
+/**
+ * The radius of the symbol a circle marker counts. A dot sits on the symbol
+ * and is drawn smaller than it (DOT_SCALE), so its symbol is the ring around it.
+ */
+function symbolRadius(marker: Marker): number {
+  if (marker.geometry.type !== 'circle') return 0;
+  return radiusForSymbol(marker.geometry.r, marker.style.symbol, 'circle');
+}
+
 function ringsOn(drawingId: string): CircleGeometry[] {
   const doc = useProjectStore.getState().doc;
   return Object.values(doc?.markers ?? {})
     .filter((m) => m.drawingId === drawingId)
-    .flatMap((m) => (m.geometry.type === 'circle' ? [m.geometry] : []));
+    .flatMap((m) => (m.geometry.type === 'circle' ? [{ ...m.geometry, r: symbolRadius(m) }] : []));
 }
 
 /** Matches as circles in drawing coordinates, the size of the example's. */
@@ -174,9 +185,18 @@ export function acceptSuggestions(ids: readonly string[]): number {
   const chosen = state.suggestions.filter((s) => ids.includes(s.id));
   const example = state.exampleId ? doc.markers[state.exampleId] : undefined;
   const item = example ? itemForMarker(doc, example.id) : undefined;
+  // Matches take the example's shape. A free-form outline fits only its own
+  // symbol (matches may be turned), so they are ringed instead.
+  const exampleSymbol = example?.style.symbol ?? 'circle';
+  const symbol = exampleSymbol === 'freeform' ? 'circle' : exampleSymbol;
   const placed = placeSuggestedMarkers(
     state.drawingId,
-    chosen.map((s) => ({ type: 'circle', cx: s.cx, cy: s.cy, r: s.r })),
+    chosen.map((s) => ({
+      type: 'circle',
+      cx: s.cx,
+      cy: s.cy,
+      r: radiusForSymbol(s.r, 'circle', symbol),
+    })),
     item
       ? {
           equipmentTypeId: item.equipmentTypeId,
@@ -185,6 +205,7 @@ export function acceptSuggestions(ids: readonly string[]): number {
           sizeUnit: item.sizeUnit,
         }
       : useUiStore.getState().itemDefaults,
+    symbol,
   );
   if (placed.length > 0) state.remove(chosen.map((s) => s.id));
   return placed.length;

@@ -3,7 +3,7 @@
  * testing, moving and resizing. Pure functions, shared by the canvas tools and
  * the annotated PDF export.
  */
-import type { MarkerGeometry } from '../schema/types';
+import type { CircleGeometry, MarkerGeometry, MarkerSymbol, Point } from '../schema/types';
 
 export interface XY {
   x: number;
@@ -74,15 +74,21 @@ export function geometryBounds(geometry: MarkerGeometry): Box {
         maxX: geometry.x + geometry.width,
         maxY: geometry.y + geometry.height,
       };
-    case 'polyline': {
-      const xs = geometry.points.map((p) => p[0]);
-      const ys = geometry.points.map((p) => p[1]);
-      return {
-        minX: Math.min(...xs),
-        minY: Math.min(...ys),
-        maxX: Math.max(...xs),
-        maxY: Math.max(...ys),
-      };
+    case 'polyline':
+    case 'stroke': {
+      // A highlighter stroke covers half its width either side of its path.
+      const pad = geometry.type === 'stroke' ? geometry.width / 2 : 0;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const [x, y] of geometry.points) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+      return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
     }
   }
 }
@@ -102,14 +108,146 @@ export function distanceToSegment(p: XY, a: XY, b: XY): number {
   return Math.hypot(p.x - (a.x + clamped * dx), p.y - (a.y + clamped * dy));
 }
 
+// ---------------------------------------------------------------------------
+// Symbols: how a circle marker is drawn (ring, dot, square or free-form)
+// ---------------------------------------------------------------------------
+
+/** The parts of a marker's style that shape its outline (see MarkerStyle). */
+export interface SymbolStyle {
+  symbol: MarkerSymbol;
+  outline: readonly (readonly [number, number])[] | null;
+}
+
+/** A dot's radius relative to a ring placed with the same click. */
+export const DOT_SCALE = 0.4;
+
 /**
- * Whether `p` hits the marker: inside a circle or rectangle, or within
+ * The outline of a square or free-form symbol in drawing coordinates, or null
+ * for a round one (a ring or a dot). A square's side is the circle's diameter,
+ * so its bounds are the circle's; a free-form outline is scaled by the radius.
+ */
+export function symbolPolygon(g: CircleGeometry, style: SymbolStyle | undefined): XY[] | null {
+  switch (style?.symbol) {
+    case 'square':
+      return [
+        { x: g.cx - g.r, y: g.cy - g.r },
+        { x: g.cx + g.r, y: g.cy - g.r },
+        { x: g.cx + g.r, y: g.cy + g.r },
+        { x: g.cx - g.r, y: g.cy + g.r },
+      ];
+    case 'freeform':
+      return style.outline
+        ? style.outline.map(([x, y]) => ({ x: g.cx + x * g.r, y: g.cy + y * g.r }))
+        : null;
+    default:
+      return null;
+  }
+}
+
+/** Even-odd test: whether `p` lies inside the closed polygon. */
+export function insidePolygon(p: XY, polygon: readonly XY[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+    const a = polygon[i]!;
+    const b = polygon[j]!;
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function nearPolygon(p: XY, polygon: readonly XY[], tolerance: number): boolean {
+  for (let i = 0; i < polygon.length; i += 1) {
+    const a = polygon[i]!;
+    const b = polygon[(i + 1) % polygon.length]!;
+    if (distanceToSegment(p, a, b) <= tolerance) return true;
+  }
+  return false;
+}
+
+/** A marker's radius after its symbol changes: a dot is DOT_SCALE of the ring around the same symbol. */
+export function radiusForSymbol(r: number, from: MarkerSymbol, to: MarkerSymbol): number {
+  const scale = (symbol: MarkerSymbol) => (symbol === 'dot' ? DOT_SCALE : 1);
+  return Math.max(MIN_MARKER_SIZE, (r * scale(to)) / scale(from));
+}
+
+/**
+ * Ramer–Douglas–Peucker: drops points that lie within `tolerance` of the line
+ * through their neighbours, so a hand-drawn outline keeps its shape with far
+ * fewer points.
+ */
+export function simplifyPath(points: readonly XY[], tolerance: number): XY[] {
+  if (points.length <= 2) return [...points];
+  const keep = new Uint8Array(points.length);
+  keep[0] = 1;
+  keep[points.length - 1] = 1;
+  const stack: [number, number][] = [[0, points.length - 1]];
+  while (stack.length) {
+    const [a, b] = stack.pop()!;
+    let index = -1;
+    let furthest = tolerance;
+    for (let i = a + 1; i < b; i += 1) {
+      const d = distanceToSegment(points[i]!, points[a]!, points[b]!);
+      if (d > furthest) {
+        furthest = d;
+        index = i;
+      }
+    }
+    if (index >= 0) {
+      keep[index] = 1;
+      stack.push([a, index], [index, b]);
+    }
+  }
+  return points.filter((_, i) => keep[i]);
+}
+
+/** Most points a free-form outline keeps (the project file allows 2000). */
+export const MAX_OUTLINE_POINTS = 500;
+
+/**
+ * A free-form symbol from a hand-drawn path: its bounding circle (centred on
+ * the path's bounds) and the outline relative to it. Null when the path
+ * encloses nothing.
+ */
+export function freeformSymbol(
+  path: readonly XY[],
+): { geometry: CircleGeometry; outline: Point[] } | null {
+  let points = path;
+  if (points.length > MAX_OUTLINE_POINTS) {
+    const step = points.length / MAX_OUTLINE_POINTS;
+    points = Array.from({ length: MAX_OUTLINE_POINTS }, (_, i) => path[Math.floor(i * step)]!);
+  }
+  if (points.length < 3) return null;
+  const box = unionBoxes(points.map((p) => ({ minX: p.x, minY: p.y, maxX: p.x, maxY: p.y })))!;
+  if (box.maxX - box.minX < MIN_MARKER_SIZE || box.maxY - box.minY < MIN_MARKER_SIZE) return null;
+  const cx = (box.minX + box.maxX) / 2;
+  const cy = (box.minY + box.maxY) / 2;
+  const r = Math.max(...points.map((p) => Math.hypot(p.x - cx, p.y - cy)));
+  // Four decimals keep the outline to within 1/10,000 of the radius.
+  const unit = (v: number) => Math.round(v * 10_000) / 10_000;
+  return {
+    geometry: { type: 'circle', cx, cy, r },
+    outline: points.map((p): Point => [unit((p.x - cx) / r), unit((p.y - cy) / r)]),
+  };
+}
+
+/**
+ * Whether `p` hits the marker: inside a circle, symbol or rectangle, or within
  * `tolerance` of its outline or of a polyline.
  */
-export function hitsGeometry(geometry: MarkerGeometry, p: XY, tolerance: number): boolean {
+export function hitsGeometry(
+  geometry: MarkerGeometry,
+  p: XY,
+  tolerance: number,
+  style?: SymbolStyle,
+): boolean {
   switch (geometry.type) {
-    case 'circle':
+    case 'circle': {
+      const polygon = symbolPolygon(geometry, style);
+      if (polygon) return insidePolygon(p, polygon) || nearPolygon(p, polygon, tolerance);
       return Math.hypot(p.x - geometry.cx, p.y - geometry.cy) <= geometry.r + tolerance;
+    }
     case 'rect':
       return (
         p.x >= geometry.x - tolerance &&
@@ -117,12 +255,14 @@ export function hitsGeometry(geometry: MarkerGeometry, p: XY, tolerance: number)
         p.y >= geometry.y - tolerance &&
         p.y <= geometry.y + geometry.height + tolerance
       );
-    case 'polyline': {
+    case 'polyline':
+    case 'stroke': {
+      const reach = tolerance + (geometry.type === 'stroke' ? geometry.width / 2 : 0);
       const points = geometry.points;
       for (let i = 1; i < points.length; i += 1) {
         const a = points[i - 1]!;
         const b = points[i]!;
-        if (distanceToSegment(p, { x: a[0], y: a[1] }, { x: b[0], y: b[1] }) <= tolerance) {
+        if (distanceToSegment(p, { x: a[0], y: a[1] }, { x: b[0], y: b[1] }) <= reach) {
           return true;
         }
       }
@@ -135,7 +275,7 @@ export function hitsGeometry(geometry: MarkerGeometry, p: XY, tolerance: number)
  * Picks the marker under `p`. When markers overlap, the one with the smallest
  * bounds wins, so a circle inside a highlighted area can still be picked.
  */
-export function pickMarker<T extends { id: string; geometry: MarkerGeometry }>(
+export function pickMarker<T extends { id: string; geometry: MarkerGeometry; style?: SymbolStyle }>(
   markers: Iterable<T>,
   p: XY,
   tolerance: number,
@@ -143,7 +283,7 @@ export function pickMarker<T extends { id: string; geometry: MarkerGeometry }>(
   let best: T | null = null;
   let bestArea = Infinity;
   for (const marker of markers) {
-    if (!hitsGeometry(marker.geometry, p, tolerance)) continue;
+    if (!hitsGeometry(marker.geometry, p, tolerance, marker.style)) continue;
     const area = boxArea(geometryBounds(marker.geometry));
     // `<=` keeps the last (topmost) of equal candidates.
     if (area <= bestArea) {
@@ -177,6 +317,7 @@ export function translateGeometry(
     case 'rect':
       return { ...geometry, x: geometry.x + dx, y: geometry.y + dy };
     case 'polyline':
+    case 'stroke':
       return { ...geometry, points: geometry.points.map(([x, y]) => [x + dx, y + dy]) };
   }
 }
@@ -216,6 +357,10 @@ export function geometryHandles(geometry: MarkerGeometry): Handle[] {
     }
     case 'polyline':
       return geometry.points.map(([x, y], i) => ({ id: `v${i}` as const, x, y }));
+    case 'stroke':
+      // A hand-drawn stroke has too many points to drag one by one; its
+      // width is set in the panel instead.
+      return [];
   }
 }
 
@@ -253,6 +398,8 @@ export function resizeGeometry(geometry: MarkerGeometry, handle: HandleId, p: XY
       );
       return { ...geometry, points };
     }
+    case 'stroke':
+      return geometry;
   }
 }
 

@@ -42,6 +42,22 @@ export function deleteLinkCommand(linkId: string): boolean {
   return done;
 }
 
+/**
+ * Deletes a link the user asked to delete. A link that leads to a drawing is
+ * worth keeping, so it asks first (DeleteLinkDialog); one without a target, or
+ * whose target was removed, goes straight away. Either way it can be undone.
+ */
+export function requestDeleteLink(linkId: string): boolean {
+  const doc = useProjectStore.getState().doc;
+  const link = doc?.links[linkId];
+  if (!doc || !link || useProjectStore.getState().readOnly) return false;
+  if (linkStatus(link, doc) === 'ok') {
+    useUiStore.getState().setLinkDeleteRequest(linkId);
+    return true;
+  }
+  return deleteLinkCommand(linkId);
+}
+
 /** LNK-02: opens the link's target drawing (at its saved view) and remembers where we were. */
 export function followLink(linkId: string): boolean {
   const doc = useProjectStore.getState().doc;

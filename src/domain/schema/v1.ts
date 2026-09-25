@@ -59,8 +59,18 @@ export const SegmentStatus = z.enum(['notStarted', 'inProgress', 'counted', 'che
 
 export const DrawingFileType = z.enum(['pdf', 'dwg', 'dxf']);
 
-/** ANN-01: the marker set is fixed to these two shapes. */
-export const MarkerShape = z.enum(['circle', 'dashedHighlight']);
+/**
+ * ANN-01: circles (equipment and ESDVs) and dashed highlights, plus
+ * highlighter strokes painted over a segment's pipework and equipment.
+ */
+export const MarkerShape = z.enum(['circle', 'dashedHighlight', 'highlighter']);
+
+/**
+ * How an equipment (circle) marker is drawn: a ring, a filled dot, a square or
+ * a free-form outline. Its geometry is always the symbol's bounding circle, so
+ * the symbol never changes what is counted.
+ */
+export const MarkerSymbol = z.enum(['circle', 'dot', 'square', 'freeform']);
 
 /** Broad equipment categories. Categories drive behaviour (e.g. flange convention, pipe length). */
 export const EquipmentCategory = z.enum([
@@ -221,15 +231,38 @@ export const PolylineGeometry = z.object({
   points: z.array(Point).min(2),
 });
 
+/** A highlighter stroke: a free-hand path painted `width` drawing units wide. */
+export const StrokeGeometry = z.object({
+  type: z.literal('stroke'),
+  points: z.array(Point).min(2).max(5000),
+  width: PositiveNumber,
+});
+
 export const MarkerGeometry = z.discriminatedUnion('type', [
   CircleGeometry,
   RectGeometry,
   PolylineGeometry,
+  StrokeGeometry,
 ]);
+
+/** The geometry each marker shape is drawn with. */
+const SHAPE_GEOMETRY: Record<z.output<typeof MarkerShape>, readonly string[]> = {
+  circle: ['circle'],
+  dashedHighlight: ['rect', 'polyline'],
+  highlighter: ['stroke'],
+};
 
 export const MarkerStyle = z.object({
   /** Label position relative to the marker's anchor, in drawing units. */
   labelOffset: z.object({ dx: Coordinate, dy: Coordinate }).nullable().default(null),
+  /** How a circle marker is drawn. Dashed highlights and ESDVs are always 'circle'. */
+  symbol: MarkerSymbol.default('circle'),
+  /**
+   * The outline of a free-form symbol: points relative to the circle's centre,
+   * in units of its radius (so moving and resizing the circle carries it along).
+   * Null for every other symbol.
+   */
+  outline: z.array(Point).min(3).max(2000).nullable().default(null),
 });
 
 /** SEG-01, SEG-08: data carried by an ESDV marker. */
@@ -261,28 +294,37 @@ export const Marker = z
     esdv: EsdvData.nullable().default(null),
   })
   .superRefine((marker, ctx) => {
-    const isCircle = marker.geometry.type === 'circle';
-    if (marker.shape === 'circle' && !isCircle) {
+    const allowed = SHAPE_GEOMETRY[marker.shape];
+    if (!allowed.includes(marker.geometry.type)) {
       ctx.addIssue({
         code: 'custom',
         path: ['geometry'],
-        message: 'A circle marker needs circle geometry',
-      });
-    }
-    if (marker.shape === 'dashedHighlight' && isCircle) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['geometry'],
-        message: 'A dashed highlight needs rect or polyline geometry',
+        message: `A ${marker.shape} marker needs ${allowed.join(' or ')} geometry`,
       });
     }
     if (marker.esdv && marker.shape !== 'circle') {
       ctx.addIssue({ code: 'custom', path: ['esdv'], message: 'An ESDV marker must be a circle' });
     }
+    const { symbol, outline } = marker.style;
+    if (symbol !== 'circle' && (marker.shape !== 'circle' || marker.esdv)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['style', 'symbol'],
+        message: 'Only an equipment circle marker can have another symbol',
+      });
+    }
+    if ((symbol === 'freeform') !== (outline !== null)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['style', 'outline'],
+        message: 'A free-form symbol needs an outline, and only a free-form symbol has one',
+      });
+    }
   })
   .meta({
     id: 'Marker',
-    description: 'A circle or dashed-highlight annotation in drawing coordinates (ANN-01..03).',
+    description:
+      'A circle (drawn as a ring, dot, square or free-form outline), dashed highlight or highlighter stroke in drawing coordinates (ANN-01..03).',
   });
 
 // ---------------------------------------------------------------------------
