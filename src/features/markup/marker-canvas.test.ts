@@ -13,6 +13,8 @@ function entry(id: string, cx: number, cy: number): MarkerEntry {
     highlighted: false,
     warning: false,
     esdv: false,
+    symbol: 'circle',
+    outline: null,
     segmentId: null,
   };
 }

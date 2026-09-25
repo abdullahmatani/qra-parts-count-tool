@@ -5,9 +5,11 @@
 import { create } from 'zustand';
 import type { ItemDefaults } from '@/domain/actions/items';
 import type { Box } from '@/domain/markup/geometry';
+import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { MarkerFilterState } from '@/domain/markup/presentation';
+import type { MarkerSymbol } from '@/domain/schema/types';
 
-export type Tool = 'select' | 'circle' | 'dashed' | 'link' | 'esdv' | 'stamp';
+export type Tool = 'select' | 'circle' | 'dashed' | 'highlighter' | 'link' | 'esdv' | 'stamp';
 
 export interface Viewport {
   /** Drawing coordinate at the centre of the view. */
@@ -69,6 +71,12 @@ export interface UiState {
   offlineReady: boolean;
   /** Size of the last circle drawn, as a fraction of the drawing's longer side. */
   circleRadiusFraction: number;
+  /** How the next equipment marker is drawn (ring, dot, square or free-form outline). */
+  markerSymbol: MarkerSymbol;
+  /** The pen the Highlighter tool paints with. */
+  highlighterPen: HighlighterPen;
+  /** A drawing link with a target, waiting for the user to confirm its deletion. */
+  linkDeleteRequest: string | null;
   /** Set by double-clicking or placing a marker: the edit panel shows and focuses it (ANN-07). */
   editRequest: { markerId: string; field: EditField; at: number } | null;
   /** The last type and actuation used, for the next item (FDS section 6). */
@@ -99,6 +107,9 @@ export interface UiState {
   openDialog: (dialog: DialogName) => void;
   setOfflineReady: (ready: boolean) => void;
   setCircleRadiusFraction: (fraction: number) => void;
+  setMarkerSymbol: (symbol: MarkerSymbol) => void;
+  setHighlighterPen: (pen: HighlighterPen) => void;
+  setLinkDeleteRequest: (linkId: string | null) => void;
   requestEdit: (markerId: string, field?: EditField) => void;
   setItemDefaults: (defaults: Partial<ItemDefaults>) => void;
   setLastItem: (itemId: string | null) => void;
@@ -139,6 +150,9 @@ const initial = {
   filters: { hiddenSegments: [], hiddenTypes: [], showUnassignedOnly: false },
   dialog: null,
   circleRadiusFraction: DEFAULT_CIRCLE_RADIUS_FRACTION,
+  markerSymbol: 'circle' as MarkerSymbol,
+  highlighterPen: 'medium' as HighlighterPen,
+  linkDeleteRequest: null,
   editRequest: null,
   itemDefaults: { equipmentTypeId: null, actuation: null },
   lastItemId: null,
@@ -208,6 +222,9 @@ export const useUiStore = create<UiState>()((set, get) => ({
   openDialog: (dialog) => set({ dialog }),
   setOfflineReady: (offlineReady) => set({ offlineReady }),
   setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
+  setMarkerSymbol: (markerSymbol) => set({ markerSymbol }),
+  setHighlighterPen: (highlighterPen) => set({ highlighterPen }),
+  setLinkDeleteRequest: (linkDeleteRequest) => set({ linkDeleteRequest }),
   requestEdit: (markerId, field = 'auto') =>
     set({ selection: [markerId], editRequest: { markerId, field, at: Date.now() } }),
   setItemDefaults: (defaults) =>

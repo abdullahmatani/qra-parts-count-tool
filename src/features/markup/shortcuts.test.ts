@@ -43,7 +43,7 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
   it('maps delete and escape, and ignores Alt combinations', () => {
     expect(shortcutFor(key('Delete'))).toEqual({ kind: 'delete' });
     expect(shortcutFor(key('Backspace'))).toEqual({ kind: 'delete' });
-    expect(shortcutFor(key('Escape'))).toEqual({ kind: 'clearSelection' });
+    expect(shortcutFor(key('Escape'))).toEqual({ kind: 'escape' });
     expect(shortcutFor(key('c', { altKey: true }))).toBeNull();
     expect(shortcutFor(key('ArrowLeft', { altKey: true }))).toEqual({ kind: 'back' });
   });

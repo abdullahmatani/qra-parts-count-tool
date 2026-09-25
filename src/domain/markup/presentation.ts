@@ -4,7 +4,7 @@
  * annotated PDF export.
  */
 import { ESDV_COLOUR, UNASSIGNED_COLOUR, segmentAppearance } from '../palette';
-import type { CountItem, Marker, Segment } from '../schema/types';
+import type { CountItem, Marker, MarkerSymbol, Segment } from '../schema/types';
 
 export interface MarkerFilterState {
   /** Segment ids whose markers are hidden; `unassigned` hides markers with no segment. */
@@ -59,6 +59,14 @@ export function isMarkerVisible(
   }
   if (item?.equipmentTypeId && filters.hiddenTypes.includes(item.equipmentTypeId)) return false;
   return true;
+}
+
+/** What a marker is, for its name in the interface (`markup.shapes.*`). */
+export type MarkerKind = 'esdv' | MarkerSymbol | 'rect' | 'polyline' | 'stroke';
+
+export function markerKind(marker: Pick<Marker, 'esdv' | 'geometry' | 'style'>): MarkerKind {
+  if (marker.esdv) return 'esdv';
+  return marker.geometry.type === 'circle' ? marker.style.symbol : marker.geometry.type;
 }
 
 /** ANN-05: the label beside a marker: the tag if there is one, otherwise the item number. */

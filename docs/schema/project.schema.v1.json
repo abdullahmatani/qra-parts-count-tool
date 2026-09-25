@@ -495,7 +495,8 @@
           "type": "string",
           "enum": [
             "circle",
-            "dashedHighlight"
+            "dashedHighlight",
+            "highlighter"
           ]
         },
         "geometry": {
@@ -585,6 +586,43 @@
                 "type",
                 "points"
               ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "stroke"
+                },
+                "points": {
+                  "minItems": 2,
+                  "maxItems": 5000,
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                },
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "type",
+                "points",
+                "width"
+              ]
             }
           ]
         },
@@ -614,6 +652,43 @@
                   "type": "null"
                 }
               ]
+            },
+            "symbol": {
+              "default": "circle",
+              "type": "string",
+              "enum": [
+                "circle",
+                "dot",
+                "square",
+                "freeform"
+              ]
+            },
+            "outline": {
+              "default": null,
+              "anyOf": [
+                {
+                  "minItems": 3,
+                  "maxItems": 2000,
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           }
         },
@@ -635,7 +710,7 @@
         "shape",
         "geometry"
       ],
-      "description": "A circle or dashed-highlight annotation in drawing coordinates (ANN-01..03)."
+      "description": "A circle (drawn as a ring, dot, square or free-form outline), dashed highlight or highlighter stroke in drawing coordinates (ANN-01..03)."
     },
     "EsdvData": {
       "type": "object",

@@ -3,9 +3,18 @@
  * draft inside `useProjectStore.apply`) and keep related entities consistent.
  */
 import { newId } from '@/lib/ids';
-import { translateGeometry, type XY } from '../markup/geometry';
+import { radiusForSymbol, translateGeometry, type XY } from '../markup/geometry';
+import { penWidth, type HighlighterPen } from '../markup/highlighter';
 import type { ProjectDoc } from '../model';
-import type { CountItem, Marker, MarkerGeometry } from '../schema/types';
+import type { CountItem, Marker, MarkerGeometry, MarkerStyle, MarkerSymbol } from '../schema/types';
+
+/** A fresh marker style: a ring (or the given symbol) with the label in its usual place. */
+export function newMarkerStyle(
+  symbol: MarkerSymbol = 'circle',
+  outline: MarkerStyle['outline'] = null,
+): MarkerStyle {
+  return { labelOffset: null, symbol, outline: symbol === 'freeform' ? outline : null };
+}
 
 /** SEG-04: a segment with a marker on a drawing is linked to that drawing. */
 export function linkSegmentToDrawing(doc: ProjectDoc, segmentId: string, drawingId: string): void {
@@ -41,8 +50,45 @@ export function setMarkerGeometry(
 ): void {
   const marker = doc.markers[markerId];
   if (!marker) return;
-  if ((marker.shape === 'circle') !== (geometry.type === 'circle')) return;
+  if (marker.geometry.type !== geometry.type) return;
   marker.geometry = geometry;
+}
+
+/** Repaints highlighter strokes with another pen; other markers are left alone. */
+export function setHighlighterPen(
+  doc: ProjectDoc,
+  markerIds: Iterable<string>,
+  pen: HighlighterPen,
+): void {
+  for (const id of markerIds) {
+    const marker = doc.markers[id];
+    const drawing = marker ? doc.drawings[marker.drawingId] : undefined;
+    if (!marker || !drawing || marker.geometry.type !== 'stroke') continue;
+    const width = penWidth(pen, drawing.size);
+    if (marker.geometry.width !== width) marker.geometry.width = width;
+  }
+}
+
+/**
+ * Changes how equipment circles are drawn (ring, dot or square). A dot is
+ * smaller than a ring around the same symbol, so the radius follows the symbol.
+ * A free-form outline is only ever drawn, so it cannot be chosen here, and
+ * ESDVs and dashed highlights keep their own look.
+ */
+export function setMarkerSymbol(
+  doc: ProjectDoc,
+  markerIds: Iterable<string>,
+  symbol: Exclude<MarkerSymbol, 'freeform'>,
+): void {
+  for (const id of markerIds) {
+    const marker = doc.markers[id];
+    if (!marker || marker.esdv || marker.geometry.type !== 'circle') continue;
+    const from = marker.style.symbol;
+    if (from === symbol) continue;
+    marker.geometry.r = radiusForSymbol(marker.geometry.r, from, symbol);
+    marker.style.symbol = symbol;
+    marker.style.outline = null;
+  }
 }
 
 /**

@@ -47,6 +47,8 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         highlighted: highlighted.has(marker.id),
         warning: warnings.has(marker.id),
         esdv: marker.esdv !== null,
+        symbol: marker.style.symbol,
+        outline: marker.style.outline,
         segmentId: marker.segmentId,
       };
       (marker.geometry.type === 'circle' ? circles : areas).push(entry);

@@ -139,6 +139,60 @@ describe('parseProjectFile validation (PRJ-03)', () => {
     expect(ProjectV1.shape.markers.safeParse([marker]).success).toBe(false);
   });
 
+  it('reads markers written before marker shapes as rings', () => {
+    const drawing = makeDrawing();
+    const marker = { ...makeCircleMarker(drawing.id), style: { labelOffset: null } };
+    const result = ProjectV1.shape.markers.parse([marker]);
+    expect(result[0]!.style).toEqual({ labelOffset: null, symbol: 'circle', outline: null });
+  });
+
+  it('accepts dots, squares and free-form outlines on equipment circles only', () => {
+    const drawing = makeDrawing();
+    const circle = makeCircleMarker(drawing.id);
+    const parse = (marker: unknown) => ProjectV1.shape.markers.safeParse([marker]).success;
+    const outline = [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+    ];
+    expect(parse({ ...circle, style: { symbol: 'dot' } })).toBe(true);
+    expect(parse({ ...circle, style: { symbol: 'square' } })).toBe(true);
+    expect(parse({ ...circle, style: { symbol: 'freeform', outline } })).toBe(true);
+    // A free-form symbol needs its outline, and only it has one.
+    expect(parse({ ...circle, style: { symbol: 'freeform' } })).toBe(false);
+    expect(parse({ ...circle, style: { symbol: 'square', outline } })).toBe(false);
+    // ESDVs and dashed highlights keep their own look.
+    expect(parse({ ...circle, esdv: { tag: 'ESDV-1' }, style: { symbol: 'dot' } })).toBe(false);
+    expect(
+      parse({
+        ...circle,
+        shape: 'dashedHighlight',
+        geometry: { type: 'rect', x: 0, y: 0, width: 10, height: 10 },
+        style: { symbol: 'square' },
+      }),
+    ).toBe(false);
+  });
+
+  it('keeps highlighter strokes and their geometry together', () => {
+    const drawing = makeDrawing();
+    const parse = (marker: unknown) => ProjectV1.shape.markers.safeParse([marker]).success;
+    const stroke = {
+      type: 'stroke',
+      points: [
+        [0, 0],
+        [50, 10],
+      ],
+      width: 16,
+    };
+    const base = { ...makeCircleMarker(drawing.id), shape: 'highlighter', geometry: stroke };
+    expect(parse(base)).toBe(true);
+    expect(parse({ ...base, geometry: { ...stroke, width: 0 } })).toBe(false);
+    expect(parse({ ...base, geometry: { ...stroke, points: [[0, 0]] } })).toBe(false);
+    // A highlighter is always a stroke, and a stroke always a highlighter.
+    expect(parse({ ...base, geometry: { type: 'circle', cx: 0, cy: 0, r: 5 } })).toBe(false);
+    expect(parse({ ...base, shape: 'dashedHighlight' })).toBe(false);
+  });
+
   it('rejects a bin whose upper edge is below its lower edge', () => {
     const library = {
       binSets: [

@@ -44,7 +44,8 @@ import {
   type PDFName,
   type PDFPage,
 } from 'pdf-lib';
-import { hexToRgb01, MARKER_WARNING } from '@/domain/palette';
+import { symbolPolygon, type SymbolStyle } from '@/domain/markup/geometry';
+import { DOT_ALPHA, HIGHLIGHTER_ALPHA, hexToRgb01, MARKER_WARNING } from '@/domain/palette';
 import type { Overlay } from '@/domain/export/pdf-plan';
 import type { MarkerGeometry, Size2D } from '@/domain/schema/types';
 import type { CadColorMode } from '@/store/preferences';
@@ -114,8 +115,13 @@ function circlePath(ops: Ops, cx: number, cy: number, r: number): void {
   );
 }
 
-function geometryPath(ops: Ops, g: MarkerGeometry): void {
-  if (g.type === 'circle') circlePath(ops, g.cx, g.cy, g.r);
+/** A marker's outline; circles take their symbol's shape, as on screen. */
+function geometryPath(ops: Ops, g: MarkerGeometry, style?: SymbolStyle): void {
+  const polygon = g.type === 'circle' ? symbolPolygon(g, style) : null;
+  if (polygon) {
+    polygon.forEach(({ x, y }, i) => ops.push(i === 0 ? moveTo(x, y) : lineTo(x, y)));
+    ops.push(closePath());
+  } else if (g.type === 'circle') circlePath(ops, g.cx, g.cy, g.r);
   else if (g.type === 'rect') ops.push(rectangle(g.x, g.y, g.width, g.height));
   else {
     g.points.forEach(([x, y], i) => ops.push(i === 0 ? moveTo(x, y) : lineTo(x, y)));
@@ -248,13 +254,41 @@ export function drawOverlay(
     setLineJoin(LineJoinStyle.Round),
   ];
   const faint = alphaState(page, 0.08);
+  const dotFill = alphaState(page, DOT_ALPHA);
+  const highlighter = alphaState(page, 1, HIGHLIGHTER_ALPHA);
   const run = alphaState(page, 1, 0.18);
   const solid = alphaState(page, 1, 1);
 
   const areas = overlay.markers.filter((m) => m.geometry.type !== 'circle');
   const circles = overlay.markers.filter((m) => m.geometry.type === 'circle');
-  for (const m of [...areas, ...circles]) {
+  // Highlighter strokes first, under everything else, as on screen.
+  const strokes = areas.filter((m) => m.geometry.type === 'stroke');
+  for (const m of strokes) {
+    if (m.geometry.type !== 'stroke') continue;
+    const width = m.geometry.width;
+    ops.push(setLineCap(LineCapStyle.Round), setDashPattern([], 0));
+    if (m.warning) {
+      ops.push(
+        setGraphicsState(solid),
+        setStrokingRgbColor(...colour(MARKER_WARNING)),
+        setLineWidth(width + 3.5 * k),
+      );
+      geometryPath(ops, m.geometry);
+      ops.push(stroke());
+    }
+    ops.push(
+      setGraphicsState(highlighter),
+      setStrokingRgbColor(...colour(m.colour)),
+      setLineWidth(width),
+    );
+    geometryPath(ops, m.geometry);
+    ops.push(stroke(), setLineCap(LineCapStyle.Butt));
+  }
+
+  const outlined = areas.filter((m) => m.geometry.type !== 'stroke');
+  for (const m of [...outlined, ...circles]) {
     const [r, g, b] = colour(m.colour);
+    const dot = m.geometry.type === 'circle' && m.symbol === 'dot';
     if (m.warning) {
       ops.push(
         setGraphicsState(solid),
@@ -262,7 +296,7 @@ export function drawOverlay(
         setDashPattern([], 0),
         setLineWidth(3.5 * k),
       );
-      geometryPath(ops, m.geometry);
+      geometryPath(ops, m.geometry, m);
       ops.push(stroke());
     }
     if (m.geometry.type === 'polyline') {
@@ -277,8 +311,8 @@ export function drawOverlay(
       ops.push(stroke(), setLineCap(LineCapStyle.Butt));
     }
     if (m.geometry.type !== 'polyline') {
-      ops.push(setGraphicsState(faint), setFillingRgbColor(r, g, b));
-      geometryPath(ops, m.geometry);
+      ops.push(setGraphicsState(dot ? dotFill : faint), setFillingRgbColor(r, g, b));
+      geometryPath(ops, m.geometry, m);
       ops.push(fill());
     }
     const dash = m.geometry.type === 'circle' ? m.dash.map((d) => d * k) : [6 * k, 3.5 * k];
@@ -286,9 +320,9 @@ export function drawOverlay(
       setGraphicsState(solid),
       setStrokingRgbColor(r, g, b),
       setDashPattern(dash, 0),
-      setLineWidth((m.esdv ? 2.2 : m.geometry.type === 'circle' ? 1.5 : 1.8) * k),
+      setLineWidth((m.esdv ? 2.2 : dot ? 0.8 : m.geometry.type === 'circle' ? 1.5 : 1.8) * k),
     );
-    geometryPath(ops, m.geometry);
+    geometryPath(ops, m.geometry, m);
     ops.push(stroke());
   }
   ops.push(setDashPattern([], 0), setGraphicsState(solid));

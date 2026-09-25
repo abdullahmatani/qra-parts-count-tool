@@ -5,9 +5,9 @@
  * by style so a few thousand markers take a handful of stroke and fill calls;
  * labels are drawn in screen space so they stay upright and a constant size.
  */
-import type { MarkerGeometry } from '@/domain/schema/types';
-import { MARKER_SELECTION, MARKER_WARNING } from '@/domain/palette';
-import { translateGeometry, type XY } from '@/domain/markup/geometry';
+import type { MarkerGeometry, MarkerSymbol, Point } from '@/domain/schema/types';
+import { DOT_ALPHA, HIGHLIGHTER_ALPHA, MARKER_SELECTION, MARKER_WARNING } from '@/domain/palette';
+import { symbolPolygon, translateGeometry, type XY } from '@/domain/markup/geometry';
 import { applyMatrix, type Matrix } from '@/features/viewer/view-transform';
 
 /** One marker as drawn: its geometry and resolved appearance. */
@@ -22,8 +22,15 @@ export interface MarkerEntry {
   highlighted: boolean;
   warning: boolean;
   esdv: boolean;
+  /** How a circle is drawn: a ring, a filled dot, a square or a free-form outline. */
+  symbol: MarkerSymbol;
+  /** A free-form symbol's outline, relative to the circle (see MarkerStyle). */
+  outline: readonly Point[] | null;
   segmentId: string | null;
 }
+
+/** A marker and the geometry it is drawn with this frame (moved or resized while dragged). */
+export type Drawn = readonly [MarkerEntry, MarkerGeometry];
 
 /** A marker drawn somewhere else while it is being dragged or resized. */
 export type MarkerPreview =
@@ -55,16 +62,24 @@ export function previewGeometry(entry: MarkerEntry, preview: MarkerPreview | nul
   return entry.geometry;
 }
 
-function tracePath(ctx: CanvasRenderingContext2D, g: MarkerGeometry): void {
+function tracePath(ctx: CanvasRenderingContext2D, [entry, g]: Drawn): void {
   switch (g.type) {
-    case 'circle':
-      ctx.moveTo(g.cx + g.r, g.cy);
-      ctx.arc(g.cx, g.cy, g.r, 0, Math.PI * 2);
+    case 'circle': {
+      const polygon = symbolPolygon(g, entry);
+      if (polygon) {
+        polygon.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+        ctx.closePath();
+      } else {
+        ctx.moveTo(g.cx + g.r, g.cy);
+        ctx.arc(g.cx, g.cy, g.r, 0, Math.PI * 2);
+      }
       break;
+    }
     case 'rect':
       ctx.rect(g.x, g.y, g.width, g.height);
       break;
-    case 'polyline': {
+    case 'polyline':
+    case 'stroke': {
       const [first, ...rest] = g.points;
       if (!first) return;
       ctx.moveTo(first[0], first[1]);
@@ -81,7 +96,8 @@ function labelAnchor(g: MarkerGeometry): { point: XY; dx: number; dy: number; ab
       return { point: { x: g.cx + g.r, y: g.cy }, dx: 4, dy: 0, above: false };
     case 'rect':
       return { point: { x: g.x, y: g.y }, dx: 0, dy: -3, above: true };
-    case 'polyline': {
+    case 'polyline':
+    case 'stroke': {
       const [x, y] = g.points[0] ?? [0, 0];
       return { point: { x, y }, dx: 4, dy: -4, above: true };
     }
@@ -92,41 +108,79 @@ interface Group {
   colour: string;
   dash: readonly number[];
   width: number;
-  geometries: MarkerGeometry[];
+  shapes: Drawn[];
 }
 
-function groupBy(
-  entries: Iterable<readonly [MarkerEntry, MarkerGeometry]>,
-  width: (e: MarkerEntry) => number,
-) {
+function groupBy(entries: Iterable<Drawn>, width: (e: MarkerEntry) => number) {
   const groups = new Map<string, Group>();
-  for (const [entry, geometry] of entries) {
+  for (const drawn of entries) {
+    const [entry] = drawn;
     const w = width(entry);
     const key = `${entry.colour}|${entry.dash.join(',')}|${w}`;
     let group = groups.get(key);
     if (!group) {
-      group = { colour: entry.colour, dash: entry.dash, width: w, geometries: [] };
+      group = { colour: entry.colour, dash: entry.dash, width: w, shapes: [] };
       groups.set(key, group);
     }
-    group.geometries.push(geometry);
+    group.shapes.push(drawn);
   }
   return groups.values();
 }
 
+function fillAll(
+  ctx: CanvasRenderingContext2D,
+  shapes: readonly Drawn[],
+  style: string,
+  alpha: number,
+): void {
+  if (shapes.length === 0) return;
+  ctx.beginPath();
+  for (const shape of shapes) tracePath(ctx, shape);
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = style;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * Strokes the outlines of `shapes`. A highlighter stroke is as wide as its pen
+ * plus `width`, with round ends, so halos show around it rather than inside.
+ */
 function strokeAll(
   ctx: CanvasRenderingContext2D,
-  geometries: readonly MarkerGeometry[],
+  shapes: readonly Drawn[],
   style: string,
   width: number,
   dash: readonly number[] = [],
 ): void {
-  if (geometries.length === 0) return;
-  ctx.beginPath();
-  for (const g of geometries) tracePath(ctx, g);
+  if (shapes.length === 0) return;
+  const outlines = shapes.filter(([, g]) => g.type !== 'stroke');
+  if (outlines.length) {
+    ctx.beginPath();
+    for (const shape of outlines) tracePath(ctx, shape);
+    ctx.strokeStyle = style;
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash as number[]);
+    ctx.stroke();
+  }
+  const pens = new Map<number, Drawn[]>();
+  for (const shape of shapes) {
+    const g = shape[1];
+    if (g.type === 'stroke') pens.set(g.width, [...(pens.get(g.width) ?? []), shape]);
+  }
+  if (pens.size === 0) return;
+  const cap = ctx.lineCap;
+  ctx.lineCap = 'round';
   ctx.strokeStyle = style;
-  ctx.lineWidth = width;
-  ctx.setLineDash(dash as number[]);
-  ctx.stroke();
+  ctx.setLineDash([]);
+  // One path per pen, so where strokes of a segment overlap they do not darken.
+  for (const [pen, list] of pens) {
+    ctx.beginPath();
+    for (const shape of list) tracePath(ctx, shape);
+    ctx.lineWidth = pen + width;
+    ctx.stroke();
+  }
+  ctx.lineCap = cap;
 }
 
 /** Draws all markers. `entries` are in paint order (highlights first). */
@@ -143,73 +197,81 @@ export function drawMarkers(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'butt';
 
-  const drawn = entries.map((entry) => [entry, previewGeometry(entry, options.preview)] as const);
+  const drawn = entries.map((entry): Drawn => [entry, previewGeometry(entry, options.preview)]);
   const circles = drawn.filter(([, g]) => g.type === 'circle');
   const rects = drawn.filter(([, g]) => g.type === 'rect');
   const runs = drawn.filter(([, g]) => g.type === 'polyline');
+  const strokes = drawn.filter(([, g]) => g.type === 'stroke');
 
   // Halos behind the markers: count-table highlight, selection, hover and
   // warnings (amber outline).
   ctx.globalAlpha = 0.35;
   strokeAll(
     ctx,
-    drawn.filter(([e]) => e.highlighted).map(([, g]) => g),
+    drawn.filter(([e]) => e.highlighted),
     MARKER_SELECTION,
     16 * upp,
   );
   ctx.globalAlpha = 0.45;
   strokeAll(
     ctx,
-    drawn.filter(([e]) => e.selected).map(([, g]) => g),
+    drawn.filter(([e]) => e.selected),
     MARKER_SELECTION,
     8 * upp,
   );
   ctx.globalAlpha = 0.25;
   strokeAll(
     ctx,
-    drawn.filter(([e]) => e.id === options.hoveredId && !e.selected).map(([, g]) => g),
+    drawn.filter(([e]) => e.id === options.hoveredId && !e.selected),
     MARKER_SELECTION,
     6 * upp,
   );
   ctx.globalAlpha = 1;
   strokeAll(
     ctx,
-    drawn.filter(([e]) => e.warning).map(([, g]) => g),
+    drawn.filter(([e]) => e.warning),
     MARKER_WARNING,
     5.5 * upp,
   );
 
+  // Highlighter strokes at the bottom: translucent paint over the linework.
+  ctx.globalAlpha = HIGHLIGHTER_ALPHA;
+  for (const group of groupBy(strokes, () => 0)) strokeAll(ctx, group.shapes, group.colour, 0);
+  ctx.globalAlpha = 1;
+
   // Dashed highlights: areas and line runs (ANN-01).
   const areaDash = [9 * upp, 5 * upp];
   for (const group of groupBy(rects, () => 2.5)) {
-    ctx.beginPath();
-    for (const g of group.geometries) tracePath(ctx, g);
-    ctx.globalAlpha = 0.05;
-    ctx.fillStyle = group.colour;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    strokeAll(ctx, group.geometries, group.colour, 2.5 * upp, areaDash);
+    fillAll(ctx, group.shapes, group.colour, 0.05);
+    strokeAll(ctx, group.shapes, group.colour, 2.5 * upp, areaDash);
   }
   ctx.lineCap = 'round';
   for (const group of groupBy(runs, () => 2.5)) {
     ctx.globalAlpha = 0.18;
-    strokeAll(ctx, group.geometries, group.colour, 10 * upp);
+    strokeAll(ctx, group.shapes, group.colour, 10 * upp);
     ctx.globalAlpha = 1;
-    strokeAll(ctx, group.geometries, group.colour, 2.5 * upp, areaDash);
+    strokeAll(ctx, group.shapes, group.colour, 2.5 * upp, areaDash);
   }
   ctx.lineCap = 'butt';
 
   // Circles on top, so items inside a highlighted area stay visible (ANN-03).
-  for (const group of groupBy(circles, (e) => (e.esdv ? 3 : 2))) {
-    ctx.beginPath();
-    for (const g of group.geometries) tracePath(ctx, g);
-    ctx.globalAlpha = 0.08;
-    ctx.fillStyle = group.colour;
-    ctx.fill();
-    ctx.globalAlpha = 1;
+  // Rings, squares and outlines get a faint wash; dots are filled.
+  for (const group of groupBy(circles, (e) => (e.esdv ? 3 : e.symbol === 'dot' ? 1 : 2))) {
+    fillAll(
+      ctx,
+      group.shapes.filter(([e]) => e.symbol !== 'dot'),
+      group.colour,
+      0.08,
+    );
+    fillAll(
+      ctx,
+      group.shapes.filter(([e]) => e.symbol === 'dot'),
+      group.colour,
+      DOT_ALPHA,
+    );
     strokeAll(
       ctx,
-      group.geometries,
+      group.shapes,
       group.colour,
       group.width * upp,
       group.dash.map((d) => d * upp),
@@ -224,13 +286,13 @@ export function drawMarkers(
 /** A light halo around the marker under the pointer, drawn over everything else. */
 export function drawHoverHalo(
   ctx: CanvasRenderingContext2D,
-  geometry: MarkerGeometry,
+  shape: Drawn,
   { matrix: m, devicePixelRatio: dpr, unitsPerPixel: upp }: DrawOptions,
 ): void {
   ctx.setTransform(m[0] * dpr, m[1] * dpr, m[2] * dpr, m[3] * dpr, m[4] * dpr, m[5] * dpr);
   ctx.globalAlpha = 0.3;
   ctx.lineJoin = 'round';
-  strokeAll(ctx, [geometry], MARKER_SELECTION, 6 * upp);
+  strokeAll(ctx, [shape], MARKER_SELECTION, 6 * upp);
   ctx.globalAlpha = 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }

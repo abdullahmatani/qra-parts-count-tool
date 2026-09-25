@@ -101,19 +101,21 @@ export const MarkerList = memo(function MarkerList({
     <ul className="sr-only" aria-label={t('markup.layer')} data-testid="marker-list">
       {entries.map((entry) => {
         const shape = entry.esdv ? 'esdv' : entry.geometry.type;
+        const kind = entry.esdv || entry.geometry.type !== 'circle' ? shape : entry.symbol;
         return (
           <li
             key={entry.id}
             data-testid="marker"
             data-marker-id={entry.id}
             data-shape={shape}
+            data-symbol={entry.geometry.type === 'circle' ? entry.symbol : ''}
             data-segment-id={entry.segmentId ?? ''}
             data-colour={entry.colour}
             data-selected={entry.selected ? 'true' : 'false'}
             data-highlighted={entry.highlighted ? 'true' : 'false'}
             data-warning={entry.warning ? 'true' : 'false'}
           >
-            {entry.label || t(`markup.shapes.${shape}`)}
+            {entry.label || t(`markup.shapes.${kind}`)}
           </li>
         );
       })}

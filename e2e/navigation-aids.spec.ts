@@ -32,6 +32,8 @@ test('suggests links from off-page connector text (LNK-06)', async ({ app }) => 
   await expect(page.getByTestId('link-editor')).toBeVisible();
   await page.getByRole('application').focus();
   await page.keyboard.press('Delete');
+  // The link leads to a drawing, so deleting it asks first.
+  await page.getByTestId('delete-link-dialog').getByRole('button', { name: 'Delete link' }).click();
   await expect(link).toHaveCount(0);
 
   await openMenu(page, 'Suggest drawing links…');

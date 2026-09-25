@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { itemForMarker } from '@/domain/actions/items';
 import { starterLibrary } from '@/domain/count/starter-library';
 import { projectToDoc } from '@/domain/model';
+import { penWidth } from '@/domain/markup/highlighter';
 import { updateItemCommand } from '@/features/count/item-commands';
 import { makePopulatedProject } from '@/test/fixtures';
 import { useProjectStore } from '@/store/project-store';
@@ -16,6 +17,8 @@ import {
   resetClipboard,
   selectAllOnDrawing,
   selectedMarkerIds,
+  setHighlighterPenCommand,
+  setMarkerSymbolCommand,
 } from './marker-commands';
 
 const project = () => useProjectStore.getState();
@@ -45,6 +48,79 @@ describe('marker commands', () => {
     expect(project().doc!.markers[id]).toMatchObject({ segmentId, shape: 'circle' });
     expect(ui().selection).toEqual([id]);
     expect(project().past.at(-1)?.label).toBe('add circle');
+  });
+
+  it('places equipment markers with the chosen shape, and changes it as one undo step', () => {
+    const outline: [number, number][] = [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+    ];
+    const square = placeMarker(
+      drawingId,
+      { type: 'circle', cx: 5, cy: 5, r: 3 },
+      {
+        symbol: 'square',
+      },
+    )!;
+    const traced = placeMarker(
+      drawingId,
+      { type: 'circle', cx: 50, cy: 5, r: 3 },
+      {
+        symbol: 'freeform',
+        outline,
+      },
+    )!;
+    expect(project().doc!.markers[square]!.style).toMatchObject({
+      symbol: 'square',
+      outline: null,
+    });
+    expect(project().doc!.markers[traced]!.style).toMatchObject({ symbol: 'freeform', outline });
+    // Both still carry a count item: the shape never changes what is counted.
+    expect(itemForMarker(project().doc!, square)).toBeDefined();
+    expect(itemForMarker(project().doc!, traced)).toBeDefined();
+
+    expect(setMarkerSymbolCommand([square, traced], 'circle')).toBe(true);
+    expect(project().past.at(-1)?.label).toBe('change the shape of 2 markers');
+    expect(project().doc!.markers[traced]!.style).toMatchObject({
+      symbol: 'circle',
+      outline: null,
+    });
+    project().undo();
+    expect(project().doc!.markers[traced]!.style.symbol).toBe('freeform');
+  });
+
+  it('paints highlighter strokes in the active segment, without an item or a selection', () => {
+    ui().setActiveSegment(segmentId);
+    const marker = Object.keys(project().doc!.markers)[0]!;
+    ui().setSelection([marker]);
+    const stroke = {
+      type: 'stroke' as const,
+      points: [
+        [0, 0],
+        [80, 20],
+      ] as [number, number][],
+      width: 16,
+    };
+    const id = placeMarker(drawingId, stroke)!;
+    expect(project().doc!.markers[id]).toMatchObject({
+      shape: 'highlighter',
+      segmentId,
+      geometry: stroke,
+    });
+    expect(itemForMarker(project().doc!, id)).toBeUndefined();
+    expect(project().past.at(-1)?.label).toBe('add highlighter stroke');
+    // Painting leaves nothing selected, so Delete cannot remove the wrong marker.
+    expect(ui().selection).toEqual([]);
+
+    // A broader pen for this stroke; the circle among the ids is left alone.
+    expect(setHighlighterPenCommand([id, marker], 'broad')).toBe(true);
+    const size = project().doc!.drawings[drawingId]!.size;
+    expect(project().doc!.markers[id]!.geometry).toMatchObject({
+      width: penWidth('broad', size),
+    });
+    expect(project().doc!.markers[marker]!.geometry.type).toBe('circle');
+    expect(project().past.at(-1)?.label).toBe('change the pen of 2 highlighter strokes');
   });
 
   it('places unassigned markers when there is no active segment', () => {
@@ -127,7 +203,7 @@ describe('marker commands', () => {
           segmentId: null,
           shape: 'circle' as const,
           geometry: { type: 'circle' as const, cx: 10, cy: 10, r: 2 },
-          style: { labelOffset: null },
+          style: { labelOffset: null, symbol: 'circle' as const, outline: null },
           esdv: null,
         },
       ],

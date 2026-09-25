@@ -15,7 +15,7 @@ import { CommitInput } from '@/features/segments/fields';
 import { useProjectStore } from '@/store/project-store';
 import { useOrderedDrawings } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
-import { deleteLinkCommand, followLink, updateLinkCommand } from './link-commands';
+import { followLink, requestDeleteLink, updateLinkCommand } from './link-commands';
 
 /** LNK-01: the selected link's target drawing, label and saved view. */
 export function LinkEditor({ linkId }: { linkId: string }) {
@@ -121,7 +121,7 @@ export function LinkEditor({ linkId }: { linkId: string }) {
           variant="outline"
           className="text-destructive"
           disabled={readOnly}
-          onClick={() => deleteLinkCommand(link.id)}
+          onClick={() => requestDeleteLink(link.id)}
         >
           <Trash2 /> {t('links.editor.delete')}
         </Button>

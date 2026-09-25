@@ -10,7 +10,10 @@ import {
   moveMarkers,
   pasteMarkers,
   setMarkerGeometry,
+  setMarkerSymbol,
 } from './markers';
+import { newEsdvData } from '../esdv';
+import { DOT_SCALE } from '../markup/geometry';
 
 function setup() {
   const doc = projectToDoc(makePopulatedProject());
@@ -44,6 +47,47 @@ describe('marker actions', () => {
     expect(doc.markers[id]?.geometry).toEqual({ type: 'circle', cx: 1, cy: 2, r: 3 });
     setMarkerGeometry(doc, id, { type: 'rect', x: 0, y: 0, width: 1, height: 1 });
     expect(doc.markers[id]?.geometry.type).toBe('circle');
+  });
+
+  it('redraws equipment circles as dots or squares, but leaves ESDVs and highlights alone', () => {
+    const { doc, drawingId } = setup();
+    addMarker(doc, makeCircleMarker(drawingId, { id: 'ring' }));
+    addMarker(
+      doc,
+      makeCircleMarker(drawingId, {
+        id: 'outline',
+        style: {
+          labelOffset: null,
+          symbol: 'freeform',
+          outline: [
+            [0, -1],
+            [1, 0],
+            [0, 1],
+          ],
+        },
+      }),
+    );
+    addMarker(doc, makeCircleMarker(drawingId, { id: 'esdv', esdv: newEsdvData('in') }));
+    addMarker(
+      doc,
+      makeCircleMarker(drawingId, {
+        id: 'area',
+        shape: 'dashedHighlight',
+        geometry: { type: 'rect', x: 0, y: 0, width: 5, height: 5 },
+      }),
+    );
+    setMarkerSymbol(doc, ['ring', 'outline', 'esdv', 'area'], 'dot');
+    // A dot is smaller than the ring around the same symbol.
+    expect(doc.markers.ring?.style.symbol).toBe('dot');
+    expect(doc.markers.ring?.geometry).toMatchObject({ r: 12 * DOT_SCALE });
+    expect(doc.markers.outline?.style).toMatchObject({ symbol: 'dot', outline: null });
+    expect(doc.markers.esdv?.style.symbol).toBe('circle');
+    expect(doc.markers.area?.style.symbol).toBe('circle');
+    setMarkerSymbol(doc, ['ring'], 'square');
+    expect(doc.markers.ring?.geometry.type === 'circle' && doc.markers.ring.geometry.r).toBeCloseTo(
+      12,
+    );
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
   });
 
   it('assigns markers and their items to a segment, or unassigns them (ANN-03)', () => {

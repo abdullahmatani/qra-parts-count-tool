@@ -179,6 +179,9 @@
   stroke-width: calc(var(--upp) * 1.5px);
   stroke-dasharray: calc(var(--upp) * 5px) calc(var(--upp) * 4px);
 }
+.mk-draft-dot {
+  fill-opacity: 0.5;
+}
 .mk-draft-line {
   fill: none;
   stroke: var(--marker-selection);

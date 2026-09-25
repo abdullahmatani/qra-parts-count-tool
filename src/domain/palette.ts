@@ -25,6 +25,10 @@ export const LINK_OVERLAY = '#2563eb';
 export const ESDV_COLOUR = '#dc2626';
 /** Colour for markers that belong to no segment. */
 export const UNASSIGNED_COLOUR = '#64748b';
+/** Fill opacity of a dot marker: reads as a dot, still shows the symbol under it. */
+export const DOT_ALPHA = 0.7;
+/** Opacity of a highlighter stroke: the linework under it stays readable. */
+export const HIGHLIGHTER_ALPHA = 0.35;
 
 /** Stroke dash patterns used after the palette cycles; index 0 is solid. */
 export const SEGMENT_DASH_VARIANTS: readonly (readonly number[])[] = [

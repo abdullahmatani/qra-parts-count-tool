@@ -8,11 +8,14 @@ import { markerWarningMap, type CountDoc, type CountEntry } from '../count/count
 import { itemsByMarker, markerLabel, markerPaint, markerSegmentIds } from '../markup/presentation';
 import type { ProjectDoc } from '../model';
 import { ESDV_COLOUR, MARKER_WARNING, UNASSIGNED_COLOUR, segmentAppearance } from '../palette';
-import type { Drawing, Marker, MarkerGeometry } from '../schema/types';
+import type { Drawing, Marker, MarkerGeometry, MarkerSymbol, Point } from '../schema/types';
 import { formatExportName, uniqueName } from './file-names';
 
 export interface OverlayMarker {
   geometry: MarkerGeometry;
+  /** How a circle is drawn, as on screen (ring, dot, square or free-form outline). */
+  symbol: MarkerSymbol;
+  outline: readonly Point[] | null;
   colour: string;
   dash: readonly number[];
   label: string;
@@ -126,6 +129,8 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
       if (flagged) warning = true;
       return {
         geometry: marker.geometry,
+        symbol: marker.style.symbol,
+        outline: marker.style.outline,
         colour: paint.colour,
         dash: paint.dash,
         label: markerLabel(marker, items.get(marker.id)),

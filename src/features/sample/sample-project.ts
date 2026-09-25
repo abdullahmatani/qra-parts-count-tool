@@ -124,7 +124,7 @@ export function buildSampleProject(
         segmentId: symbol.between ? null : segmentOf(symbol.segment),
         shape: 'circle',
         geometry,
-        style: { labelOffset: null },
+        style: { labelOffset: null, symbol: 'circle', outline: null },
         esdv: symbol.between
           ? {
               tag: symbol.tag,
@@ -175,7 +175,7 @@ export function buildSampleProject(
     segmentId: segmentOf('IS-01'),
     shape: 'dashedHighlight',
     geometry: { type: 'rect', x: 455, y: 225, width: 320, height: 150 },
-    style: { labelOffset: null },
+    style: { labelOffset: null, symbol: 'circle', outline: null },
     esdv: null,
   });
 
