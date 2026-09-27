@@ -2,10 +2,12 @@
  * Marker commands used by the canvas tools, shortcuts and panels. Each command
  * is one undo step (PRJ-09) with a label shown in the Undo/Redo tooltips.
  */
+import { toast } from 'sonner';
 import {
   addMarker,
   assignMarkers,
   copyMarkers,
+  cutStrokesAtEsdv,
   deleteMarkers,
   moveMarkers,
   newMarkerStyle,
@@ -13,6 +15,7 @@ import {
   setHighlighterPen,
   setMarkerGeometry,
   setMarkerSymbol,
+  strokeAtEsdvs,
   type MarkerClip,
 } from '@/domain/actions/markers';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
@@ -25,10 +28,12 @@ import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { ProjectDoc } from '@/domain/model';
 import type {
   CircleGeometry,
+  DoubleLineGeometry,
   Marker,
   MarkerGeometry,
   MarkerStyle,
   MarkerSymbol,
+  StrokeGeometry,
 } from '@/domain/schema/types';
 import i18n from '@/i18n';
 import { newId } from '@/lib/ids';
@@ -41,6 +46,12 @@ function apply(label: string, recipe: (draft: Draft<ProjectDoc>) => void): boole
   return useProjectStore.getState().apply(label, recipe);
 }
 
+/** The active segment, when it still exists. */
+function activeSegmentIn(doc: ProjectDoc): string | null {
+  const activeSegmentId = useUiStore.getState().activeSegmentId;
+  return activeSegmentId && doc.segments[activeSegmentId] ? activeSegmentId : null;
+}
+
 /** Selected markers that still exist on the active drawing. */
 export function selectedMarkerIds(): string[] {
   const doc = useProjectStore.getState().doc;
@@ -50,23 +61,35 @@ export function selectedMarkerIds(): string[] {
 }
 
 /**
- * SEG-01: places an ESDV (a red circle marker with a tag and size) and opens
- * it for editing. Its upstream and downstream segments are chosen in the panel.
+ * SEG-01: places an ESDV (a red ring round the valve, or a red double line
+ * across the pipe, with a tag and size) and opens it for editing. Its upstream
+ * and downstream segments are chosen in the panel. Highlighter strokes that
+ * run through it are cut there, in the same undo step, so each side can go to
+ * its own segment.
  */
-export function placeEsdv(drawingId: string, geometry: MarkerGeometry): string | null {
+export function placeEsdv(
+  drawingId: string,
+  geometry: CircleGeometry | DoubleLineGeometry,
+): string | null {
   const doc = useProjectStore.getState().doc;
-  if (!doc?.drawings[drawingId] || geometry.type !== 'circle') return null;
+  if (!doc?.drawings[drawingId]) return null;
   const marker: Marker = {
     id: newId('mkr'),
     drawingId,
     segmentId: null,
-    shape: 'circle',
+    shape: geometry.type,
     geometry,
     style: newMarkerStyle(),
     esdv: newEsdvData(doc.settings.units.size),
   };
-  if (!apply(t('markup.history.addEsdv'), (draft) => addMarker(draft, marker))) return null;
+  let split = false;
+  const done = apply(t('markup.history.addEsdv'), (draft) => {
+    addMarker(draft, marker);
+    split = cutStrokesAtEsdv(draft, marker.id).length > 0;
+  });
+  if (!done) return null;
   useUiStore.getState().requestEdit(marker.id);
+  if (split) toast(t('markup.esdvSplit'), { duration: 4000 });
   return marker.id;
 }
 
@@ -97,29 +120,53 @@ export function stampTemplate(doc: ProjectDoc): ItemDefaults | null {
 }
 
 /**
+ * Paints a highlighter stroke in the active segment (SEG-06). A stroke that
+ * runs through an ESDV is cut there (SEG-01), so it may land as several
+ * strokes; returns their ids. Highlighting is painting: nothing is selected,
+ * so the next stroke starts from a clean slate (Ctrl+Z takes back a stroke
+ * that went wrong).
+ */
+export function placeStroke(drawingId: string, geometry: StrokeGeometry): string[] {
+  const doc = useProjectStore.getState().doc;
+  if (!doc?.drawings[drawingId]) return [];
+  const segmentId = activeSegmentIn(doc);
+  const markers = strokeAtEsdvs(doc, drawingId, geometry).map((piece): Marker => ({
+    id: newId('mkr'),
+    drawingId,
+    segmentId,
+    shape: 'highlighter',
+    geometry: piece,
+    style: newMarkerStyle(),
+    esdv: null,
+  }));
+  const done = apply(t('markup.history.addHighlighter'), (draft) => {
+    for (const marker of markers) addMarker(draft, marker);
+  });
+  if (!done) return [];
+  useUiStore.getState().setSelection([]);
+  return markers.map((m) => m.id);
+}
+
+/**
  * Places a circle, dashed highlight or highlighter stroke in the active
  * segment (ANN-01, ANN-03, SEG-06). A circle is drawn with `symbol` (a ring
- * unless given); a free-form symbol needs its `outline`.
+ * unless given); a free-form symbol needs its `outline`. ESDVs are placed
+ * with `placeEsdv`.
  */
 export function placeMarker(
   drawingId: string,
   geometry: MarkerGeometry,
   options: { stamp?: boolean; symbol?: MarkerSymbol; outline?: MarkerStyle['outline'] } = {},
 ): string | null {
+  if (geometry.type === 'stroke') return placeStroke(drawingId, geometry)[0] ?? null;
   const doc = useProjectStore.getState().doc;
-  if (!doc?.drawings[drawingId]) return null;
-  const activeSegmentId = useUiStore.getState().activeSegmentId;
-  const segmentId = activeSegmentId && doc.segments[activeSegmentId] ? activeSegmentId : null;
+  if (!doc?.drawings[drawingId] || geometry.type === 'doubleLine') return null;
+  const segmentId = activeSegmentIn(doc);
   const marker: Marker = {
     id: newId('mkr'),
     drawingId,
     segmentId,
-    shape:
-      geometry.type === 'circle'
-        ? 'circle'
-        : geometry.type === 'stroke'
-          ? 'highlighter'
-          : 'dashedHighlight',
+    shape: geometry.type === 'circle' ? 'circle' : 'dashedHighlight',
     geometry,
     style:
       geometry.type === 'circle'
@@ -140,11 +187,7 @@ export function placeMarker(
       ? useUiStore.getState().itemDefaults
       : { equipmentTypeId: pipeType?.id ?? null, actuation: null });
   const label =
-    geometry.type === 'circle'
-      ? t('markup.history.addCircle')
-      : geometry.type === 'stroke'
-        ? t('markup.history.addHighlighter')
-        : t('markup.history.addHighlight');
+    geometry.type === 'circle' ? t('markup.history.addCircle') : t('markup.history.addHighlight');
   let itemId: string | null = null;
   const done = apply(label, (draft) => {
     addMarker(draft, marker);
@@ -157,9 +200,6 @@ export function placeMarker(
   if (itemId && !stamp && defaults.tag) ui.setItemDefaults({ tag: nextTag(defaults.tag) });
   // A stamped item is complete: select it without taking the keyboard focus.
   if (withItem && !stamp) ui.requestEdit(marker.id);
-  // Highlighting is painting: the stroke is not selected, so the next one
-  // starts from a clean slate (Ctrl+Z takes back a stroke that went wrong).
-  else if (geometry.type === 'stroke') ui.setSelection([]);
   else ui.setSelection([marker.id]);
   return marker.id;
 }
@@ -184,8 +224,7 @@ export function placeSuggestedMarkers(
 ): string[] {
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId] || geometries.length === 0) return [];
-  const activeSegmentId = useUiStore.getState().activeSegmentId;
-  const segmentId = activeSegmentId && doc.segments[activeSegmentId] ? activeSegmentId : null;
+  const segmentId = activeSegmentIn(doc);
   const markers: Marker[] = geometries.map((geometry) => ({
     id: newId('mkr'),
     drawingId,

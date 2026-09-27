@@ -72,6 +72,13 @@ function geometrySummary(marker: Marker, t: TFunction): [string, string][] {
         ],
         [t('markup.inspector.width'), round(geometry.width)],
       ];
+    case 'doubleLine': {
+      const [[x1, y1], [x2, y2]] = geometry.points;
+      return [
+        [t('markup.inspector.position'), `${round((x1 + x2) / 2)}, ${round((y1 + y2) / 2)}`],
+        [t('markup.inspector.length'), round(Math.hypot(x2 - x1, y2 - y1))],
+      ];
+    }
   }
 }
 

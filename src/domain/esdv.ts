@@ -1,9 +1,14 @@
 /**
- * ESDV boundary rule (SEG-08): which segment an ESDV on a segment boundary is
- * counted in. The rule is chosen at project setup with no default, and each
- * ESDV may override it.
+ * ESDVs: how they are drawn (SEG-01) and the boundary rule (SEG-08), which
+ * segment an ESDV on a segment boundary is counted in. The rule is chosen at
+ * project setup with no default, and each ESDV may override it.
  */
-import type { EsdvBoundaryRule, EsdvData, Marker, SizeUnit } from './schema/types';
+import type { EsdvBoundaryRule, EsdvData, Marker, MarkerShape, SizeUnit } from './schema/types';
+
+/** How an ESDV is drawn: a ring round the valve, or a double line across the pipe. */
+export type EsdvShape = Extract<MarkerShape, 'circle' | 'doubleLine'>;
+
+export const ESDV_SHAPES: readonly EsdvShape[] = ['circle', 'doubleLine'];
 
 export function newEsdvData(sizeUnit: SizeUnit): EsdvData {
   return {

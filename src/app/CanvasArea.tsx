@@ -8,6 +8,7 @@ import { useUiStore } from '@/store/ui-store';
 import { SuggestionBar } from '@/features/assist/SuggestionBar';
 import { FindBar } from '@/features/search/FindBar';
 import { EquipmentBar } from './EquipmentBar';
+import { EsdvBar } from './EsdvBar';
 import { HighlighterBar } from './HighlighterBar';
 import { Toolbar } from './Toolbar';
 
@@ -35,7 +36,13 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
     <div className="flex h-full min-w-0 flex-col">
       <Toolbar />
       {/* The bar under the toolbar holds the options of what is being placed. */}
-      {tool === 'highlighter' ? <HighlighterBar /> : <EquipmentBar />}
+      {tool === 'highlighter' ? (
+        <HighlighterBar />
+      ) : tool === 'esdv' ? (
+        <EsdvBar />
+      ) : (
+        <EquipmentBar />
+      )}
       {tabs.length > 0 && (
         <div
           role="tablist"

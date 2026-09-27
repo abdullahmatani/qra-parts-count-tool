@@ -188,3 +188,7 @@
   stroke-width: calc(var(--upp) * 2px);
   stroke-dasharray: calc(var(--upp) * 9px) calc(var(--upp) * 5px);
 }
+.mk-draft-double {
+  stroke: var(--marker-selection);
+  stroke-width: calc(var(--upp) * 2px);
+}

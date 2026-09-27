@@ -13,7 +13,7 @@ import type { MarkerEntry } from './marker-canvas';
 
 /**
  * The visible markers on a drawing with their resolved appearance, in paint
- * order: dashed highlights first, circles on top. Recomputed only when the
+ * order: highlights first, circles and ESDV double lines on top. Recomputed only when the
  * project, selection or filters change, never on pan or zoom.
  */
 export function useMarkerEntries(drawingId: string): MarkerEntry[] {
@@ -51,7 +51,8 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         outline: marker.style.outline,
         segmentId: marker.segmentId,
       };
-      (marker.geometry.type === 'circle' ? circles : areas).push(entry);
+      const onTop = marker.geometry.type === 'circle' || marker.geometry.type === 'doubleLine';
+      (onTop ? circles : areas).push(entry);
     }
     return [...areas, ...circles];
   }, [markers, items, segments, selection, highlight, filters, showLabels, drawingId, warnings]);

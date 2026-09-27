@@ -193,6 +193,31 @@ describe('parseProjectFile validation (PRJ-03)', () => {
     expect(parse({ ...base, shape: 'dashedHighlight' })).toBe(false);
   });
 
+  it('keeps ESDV double lines and their geometry together', () => {
+    const drawing = makeDrawing();
+    const parse = (marker: unknown) => ProjectV1.shape.markers.safeParse([marker]).success;
+    const line = {
+      type: 'doubleLine',
+      points: [
+        [10, 0],
+        [10, 30],
+      ],
+      gap: 6,
+    };
+    const esdv = { tag: 'ESDV-101' };
+    const base = { ...makeCircleMarker(drawing.id), shape: 'doubleLine', geometry: line, esdv };
+    expect(parse(base)).toBe(true);
+    expect(parse({ ...base, geometry: { ...line, gap: 0 } })).toBe(false);
+    expect(parse({ ...base, geometry: { ...line, points: [[10, 0]] } })).toBe(false);
+    // A double line is always an ESDV, drawn with double line geometry.
+    expect(parse({ ...base, esdv: null })).toBe(false);
+    expect(parse({ ...base, geometry: { type: 'circle', cx: 0, cy: 0, r: 5 } })).toBe(false);
+    // An ESDV is a ring or a double line, never a highlight.
+    expect(parse({ ...base, shape: 'highlighter', geometry: { ...line, type: 'stroke' } })).toBe(
+      false,
+    );
+  });
+
   it('rejects a bin whose upper edge is below its lower edge', () => {
     const library = {
       binSets: [

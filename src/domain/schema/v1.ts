@@ -61,9 +61,10 @@ export const DrawingFileType = z.enum(['pdf', 'dwg', 'dxf']);
 
 /**
  * ANN-01: circles (equipment and ESDVs) and dashed highlights, plus
- * highlighter strokes painted over a segment's pipework and equipment.
+ * highlighter strokes painted over a segment's pipework and equipment, and
+ * ESDVs drawn as a double line across the pipe (SEG-01).
  */
-export const MarkerShape = z.enum(['circle', 'dashedHighlight', 'highlighter']);
+export const MarkerShape = z.enum(['circle', 'dashedHighlight', 'highlighter', 'doubleLine']);
 
 /**
  * How an equipment (circle) marker is drawn: a ring, a filled dot, a square or
@@ -238,11 +239,22 @@ export const StrokeGeometry = z.object({
   width: PositiveNumber,
 });
 
+/**
+ * A double line across a pipe: two parallel lines `gap` drawing units apart,
+ * one either side of the line from the first point to the second.
+ */
+export const DoubleLineGeometry = z.object({
+  type: z.literal('doubleLine'),
+  points: z.tuple([Point, Point]),
+  gap: PositiveNumber,
+});
+
 export const MarkerGeometry = z.discriminatedUnion('type', [
   CircleGeometry,
   RectGeometry,
   PolylineGeometry,
   StrokeGeometry,
+  DoubleLineGeometry,
 ]);
 
 /** The geometry each marker shape is drawn with. */
@@ -250,6 +262,7 @@ const SHAPE_GEOMETRY: Record<z.output<typeof MarkerShape>, readonly string[]> = 
   circle: ['circle'],
   dashedHighlight: ['rect', 'polyline'],
   highlighter: ['stroke'],
+  doubleLine: ['doubleLine'],
 };
 
 export const MarkerStyle = z.object({
@@ -290,7 +303,7 @@ export const Marker = z
     shape: MarkerShape,
     geometry: MarkerGeometry,
     style: MarkerStyle.prefault({}),
-    /** Present when the marker is an ESDV (SEG-01). ESDVs are always circles. */
+    /** Present when the marker is an ESDV (SEG-01). ESDVs are circles or double lines. */
     esdv: EsdvData.nullable().default(null),
   })
   .superRefine((marker, ctx) => {
@@ -302,8 +315,19 @@ export const Marker = z
         message: `A ${marker.shape} marker needs ${allowed.join(' or ')} geometry`,
       });
     }
-    if (marker.esdv && marker.shape !== 'circle') {
-      ctx.addIssue({ code: 'custom', path: ['esdv'], message: 'An ESDV marker must be a circle' });
+    if (marker.esdv && marker.shape !== 'circle' && marker.shape !== 'doubleLine') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['esdv'],
+        message: 'An ESDV marker must be a circle or a double line',
+      });
+    }
+    if (marker.shape === 'doubleLine' && !marker.esdv) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['esdv'],
+        message: 'A double line marker must be an ESDV',
+      });
     }
     const { symbol, outline } = marker.style;
     if (symbol !== 'circle' && (marker.shape !== 'circle' || marker.esdv)) {
@@ -324,7 +348,7 @@ export const Marker = z
   .meta({
     id: 'Marker',
     description:
-      'A circle (drawn as a ring, dot, square or free-form outline), dashed highlight or highlighter stroke in drawing coordinates (ANN-01..03).',
+      'A circle (drawn as a ring, dot, square or free-form outline), dashed highlight, highlighter stroke or ESDV double line in drawing coordinates (ANN-01..03).',
   });
 
 // ---------------------------------------------------------------------------

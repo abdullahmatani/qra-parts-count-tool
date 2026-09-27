@@ -102,7 +102,16 @@
       "medium": "Medium",
       "broad": "Broad"
     },
-    "hint": "Drag over the segment's pipework and equipment. Hold Shift for a straight stroke."
+    "hint": "Drag over the segment's pipework and equipment. Hold Shift for a straight stroke. Strokes snap to ESDVs and stop at them; hold Alt to draw freely."
+  },
+  "esdvBar": {
+    "label": "ESDV options",
+    "shape": "Shape",
+    "hints": {
+      "circle": "Click an ESD valve to ring it, or drag out the size of the ring.",
+      "doubleLine": "Drag across the pipe, or click a highlighter stroke to cross it. Hold Shift for 45° steps."
+    },
+    "split": "An ESDV cuts the highlighter strokes it crosses."
   },
   "drawings": {
     "title": "Drawings",
@@ -488,6 +497,7 @@
       "rect": "Dashed rectangle",
       "polyline": "Dashed line run",
       "stroke": "Highlighter stroke",
+      "doubleLine": "Double line",
       "esdv": "ESDV"
     },
     "unassigned": "Unassigned",
@@ -517,6 +527,7 @@
       "radius": "Radius",
       "size": "Size",
       "width": "Width",
+      "length": "Length",
       "points": "{{count}} points",
       "split": "Split into a new segment",
       "splitHint": "Moves the selected markers of {{label}} into a new segment."
@@ -529,6 +540,7 @@
     "polylineHint": "Click to add points. Double-click or press Enter to finish, Esc to cancel.",
     "freeformHint": "Drag around a symbol to draw a free-form outline.",
     "highlighterHint": "Drag over the pipework and equipment to highlight them.",
+    "esdvSplit": "The highlighter is cut at the ESDV: select a piece to move it to another segment.",
     "filters": {
       "button": "Marker filters",
       "segments": "Segments",

@@ -62,7 +62,7 @@ export function isMarkerVisible(
 }
 
 /** What a marker is, for its name in the interface (`markup.shapes.*`). */
-export type MarkerKind = 'esdv' | MarkerSymbol | 'rect' | 'polyline' | 'stroke';
+export type MarkerKind = 'esdv' | MarkerSymbol | 'rect' | 'polyline' | 'stroke' | 'doubleLine';
 
 export function markerKind(marker: Pick<Marker, 'esdv' | 'geometry' | 'style'>): MarkerKind {
   if (marker.esdv) return 'esdv';

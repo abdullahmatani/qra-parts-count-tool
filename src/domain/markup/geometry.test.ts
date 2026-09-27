@@ -5,6 +5,8 @@ import {
   MAX_OUTLINE_POINTS,
   boxFromPoints,
   dedupePoints,
+  doubleLineStrokes,
+  doubleLineTop,
   freeformSymbol,
   geometryBounds,
   geometryHandles,
@@ -269,5 +271,57 @@ describe('highlighter strokes', () => {
     });
     expect(geometryHandles(stroke)).toEqual([]);
     expect(resizeGeometry(stroke, 'e', { x: 0, y: 0 })).toBe(stroke);
+  });
+});
+
+describe('ESDV double lines', () => {
+  // Upright across a horizontal pipe at y = 50.
+  const line: MarkerGeometry = {
+    type: 'doubleLine',
+    points: [
+      [100, 40],
+      [100, 60],
+    ],
+    gap: 6,
+  };
+
+  it('draws two lines half the gap either side of its centre line', () => {
+    if (line.type !== 'doubleLine') throw new Error('unreachable');
+    const [first, second] = doubleLineStrokes(line);
+    expect(first.map((p) => p.x)).toEqual([97, 97]);
+    expect(second.map((p) => p.x)).toEqual([103, 103]);
+    expect(geometryBounds(line)).toEqual({ minX: 97, minY: 40, maxX: 103, maxY: 60 });
+    // The label goes by the top of the right-hand line.
+    expect(doubleLineTop(line)).toEqual({ x: 103, y: 40 });
+  });
+
+  it('is hit on either line and in the gap between them', () => {
+    expect(hitsGeometry(line, { x: 100, y: 50 }, 0)).toBe(true);
+    expect(hitsGeometry(line, { x: 103, y: 45 }, 0)).toBe(true);
+    expect(hitsGeometry(line, { x: 106, y: 45 }, 0)).toBe(false);
+    expect(hitsGeometry(line, { x: 106, y: 45 }, 4)).toBe(true);
+    expect(hitsGeometry(line, { x: 100, y: 70 }, 4)).toBe(false);
+  });
+
+  it('moves with its ends, and each end is a handle', () => {
+    expect(translateGeometry(line, 5, -5)).toEqual({
+      type: 'doubleLine',
+      points: [
+        [105, 35],
+        [105, 55],
+      ],
+      gap: 6,
+    });
+    expect(geometryHandles(line).map((h) => h.id)).toEqual(['v0', 'v1']);
+    expect(resizeGeometry(line, 'v1', { x: 120, y: 60 })).toEqual({
+      type: 'doubleLine',
+      points: [
+        [100, 40],
+        [120, 60],
+      ],
+      gap: 6,
+    });
+    // Both ends in one place would leave it without a direction.
+    expect(resizeGeometry(line, 'v1', { x: 100, y: 40 })).toBe(line);
   });
 });

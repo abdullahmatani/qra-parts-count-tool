@@ -108,7 +108,13 @@ export const MarkerList = memo(function MarkerList({
             data-testid="marker"
             data-marker-id={entry.id}
             data-shape={shape}
-            data-symbol={entry.geometry.type === 'circle' ? entry.symbol : ''}
+            data-symbol={
+              entry.geometry.type === 'circle'
+                ? entry.symbol
+                : entry.geometry.type === 'doubleLine'
+                  ? 'doubleLine'
+                  : ''
+            }
             data-segment-id={entry.segmentId ?? ''}
             data-colour={entry.colour}
             data-selected={entry.selected ? 'true' : 'false'}

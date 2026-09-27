@@ -134,6 +134,55 @@ describe('planPdfExport (EXP-03, EXP-05)', () => {
     expect(plans[2]!.pages[0]!.overlay).toMatchObject({ markers: [], legend: [] });
   });
 
+  it('draws an ESDV double line over the highlights, with its own legend entry', () => {
+    const doc = setup();
+    const esdv = doc.markers.mkr_e!;
+    esdv.shape = 'doubleLine';
+    esdv.geometry = {
+      type: 'doubleLine',
+      points: [
+        [100, 80],
+        [100, 120],
+      ],
+      gap: 6,
+    };
+    doc.markers.hl = makeCircleMarker('drw_1', {
+      id: 'hl',
+      segmentId: 'seg_a',
+      shape: 'highlighter',
+      geometry: {
+        type: 'stroke',
+        points: [
+          [0, 100],
+          [90, 100],
+        ],
+        width: 10,
+      },
+    });
+    const [first] = planPdfExport({
+      doc,
+      entries: countEntries(doc),
+      drawings: true,
+      segments: false,
+      now,
+      labels,
+    });
+    const overlay = first!.pages[0]!.overlay;
+    expect(overlay.markers.map((m) => [m.geometry.type, m.label])).toEqual([
+      ['rect', ''],
+      ['stroke', ''],
+      ['circle', 'P-101'],
+      ['doubleLine', 'ESDV-101'],
+    ]);
+    expect(overlay.legend.at(-1)).toEqual({
+      label: 'ESDV',
+      colour: ESDV_COLOUR,
+      dash: [],
+      kind: 'esdvLine',
+    });
+    expect(overlay.legend.filter((e) => e.kind === 'esdv')).toEqual([]);
+  });
+
   it('plans a combined PDF per segment with only that segment on each page', () => {
     const doc = setup();
     const plans = planPdfExport({

@@ -27,7 +27,8 @@ export interface LegendEntry {
   label: string;
   colour: string;
   dash: readonly number[];
-  kind: 'circle' | 'esdv' | 'warning';
+  /** The swatch: a ring, an ESDV ring or double line, or a warning outline. */
+  kind: 'circle' | 'esdv' | 'esdvLine' | 'warning';
 }
 
 export interface Overlay {
@@ -94,8 +95,9 @@ export function drawingName(drawing: Drawing): string {
   return file.replace(/\.[^.]+$/, '');
 }
 
+/** Highlights and runs, drawn under the circles and ESDV double lines. */
 function isArea(marker: Marker): boolean {
-  return marker.geometry.type !== 'circle';
+  return marker.geometry.type !== 'circle' && marker.geometry.type !== 'doubleLine';
 }
 
 export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
@@ -117,14 +119,18 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
     const ordered = [...markers.filter(isArea), ...markers.filter((m) => !isArea(m))];
     const legend: LegendEntry[] = [];
     const segmentIds = new Set<string>();
-    let esdv = false;
+    let esdvRing = false;
+    let esdvLine = false;
     let unassigned = false;
     let warning = false;
     const out = ordered.map((marker): OverlayMarker => {
       const paint = markerPaint(marker, doc.segments);
       const flagged = warnings.has(marker.id);
-      if (marker.esdv) esdv = true;
-      else if (marker.segmentId && doc.segments[marker.segmentId]) segmentIds.add(marker.segmentId);
+      if (marker.esdv) {
+        if (marker.geometry.type === 'doubleLine') esdvLine = true;
+        else esdvRing = true;
+      } else if (marker.segmentId && doc.segments[marker.segmentId])
+        segmentIds.add(marker.segmentId);
       else unassigned = true;
       if (flagged) warning = true;
       return {
@@ -151,7 +157,10 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
         kind: 'circle',
       });
     }
-    if (esdv) legend.push({ label: labels.esdv, colour: ESDV_COLOUR, dash: [], kind: 'esdv' });
+    if (esdvRing) legend.push({ label: labels.esdv, colour: ESDV_COLOUR, dash: [], kind: 'esdv' });
+    if (esdvLine) {
+      legend.push({ label: labels.esdv, colour: ESDV_COLOUR, dash: [], kind: 'esdvLine' });
+    }
     if (unassigned) {
       legend.push({
         label: labels.unassigned,

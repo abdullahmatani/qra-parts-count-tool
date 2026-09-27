@@ -29,6 +29,8 @@ export interface ViewerInteraction {
   onPointerDown?(event: ViewerPointerEvent, context: ViewerContext): void;
   onPointerMove?(event: ViewerPointerEvent, context: ViewerContext): void;
   onPointerUp?(event: ViewerPointerEvent, context: ViewerContext): void;
+  /** The pointer left the canvas. */
+  onPointerLeave?(): void;
   onDoubleClick?(event: { point: Point2; screen: Point2 }, context: ViewerContext): void;
   onKeyDown?(event: React.KeyboardEvent<HTMLElement>, context: ViewerContext): boolean;
 }

@@ -441,7 +441,10 @@ function ViewerSurface({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      onPointerLeave={() => onCursor(null)}
+      onPointerLeave={() => {
+        onCursor(null);
+        interaction?.onPointerLeave?.();
+      }}
       onDoubleClick={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
