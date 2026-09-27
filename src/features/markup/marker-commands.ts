@@ -17,7 +17,7 @@ import {
 } from '@/domain/actions/markers';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { Draft } from 'immer';
-import { addItem, type ItemDefaults } from '@/domain/actions/items';
+import { addItem, nextTag, type ItemDefaults } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
 import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
@@ -153,6 +153,8 @@ export function placeMarker(
   if (!done) return null;
   const ui = useUiStore.getState();
   if (itemId) ui.setLastItem(itemId);
+  // A typed label counts up for the next marker; a stamp copies no label.
+  if (itemId && !stamp && defaults.tag) ui.setItemDefaults({ tag: nextTag(defaults.tag) });
   // A stamped item is complete: select it without taking the keyboard focus.
   if (withItem && !stamp) ui.requestEdit(marker.id);
   // Highlighting is painting: the stroke is not selected, so the next one

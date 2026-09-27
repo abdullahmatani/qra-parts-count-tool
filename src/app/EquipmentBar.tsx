@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -154,6 +155,25 @@ export function EquipmentBar() {
           <span className="px-2 text-xs text-muted-foreground">{t('equipmentBar.empty')}</span>
         )}
       </div>
+
+      <Separator orientation="vertical" className="mx-1 h-5!" />
+
+      <span className="shrink-0 px-1 text-xs text-muted-foreground">{t('equipmentBar.tag')}</span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Input
+            value={defaults.tag ?? ''}
+            onChange={(event) => useUiStore.getState().setItemDefaults({ tag: event.target.value })}
+            disabled={readOnly}
+            maxLength={500}
+            placeholder={t('equipmentBar.tagPlaceholder')}
+            aria-label={t('equipmentBar.tag')}
+            data-testid="equipment-tag"
+            className="h-7 w-28 shrink-0 text-xs md:text-xs"
+          />
+        </TooltipTrigger>
+        <TooltipContent>{t('equipmentBar.tagHint')}</TooltipContent>
+      </Tooltip>
     </div>
   );
 }
