@@ -13,6 +13,16 @@ export interface ItemDefaults {
   /** Stamp mode (ANN-09) repeats the size too; otherwise the size is typed per item. */
   nominalSize?: number | null;
   sizeUnit?: SizeUnit;
+  /** The label new markers show instead of the item number (e.g. "HV-1" or "A"). */
+  tag?: string;
+}
+
+/** The label after `tag`: a trailing number counts up ("HV-1" to "HV-2"); anything else repeats. */
+export function nextTag(tag: string): string {
+  const match = /^(.*?)(\d+)$/.exec(tag);
+  if (!match) return tag;
+  const [, prefix = '', digits = ''] = match;
+  return `${prefix}${String(Number(digits) + 1).padStart(digits.length, '0')}`;
 }
 
 /** The item on a marker, if any. */
@@ -41,7 +51,7 @@ export function addItem(doc: ProjectDoc, markerId: string, defaults: ItemDefault
     sizeUnit: defaults.sizeUnit ?? doc.settings.units.size,
     actuation: type?.hasActuation ? defaults.actuation : null,
     quantity: 1,
-    tag: '',
+    tag: defaults.tag ?? '',
     remarks: '',
     pipeLength: null,
   };

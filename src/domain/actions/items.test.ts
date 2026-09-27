@@ -3,7 +3,7 @@ import { starterLibrary } from '../count/starter-library';
 import { projectToDoc } from '../model';
 import { makeCircleMarker, makeDrawing, makeProject } from '@/test/fixtures';
 import { newEsdvData } from '../esdv';
-import { addItem, itemForMarker, updateItem, updateItems } from './items';
+import { addItem, itemForMarker, nextTag, updateItem, updateItems } from './items';
 import { addMarker } from './markers';
 
 function setup() {
@@ -76,5 +76,17 @@ describe('bulk edit (CNT-10)', () => {
     expect(doc.items[b]).toMatchObject({ equipmentTypeId: valve, actuation: 'automated' });
     updateItems(doc, [a, b], { equipmentTypeId: pump });
     expect(doc.items[a]!.actuation).toBeNull();
+  });
+});
+
+describe('nextTag', () => {
+  it('counts a trailing number up and keeps its padding', () => {
+    expect(nextTag('HV-1')).toBe('HV-2');
+    expect(nextTag('P-009')).toBe('P-010');
+    expect(nextTag('7')).toBe('8');
+  });
+
+  it('repeats a label without a trailing number', () => {
+    expect(nextTag('A')).toBe('A');
   });
 });
