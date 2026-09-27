@@ -19,6 +19,7 @@ export type CircleGeometry = z.output<typeof v1.CircleGeometry>;
 export type RectGeometry = z.output<typeof v1.RectGeometry>;
 export type PolylineGeometry = z.output<typeof v1.PolylineGeometry>;
 export type StrokeGeometry = z.output<typeof v1.StrokeGeometry>;
+export type DoubleLineGeometry = z.output<typeof v1.DoubleLineGeometry>;
 export type MarkerStyle = z.output<typeof v1.MarkerStyle>;
 export type MarkerSymbol = z.output<typeof v1.MarkerSymbol>;
 export type EsdvData = z.output<typeof v1.EsdvData>;

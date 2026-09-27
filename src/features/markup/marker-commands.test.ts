@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { itemForMarker } from '@/domain/actions/items';
 import { starterLibrary } from '@/domain/count/starter-library';
 import { projectToDoc } from '@/domain/model';
+import { doubleLine } from '@/domain/markup/esdv-boundary';
 import { penWidth } from '@/domain/markup/highlighter';
 import { updateItemCommand } from '@/features/count/item-commands';
 import { makePopulatedProject } from '@/test/fixtures';
@@ -13,7 +14,9 @@ import {
   deleteMarkerIds,
   pasteClipboard,
   pasteOffset,
+  placeEsdv,
   placeMarker,
+  placeStroke,
   resetClipboard,
   selectAllOnDrawing,
   selectedMarkerIds,
@@ -121,6 +124,76 @@ describe('marker commands', () => {
     });
     expect(project().doc!.markers[marker]!.geometry.type).toBe('circle');
     expect(project().past.at(-1)?.label).toBe('change the pen of 2 highlighter strokes');
+  });
+
+  it('places an ESDV as a double line that cuts the highlighter it crosses, as one undo step', () => {
+    ui().setActiveSegment(segmentId);
+    const pipe = {
+      type: 'stroke' as const,
+      points: [
+        [0, 600],
+        [400, 600],
+      ] as [number, number][],
+      width: 10,
+    };
+    const [stroke] = placeStroke(drawingId, pipe);
+    const before = markerCount();
+
+    const id = placeEsdv(drawingId, doubleLine({ x: 200, y: 580 }, { x: 200, y: 620 }, 6))!;
+    const doc = project().doc!;
+    expect(doc.markers[id]).toMatchObject({
+      shape: 'doubleLine',
+      segmentId: null,
+      esdv: { tag: '', upstreamSegmentId: null },
+    });
+    // The ESDV and the second half of the stroke.
+    expect(markerCount()).toBe(before + 2);
+    const strokes = Object.values(doc.markers).filter((m) => m.geometry.type === 'stroke');
+    expect(strokes.map((m) => m.segmentId)).toEqual([segmentId, segmentId]);
+    expect(doc.markers[stroke!]!.geometry).toMatchObject({
+      points: [
+        [0, 600],
+        [192, 600],
+      ],
+    });
+    // It opens in the panel for its tag and segments.
+    expect(ui().selection).toEqual([id]);
+    expect(project().past.at(-1)?.label).toBe('add ESDV');
+
+    project().undo();
+    expect(markerCount()).toBe(before);
+    expect(project().doc!.markers[stroke!]!.geometry).toEqual(pipe);
+  });
+
+  it('paints a stroke across an ESDV as a piece on each side', () => {
+    placeEsdv(drawingId, { type: 'circle', cx: 200, cy: 600, r: 10 });
+    const ids = placeStroke(drawingId, {
+      type: 'stroke',
+      points: [
+        [0, 600],
+        [400, 600],
+      ],
+      width: 10,
+    });
+    expect(ids).toHaveLength(2);
+    expect(ids.map((id) => project().doc!.markers[id]!.geometry)).toMatchObject([
+      {
+        points: [
+          [0, 600],
+          [185, 600],
+        ],
+      },
+      {
+        points: [
+          [215, 600],
+          [400, 600],
+        ],
+      },
+    ]);
+    expect(ui().selection).toEqual([]);
+    // One stroke painted, one step to take it back.
+    project().undo();
+    expect(ids.some((id) => project().doc!.markers[id])).toBe(false);
   });
 
   it('places unassigned markers when there is no active segment', () => {

@@ -3,10 +3,18 @@
  * draft inside `useProjectStore.apply`) and keep related entities consistent.
  */
 import { newId } from '@/lib/ids';
+import { cutStroke, isEsdvGeometry, type EsdvGeometry } from '../markup/esdv-boundary';
 import { radiusForSymbol, translateGeometry, type XY } from '../markup/geometry';
 import { penWidth, type HighlighterPen } from '../markup/highlighter';
 import type { ProjectDoc } from '../model';
-import type { CountItem, Marker, MarkerGeometry, MarkerStyle, MarkerSymbol } from '../schema/types';
+import type {
+  CountItem,
+  Marker,
+  MarkerGeometry,
+  MarkerStyle,
+  MarkerSymbol,
+  StrokeGeometry,
+} from '../schema/types';
 
 /** A fresh marker style: a ring (or the given symbol) with the label in its usual place. */
 export function newMarkerStyle(
@@ -67,6 +75,64 @@ export function setHighlighterPen(
     const width = penWidth(pen, drawing.size);
     if (marker.geometry.width !== width) marker.geometry.width = width;
   }
+}
+
+/** The shapes of the ESDVs on a drawing. */
+function esdvsOn(doc: ProjectDoc, drawingId: string): EsdvGeometry[] {
+  const out: EsdvGeometry[] = [];
+  for (const marker of Object.values(doc.markers)) {
+    if (marker.drawingId === drawingId && marker.esdv && isEsdvGeometry(marker.geometry)) {
+      out.push(marker.geometry);
+    }
+  }
+  return out;
+}
+
+/**
+ * A new highlighter stroke cut at the ESDVs on its drawing (SEG-01): the
+ * pieces either side of each ESDV it runs through, or just the stroke.
+ */
+export function strokeAtEsdvs(
+  doc: ProjectDoc,
+  drawingId: string,
+  stroke: StrokeGeometry,
+): StrokeGeometry[] {
+  return cutStroke(stroke, esdvsOn(doc, drawingId)) ?? [stroke];
+}
+
+/**
+ * An ESDV is a segment boundary (SEG-01): highlighter strokes on its drawing
+ * that run through it are cut there, so the paint stops at it and each side
+ * can go to its own segment. The first piece keeps the stroke (its id,
+ * segment and note references); the others are new strokes in the same
+ * segment. Returns the ids of the new strokes.
+ */
+export function cutStrokesAtEsdv(doc: ProjectDoc, esdvId: string): string[] {
+  const esdv = doc.markers[esdvId];
+  if (!esdv?.esdv || !isEsdvGeometry(esdv.geometry)) return [];
+  const boundary = esdv.geometry;
+  const added: string[] = [];
+  for (const marker of Object.values(doc.markers)) {
+    if (marker.drawingId !== esdv.drawingId || marker.geometry.type !== 'stroke') continue;
+    const pieces = cutStroke(marker.geometry, [boundary]);
+    if (!pieces) continue;
+    const [first, ...rest] = pieces;
+    marker.geometry = first!;
+    for (const geometry of rest) {
+      const id = newId('mkr');
+      addMarker(doc, {
+        id,
+        drawingId: marker.drawingId,
+        segmentId: marker.segmentId,
+        shape: marker.shape,
+        geometry,
+        style: newMarkerStyle(),
+        esdv: null,
+      });
+      added.push(id);
+    }
+  }
+  return added;
 }
 
 /**

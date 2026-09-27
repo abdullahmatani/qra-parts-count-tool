@@ -1,15 +1,22 @@
-import type { XY } from '@/domain/markup/geometry';
+import { doubleLineStrokes, type XY } from '@/domain/markup/geometry';
 import { HIGHLIGHTER_ALPHA } from '@/domain/palette';
-import type { CircleGeometry, MarkerSymbol, RectGeometry } from '@/domain/schema/types';
+import type {
+  CircleGeometry,
+  DoubleLineGeometry,
+  MarkerSymbol,
+  RectGeometry,
+} from '@/domain/schema/types';
 
 /**
- * A shape being drawn: a circle (drawn as the chosen symbol) or rectangle
- * geometry, the points of a line run, a free-form outline being traced, or a
- * highlighter stroke being painted (as it will look, in its segment's colour).
+ * A shape being drawn: a circle (drawn as the chosen symbol), rectangle or
+ * ESDV double line geometry, the points of a line run, a free-form outline
+ * being traced, or a highlighter stroke being painted (as it will look, in
+ * its segment's colour).
  */
 export type DraftShape =
   | (CircleGeometry & { symbol?: MarkerSymbol })
   | RectGeometry
+  | DoubleLineGeometry
   | { type: 'line'; points: XY[] }
   | { type: 'outline'; points: XY[] }
   | { type: 'stroke'; points: XY[]; width: number; colour: string };
@@ -49,6 +56,14 @@ export function Draft({ shape }: { shape: DraftShape | null }) {
           height={shape.height}
           className="mk-draft"
         />
+      );
+    case 'doubleLine':
+      return (
+        <g data-testid="draft" className="mk-draft-double">
+          {doubleLineStrokes(shape).map(([a, b], i) => (
+            <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
+          ))}
+        </g>
       );
     case 'line':
       return (

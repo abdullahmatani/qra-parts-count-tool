@@ -5,6 +5,18 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **ESDV as a double line**: while the ESDV tool (`E`) is in use, the bar under the toolbar
+  chooses how the next ESDV is drawn: a red **Circle** round the valve (as before) or a red
+  **Double line** across the pipe. Drag the double line across the pipe (`Shift` for 45° steps),
+  or click a highlighter stroke to put one square across it; drag its ends to turn or lengthen
+  it. Double lines are drawn on the annotated PDFs, with their own legend entry, and are stored
+  as `doubleLine` ESDV markers with `doubleLine` geometry (two points and the gap between the
+  lines). Older builds cannot open a project that has one.
+- **ESDVs cut the highlighter**: an ESDV placed on a highlighter stroke cuts it into a piece on
+  each side, clear of the ESDV, in the same undo step, so the far side can be moved to its own
+  segment. A stroke painted across an ESDV is cut the same way.
+- **Highlighter magnet**: near an ESDV, the Highlighter shows a red ring where the stroke will
+  snap; a stroke begun or let go there starts or ends at the ESDV. Hold `Alt` to paint freely.
 - **Highlighter** (`H`): drag over a segment's pipework and equipment to paint it in the active
   segment's colour, like a highlighter pen on a print; `Shift` draws a straight stroke. While the
   tool is in use, the bar under the toolbar shows the segment being highlighted and the pen

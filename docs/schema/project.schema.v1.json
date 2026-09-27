@@ -496,7 +496,8 @@
           "enum": [
             "circle",
             "dashedHighlight",
-            "highlighter"
+            "highlighter",
+            "doubleLine"
           ]
         },
         "geometry": {
@@ -623,6 +624,60 @@
                 "points",
                 "width"
               ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "doubleLine"
+                },
+                "points": {
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "type": "array",
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "items": false,
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    {
+                      "type": "array",
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "items": false,
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  ],
+                  "items": false,
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "gap": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "type",
+                "points",
+                "gap"
+              ]
             }
           ]
         },
@@ -710,7 +765,7 @@
         "shape",
         "geometry"
       ],
-      "description": "A circle (drawn as a ring, dot, square or free-form outline), dashed highlight or highlighter stroke in drawing coordinates (ANN-01..03)."
+      "description": "A circle (drawn as a ring, dot, square or free-form outline), dashed highlight, highlighter stroke or ESDV double line in drawing coordinates (ANN-01..03)."
     },
     "EsdvData": {
       "type": "object",

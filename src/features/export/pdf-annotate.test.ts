@@ -102,6 +102,24 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       esdv: false,
       warning,
     })),
+    // An ESDV drawn as a double line across the pipe.
+    {
+      geometry: {
+        type: 'doubleLine',
+        points: [
+          [x + 120, y - 15],
+          [x + 120, y + 15],
+        ],
+        gap: 4,
+      },
+      symbol: 'circle',
+      outline: null,
+      colour: '#2563eb',
+      dash: [],
+      label: 'ESDV-2',
+      esdv: true,
+      warning: false,
+    },
     {
       geometry: { type: 'circle', cx: x + 90, cy: y, r: 8 },
       symbol: 'freeform',
@@ -122,6 +140,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
   legend: [
     { label: 'IS-01 Gas', colour: '#dc2626', dash: [], kind: 'circle' },
     { label: 'ESDV', colour: '#2563eb', dash: [], kind: 'esdv' },
+    { label: 'ESDV', colour: '#2563eb', dash: [], kind: 'esdvLine' },
   ],
   stamp: ['Plant A QRA', 'PEFS-1001 rev B', 'Count rev 0', '2026-09-23'],
 });
@@ -196,7 +215,14 @@ describe('addAnnotatedPdfPage', () => {
       const strings = items.map((item) => item.str);
       expect(strings).toContain(`Original ${'ABC'[n - 1]}`);
       expect(strings).toEqual(
-        expect.arrayContaining(['HV-101', 'ESDV-1', 'Segments', 'IS-01 Gas', 'Plant A QRA']),
+        expect.arrayContaining([
+          'HV-101',
+          'ESDV-1',
+          'ESDV-2',
+          'Segments',
+          'IS-01 Gas',
+          'Plant A QRA',
+        ]),
       );
       // Each label once: no duplicate text from a halo.
       expect(strings.filter((s) => s === 'HV-101')).toHaveLength(1);
@@ -214,6 +240,24 @@ describe('addAnnotatedPdfPage', () => {
       );
       expect(ux - x).toBeCloseTo(0, 6);
       expect(uy - y).toBeLessThan(0);
+
+      // A double line's label sits by its top end.
+      const line = items.find((item) => item.str === 'ESDV-2')!;
+      const [lx, ly] = viewport.convertToViewportPoint(line.transform[4]!, line.transform[5]!);
+      const [bx, by] = labelAnchor(
+        {
+          type: 'doubleLine',
+          points: [
+            [320, 135],
+            [320, 165],
+          ],
+          gap: 4,
+        },
+        6.5 * k,
+        k,
+      );
+      expect(lx).toBeCloseTo(bx, 3);
+      expect(ly).toBeCloseTo(by, 3);
 
       // The stamp sits in the top-right corner of the sheet as displayed.
       const stamp = items.find((item) => item.str === 'Plant A QRA')!;

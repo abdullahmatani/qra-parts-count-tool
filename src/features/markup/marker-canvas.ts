@@ -7,7 +7,13 @@
  */
 import type { MarkerGeometry, MarkerSymbol, Point } from '@/domain/schema/types';
 import { DOT_ALPHA, HIGHLIGHTER_ALPHA, MARKER_SELECTION, MARKER_WARNING } from '@/domain/palette';
-import { symbolPolygon, translateGeometry, type XY } from '@/domain/markup/geometry';
+import {
+  doubleLineStrokes,
+  doubleLineTop,
+  symbolPolygon,
+  translateGeometry,
+  type XY,
+} from '@/domain/markup/geometry';
 import { applyMatrix, type Matrix } from '@/features/viewer/view-transform';
 
 /** One marker as drawn: its geometry and resolved appearance. */
@@ -86,6 +92,12 @@ function tracePath(ctx: CanvasRenderingContext2D, [entry, g]: Drawn): void {
       for (const [x, y] of rest) ctx.lineTo(x, y);
       break;
     }
+    case 'doubleLine':
+      for (const [a, b] of doubleLineStrokes(g)) {
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
+      break;
   }
 }
 
@@ -101,6 +113,8 @@ function labelAnchor(g: MarkerGeometry): { point: XY; dx: number; dy: number; ab
       const [x, y] = g.points[0] ?? [0, 0];
       return { point: { x, y }, dx: 4, dy: -4, above: true };
     }
+    case 'doubleLine':
+      return { point: doubleLineTop(g), dx: 4, dy: -4, above: true };
   }
 }
 
@@ -202,6 +216,7 @@ export function drawMarkers(
   const rects = drawn.filter(([, g]) => g.type === 'rect');
   const runs = drawn.filter(([, g]) => g.type === 'polyline');
   const strokes = drawn.filter(([, g]) => g.type === 'stroke');
+  const doubleLines = drawn.filter(([, g]) => g.type === 'doubleLine');
 
   // Halos behind the markers: count-table highlight, selection, hover and
   // warnings (amber outline).
@@ -276,6 +291,11 @@ export function drawMarkers(
       group.width * upp,
       group.dash.map((d) => d * upp),
     );
+  }
+  // ESDV double lines across the pipe, a little lighter than a ring so the
+  // gap between them shows (SEG-01).
+  for (const group of groupBy(doubleLines, () => 2.5)) {
+    strokeAll(ctx, group.shapes, group.colour, group.width * upp);
   }
   ctx.setLineDash([]);
 

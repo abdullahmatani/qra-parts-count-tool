@@ -44,7 +44,12 @@ import {
   type PDFName,
   type PDFPage,
 } from 'pdf-lib';
-import { symbolPolygon, type SymbolStyle } from '@/domain/markup/geometry';
+import {
+  doubleLineStrokes,
+  doubleLineTop,
+  symbolPolygon,
+  type SymbolStyle,
+} from '@/domain/markup/geometry';
 import { DOT_ALPHA, HIGHLIGHTER_ALPHA, hexToRgb01, MARKER_WARNING } from '@/domain/palette';
 import type { Overlay } from '@/domain/export/pdf-plan';
 import type { MarkerGeometry, Size2D } from '@/domain/schema/types';
@@ -123,7 +128,9 @@ function geometryPath(ops: Ops, g: MarkerGeometry, style?: SymbolStyle): void {
     ops.push(closePath());
   } else if (g.type === 'circle') circlePath(ops, g.cx, g.cy, g.r);
   else if (g.type === 'rect') ops.push(rectangle(g.x, g.y, g.width, g.height));
-  else {
+  else if (g.type === 'doubleLine') {
+    for (const [a, b] of doubleLineStrokes(g)) ops.push(moveTo(a.x, a.y), lineTo(b.x, b.y));
+  } else {
     g.points.forEach(([x, y], i) => ops.push(i === 0 ? moveTo(x, y) : lineTo(x, y)));
   }
 }
@@ -222,10 +229,14 @@ function registerFonts(page: PDFPage, fonts: Fonts): void {
   }
 }
 
-/** Baseline start of a marker's label: right of a circle, above an area or run. */
+/** Baseline start of a marker's label: right of a circle, above an area, run or double line. */
 export function labelAnchor(g: MarkerGeometry, size: number, k: number): [number, number] {
   if (g.type === 'circle') return [g.cx + g.r + 2 * k, g.cy + size * 0.35];
   if (g.type === 'rect') return [g.x, g.y - 2 * k];
+  if (g.type === 'doubleLine') {
+    const top = doubleLineTop(g);
+    return [top.x + 2 * k, top.y - 2 * k];
+  }
   const [x, y] = g.points[0] ?? [0, 0];
   return [x + 2 * k, y - 2 * k];
 }
@@ -259,8 +270,11 @@ export function drawOverlay(
   const run = alphaState(page, 1, 0.18);
   const solid = alphaState(page, 1, 1);
 
-  const areas = overlay.markers.filter((m) => m.geometry.type !== 'circle');
-  const circles = overlay.markers.filter((m) => m.geometry.type === 'circle');
+  // Circles and ESDV double lines go on top of the highlights and runs.
+  const onTop = (m: Overlay['markers'][number]) =>
+    m.geometry.type === 'circle' || m.geometry.type === 'doubleLine';
+  const areas = overlay.markers.filter((m) => !onTop(m));
+  const symbols = overlay.markers.filter(onTop);
   // Highlighter strokes first, under everything else, as on screen.
   const strokes = areas.filter((m) => m.geometry.type === 'stroke');
   for (const m of strokes) {
@@ -286,7 +300,7 @@ export function drawOverlay(
   }
 
   const outlined = areas.filter((m) => m.geometry.type !== 'stroke');
-  for (const m of [...outlined, ...circles]) {
+  for (const m of [...outlined, ...symbols]) {
     const [r, g, b] = colour(m.colour);
     const dot = m.geometry.type === 'circle' && m.symbol === 'dot';
     if (m.warning) {
@@ -310,17 +324,21 @@ export function drawOverlay(
       geometryPath(ops, m.geometry);
       ops.push(stroke(), setLineCap(LineCapStyle.Butt));
     }
-    if (m.geometry.type !== 'polyline') {
+    if (m.geometry.type !== 'polyline' && m.geometry.type !== 'doubleLine') {
       ops.push(setGraphicsState(dot ? dotFill : faint), setFillingRgbColor(r, g, b));
       geometryPath(ops, m.geometry, m);
       ops.push(fill());
     }
-    const dash = m.geometry.type === 'circle' ? m.dash.map((d) => d * k) : [6 * k, 3.5 * k];
+    // An ESDV double line is solid, and lighter than a ring so its gap shows.
+    const line = m.geometry.type === 'doubleLine';
+    const circle = m.geometry.type === 'circle';
+    const dash = circle ? m.dash.map((d) => d * k) : line ? [] : [6 * k, 3.5 * k];
+    const width = line ? 1.5 : m.esdv ? 2.2 : dot ? 0.8 : circle ? 1.5 : 1.8;
     ops.push(
       setGraphicsState(solid),
       setStrokingRgbColor(r, g, b),
       setDashPattern(dash, 0),
-      setLineWidth((m.esdv ? 2.2 : dot ? 0.8 : m.geometry.type === 'circle' ? 1.5 : 1.8) * k),
+      setLineWidth(width * k),
     );
     geometryPath(ops, m.geometry, m);
     ops.push(stroke());
@@ -380,7 +398,14 @@ export function drawOverlay(
       const cy = margin + pad + (i + 1) * line + size * 0.6;
       const sx = margin + pad + 5 * k;
       const [r, g, b] = colour(entry.colour);
-      const width = entry.kind === 'esdv' ? 2 : entry.kind === 'warning' ? 2.5 : 1.3;
+      const width =
+        entry.kind === 'esdvLine'
+          ? 1.4
+          : entry.kind === 'esdv'
+            ? 2
+            : entry.kind === 'warning'
+              ? 2.5
+              : 1.3;
       ops.push(
         setStrokingRgbColor(r, g, b),
         setLineWidth(width * k),
@@ -389,7 +414,13 @@ export function drawOverlay(
           0,
         ),
       );
-      circlePath(ops, sx, cy, 3.5 * k);
+      if (entry.kind === 'esdvLine') {
+        for (const x of [sx - 1.3 * k, sx + 1.3 * k]) {
+          ops.push(moveTo(x, cy - 3.5 * k), lineTo(x, cy + 3.5 * k));
+        }
+      } else {
+        circlePath(ops, sx, cy, 3.5 * k);
+      }
       ops.push(stroke());
       ops.push(setDashPattern([], 0));
       textOps(

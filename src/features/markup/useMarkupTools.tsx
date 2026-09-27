@@ -5,10 +5,14 @@
  *   its radius. A new ESDV opens in the panel for its tag, size and segments.
  *   Circles are drawn with the shape chosen in the equipment bar: a ring, a
  *   dot, a square, or a free-form outline dragged around the symbol.
+ * - ESDV as a double line (chosen in the ESDV bar): drag across the pipe, with
+ *   Shift for a multiple of 45°, or click on a highlighter stroke to put one
+ *   square across it. Highlighter strokes are cut where an ESDV crosses them.
  * - Dashed highlight: drag a rectangle around an area, or click points along a
  *   line run and double-click (or press Enter) to finish.
  * - Highlighter: drag to paint over a segment's pipework and equipment in its
- *   colour; hold Shift for a straight stroke.
+ *   colour; hold Shift for a straight stroke. Near an ESDV the stroke snaps to
+ *   it (the magnet; Alt drags freely), and it stops at the ESDV.
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
@@ -21,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
   DOT_SCALE,
+  MIN_MARKER_SIZE,
   boxFromPoints,
   dedupePoints,
   freeformSymbol,
@@ -36,10 +41,17 @@ import {
   type XY,
 } from '@/domain/markup/geometry';
 import { moveMarkers } from '@/domain/actions/markers';
+import {
+  doubleLine,
+  doubleLineForClick,
+  doubleLineGap,
+  snapAngle,
+  snapToEsdv,
+} from '@/domain/markup/esdv-boundary';
 import { penWidth } from '@/domain/markup/highlighter';
 import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
-import type { Marker, MarkerGeometry, MarkerSymbol } from '@/domain/schema/types';
+import type { Marker, MarkerGeometry, MarkerSymbol, StrokeGeometry } from '@/domain/schema/types';
 import type { ViewerContext, ViewerInteraction } from '@/features/viewer/viewer-context';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -51,13 +63,21 @@ import { LinkLayer } from '@/features/links/LinkLayer';
 import { BackButton } from '@/features/links/BackButton';
 import { createLinkCommand, followLink } from '@/features/links/link-commands';
 import { Draft, SelectionBox, type DraftShape } from './MarkupDrafts';
-import { moveMarkerIds, placeEsdv, placeMarker, resizeMarker } from './marker-commands';
+import {
+  moveMarkerIds,
+  placeEsdv,
+  placeMarker,
+  placeStroke,
+  resizeMarker,
+} from './marker-commands';
 
 /** Pointer travel (CSS px) before a press becomes a drag. */
 const DRAG_THRESHOLD = 4;
 /** Hit tolerance around markers and handles, in CSS px. */
 const HIT_TOLERANCE = 6;
 const HANDLE_TOLERANCE = 8;
+/** How near an ESDV (CSS px) a highlighter stroke snaps to it. */
+const MAGNET = 14;
 
 type Gesture =
   | { kind: 'none' }
@@ -71,7 +91,10 @@ type Gesture =
       dragging: boolean;
       /** Width in drawing units, fixed when the stroke starts. */
       width: number;
+      /** The ESDV the stroke snapped to at its start: its end does not snap back to it. */
+      fromEsdvId: string | null;
     }
+  | { kind: 'doubleLine'; start: XY; startScreen: XY; current: XY; dragging: boolean }
   | { kind: 'rect'; start: XY; startScreen: XY; current: XY; dragging: boolean }
   | { kind: 'polyPoint'; point: XY }
   | {
@@ -110,6 +133,14 @@ function placedSymbol(tool: string, symbol: MarkerSymbol): MarkerSymbol {
   return tool === 'esdv' ? 'circle' : symbol;
 }
 
+/** The end of a line from `start` towards `p`, turned to a multiple of 45° when `constrain` is set. */
+function lineEnd(start: XY, p: XY, constrain: boolean): XY {
+  if (!constrain) return p;
+  const angle = snapAngle(Math.atan2(p.y - start.y, p.x - start.x));
+  const length = Math.hypot(p.x - start.x, p.y - start.y);
+  return { x: start.x + Math.cos(angle) * length, y: start.y + Math.sin(angle) * length };
+}
+
 const HANDLE_CURSORS: Record<string, string> = {
   n: 'ns-resize',
   s: 'ns-resize',
@@ -132,6 +163,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const tool = useUiStore((s) => s.tool);
   const markerSymbol = useUiStore((s) => s.markerSymbol);
   const symbol = placedSymbol(tool, markerSymbol);
+  const esdvShape = useUiStore((s) => s.esdvShape);
   const filters = useUiStore((s) => s.filters);
   const selection = useUiStore((s) => s.selection);
   const readOnly = useProjectStore((s) => s.readOnly);
@@ -170,6 +202,13 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     handle: null,
     screen: { x: 0, y: 0 },
   });
+  // The highlighter's magnet: the point on an ESDV a stroke would snap to.
+  const [snap, setSnapState] = useState<XY | null>(null);
+  const setSnap = useCallback((next: XY | null) => {
+    setSnapState((prev) =>
+      prev === next || (prev && next && prev.x === next.x && prev.y === next.y) ? prev : next,
+    );
+  }, []);
   const linksHere = useMemo(
     () => Object.values(links ?? {}).filter((link) => link.sourceDrawingId === drawingId),
     [links, drawingId],
@@ -189,12 +228,44 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   );
   const single: Marker | null =
     selectedHere.length === 1 ? (visibleById.get(selectedHere[0]!) ?? null) : null;
+  const esdvsHere = useMemo(() => visible.filter((m) => m.esdv), [visible]);
 
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
-  // The ESDV tool (SEG-01) and stamp mode (ANN-09) draw circles like the circle tool.
-  const circleLike = tool === 'circle' || tool === 'esdv' || tool === 'stamp';
-  const selectLike = !circleLike && tool !== 'dashed' && tool !== 'highlighter' && tool !== 'link';
+  // The ESDV tool draws a double line across the pipe, or a ring like the
+  // circle tool (SEG-01); stamp mode (ANN-09) draws circles too.
+  const doubleLineTool = tool === 'esdv' && esdvShape === 'doubleLine';
+  const circleLike = tool === 'circle' || (tool === 'esdv' && !doubleLineTool) || tool === 'stamp';
+  const drawingTool =
+    circleLike || doubleLineTool || tool === 'dashed' || tool === 'highlighter' || tool === 'link';
+  const selectLike = !drawingTool;
   const editable = !readOnly;
+
+  /** The ESDV a highlighter stroke snaps to at `point` (none while Alt is held). */
+  const snapAt = (
+    point: XY,
+    context: ViewerContext,
+    altKey: boolean,
+    exceptId: string | null = null,
+  ) => {
+    if (altKey) return null;
+    const esdvs = exceptId ? esdvsHere.filter((m) => m.id !== exceptId) : esdvsHere;
+    return snapToEsdv(esdvs, point, MAGNET * context.unitsPerPixel);
+  };
+
+  /** A double line placed with a click: across the highlighter stroke under it, if any. */
+  const clickedDoubleLine = (point: XY, context: ViewerContext) => {
+    const memory = useUiStore.getState().doubleLine;
+    const strokes = visible
+      .map((m) => m.geometry)
+      .filter((g): g is StrokeGeometry => g.type === 'stroke');
+    return doubleLineForClick(
+      point,
+      strokes,
+      { angle: memory.angle, length: memory.lengthFraction * longSide },
+      doubleLineGap(context.drawingSize),
+      HIT_TOLERANCE * context.unitsPerPixel,
+    );
+  };
 
   const handlesOf = (marker: Marker | null, geometry?: MarkerGeometry): Handle[] =>
     marker && editable ? geometryHandles(geometry ?? marker.geometry) : [];
@@ -242,20 +313,19 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   };
 
   const interaction: ViewerInteraction = {
-    cursor:
-      circleLike || tool === 'dashed' || tool === 'highlighter' || tool === 'link'
-        ? 'crosshair'
-        : gesture.kind === 'move' && gesture.dragging
-          ? 'grabbing'
-          : hover.handle
-            ? (HANDLE_CURSORS[hover.handle] ?? 'move')
-            : hover.id
-              ? editable
-                ? 'move'
-                : 'pointer'
-              : hover.linkId
-                ? 'pointer'
-                : 'default',
+    cursor: drawingTool
+      ? 'crosshair'
+      : gesture.kind === 'move' && gesture.dragging
+        ? 'grabbing'
+        : hover.handle
+          ? (HANDLE_CURSORS[hover.handle] ?? 'move')
+          : hover.id
+            ? editable
+              ? 'move'
+              : 'pointer'
+            : hover.linkId
+              ? 'pointer'
+              : 'default',
 
     onPointerDown(event, context) {
       if (event.native.button !== 0) return;
@@ -277,16 +347,30 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         }
         return;
       }
+      if (doubleLineTool && editable) {
+        setGesture({
+          kind: 'doubleLine',
+          start: point,
+          startScreen: screen,
+          current: point,
+          dragging: false,
+        });
+        return;
+      }
       if (tool === 'highlighter' && editable) {
         const pen = useUiStore.getState().highlighterPen;
+        // The magnet: a stroke begun near an ESDV starts on it.
+        const snapped = snapAt(point, context, event.native.altKey);
         setGesture({
           kind: 'stroke',
-          points: [point],
+          points: [snapped?.point ?? point],
           startScreen: screen,
           lastScreen: screen,
           dragging: false,
           width: penWidth(pen, context.drawingSize),
+          fromEsdvId: snapped?.marker.id ?? null,
         });
+        setSnap(null);
         return;
       }
       if (tool === 'dashed' && editable) {
@@ -382,8 +466,17 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           } else if (screenDistance(screen, g.lastScreen) >= FREEFORM_STEP) {
             setGesture({ ...g, points: [...g.points, point], lastScreen: screen, dragging });
           }
+          // Shows the ESDV the stroke will end on if it is let go here.
+          setSnap(snapAt(point, context, event.native.altKey, g.fromEsdvId)?.point ?? null);
           return;
         }
+        case 'doubleLine':
+          setGesture({
+            ...g,
+            current: lineEnd(g.start, point, event.native.shiftKey),
+            dragging: g.dragging || screenDistance(screen, g.startScreen) > DRAG_THRESHOLD,
+          });
+          return;
         case 'freeform':
           if (screenDistance(screen, g.lastScreen) >= FREEFORM_STEP) {
             setGesture({
@@ -431,6 +524,9 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       }
       if (!selectLike) {
         if (hover.id || hover.handle) setHover({ id: null, handle: null, screen });
+        if (tool === 'highlighter' && editable) {
+          setSnap(snapAt(point, context, event.native.altKey)?.point ?? null);
+        }
         return;
       }
       const handle = handleAt(screen, context);
@@ -465,7 +561,10 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           return;
         }
         case 'stroke': {
-          const end = event.native.shiftKey ? [g.points[0]!, point] : [...g.points, point];
+          setSnap(null);
+          // Let go near an ESDV, the stroke ends on it.
+          const last = snapAt(point, context, event.native.altKey, g.fromEsdvId)?.point ?? point;
+          const end = event.native.shiftKey ? [g.points[0]!, last] : [...g.points, last];
           const path = dedupePoints(
             simplifyPath(end, context.unitsPerPixel),
             context.unitsPerPixel,
@@ -474,11 +573,26 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             toast(t('markup.highlighterHint'), { duration: 2500 });
             return;
           }
-          placeMarker(drawingId, {
+          placeStroke(drawingId, {
             type: 'stroke',
             points: path.map((p) => [p.x, p.y]),
             width: g.width,
           });
+          return;
+        }
+        case 'doubleLine': {
+          if (!g.dragging) {
+            placeEsdv(drawingId, clickedDoubleLine(g.start, context));
+            return;
+          }
+          const end = lineEnd(g.start, point, event.native.shiftKey);
+          const length = Math.hypot(end.x - g.start.x, end.y - g.start.y);
+          if (length < MIN_MARKER_SIZE) return;
+          useUiStore.getState().setDoubleLine({
+            lengthFraction: length / longSide,
+            angle: Math.atan2(end.y - g.start.y, end.x - g.start.x),
+          });
+          placeEsdv(drawingId, doubleLine(g.start, end, doubleLineGap(context.drawingSize)));
           return;
         }
         case 'freeform': {
@@ -562,6 +676,10 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       }
     },
 
+    onPointerLeave() {
+      setSnap(null);
+    },
+
     onDoubleClick(event, context) {
       if (polylineRef.current) {
         finishPolyline(context);
@@ -643,6 +761,10 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   } else if (gesture.kind === 'stroke') {
     const colour = activeSegment ? segmentAppearance(activeSegment.colour).hex : UNASSIGNED_COLOUR;
     draft = { type: 'stroke', points: gesture.points, width: gesture.width, colour };
+  } else if (gesture.kind === 'doubleLine' && drawingSize) {
+    draft = gesture.dragging
+      ? doubleLine(gesture.start, gesture.current, doubleLineGap(drawingSize))
+      : null;
   } else if ((gesture.kind === 'rect' || gesture.kind === 'link') && gesture.dragging) {
     draft = rectGeometry(gesture.start, gesture.current);
   } else if (polyline) {
@@ -690,6 +812,13 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         })}
         {gesture.kind === 'box' && gesture.dragging && (
           <SelectionBox a={context.toScreen(gesture.start)} b={context.toScreen(gesture.current)} />
+        )}
+        {snap && tool === 'highlighter' && (
+          <div
+            data-testid="esdv-snap"
+            className="pointer-events-none absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-esdv bg-esdv/20 shadow-sm"
+            style={{ left: context.toScreen(snap).x, top: context.toScreen(snap).y }}
+          />
         )}
         {canGoBack && <BackButton />}
         {polyline && (

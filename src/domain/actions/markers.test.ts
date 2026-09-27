@@ -1,18 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { docToProject, projectToDoc } from '../model';
 import { checkIntegrity } from '../schema';
-import { makeCircleMarker, makeItem, makePopulatedProject, makeSegment } from '@/test/fixtures';
+import {
+  makeCircleMarker,
+  makeDrawing,
+  makeItem,
+  makePopulatedProject,
+  makeSegment,
+} from '@/test/fixtures';
+import type { Marker, StrokeGeometry } from '../schema/types';
 import {
   addMarker,
   assignMarkers,
   copyMarkers,
+  cutStrokesAtEsdv,
   deleteMarkers,
   moveMarkers,
   pasteMarkers,
   setMarkerGeometry,
   setMarkerSymbol,
+  strokeAtEsdvs,
 } from './markers';
 import { newEsdvData } from '../esdv';
+import { doubleLine } from '../markup/esdv-boundary';
 import { DOT_SCALE } from '../markup/geometry';
 
 function setup() {
@@ -147,5 +157,101 @@ describe('copy and paste (ANN-04)', () => {
   it('returns nothing to copy for unknown ids', () => {
     const { doc } = setup();
     expect(copyMarkers(doc, ['nope'])).toBeNull();
+  });
+});
+
+describe('ESDVs cut highlighter strokes (SEG-01)', () => {
+  /** A pipe run along y = 500, highlighted with a 10-unit pen. */
+  const pipe = (): StrokeGeometry => ({
+    type: 'stroke',
+    points: [
+      [0, 500],
+      [400, 500],
+    ],
+    width: 10,
+  });
+  const highlight = (drawingId: string, id: string, segmentId: string | null): Marker =>
+    makeCircleMarker(drawingId, { id, segmentId, shape: 'highlighter', geometry: pipe() });
+  const esdv = (drawingId: string): Marker =>
+    makeCircleMarker(drawingId, {
+      id: 'esdv',
+      shape: 'doubleLine',
+      geometry: doubleLine({ x: 200, y: 480 }, { x: 200, y: 520 }, 6),
+      esdv: newEsdvData('in'),
+    });
+
+  it('cuts the strokes an ESDV crosses into a piece on each side, in the same segment', () => {
+    const { doc, drawingId, segmentId } = setup();
+    const other = makeDrawing({ id: 'drw_other' });
+    doc.drawings[other.id] = other;
+    doc.drawingOrder.push(other.id);
+    addMarker(doc, highlight(drawingId, 'hl', segmentId));
+    addMarker(doc, highlight(other.id, 'elsewhere', segmentId));
+    addMarker(doc, {
+      ...highlight(drawingId, 'beside', null),
+      geometry: { ...pipe(), points: pipe().points.map(([x, y]) => [x, y + 100]) },
+    });
+    addMarker(doc, esdv(drawingId));
+
+    const added = cutStrokesAtEsdv(doc, 'esdv');
+    expect(added).toHaveLength(1);
+    // The paint stops at the double line: gap 3 plus half the pen either side.
+    expect(doc.markers.hl!.geometry).toEqual({
+      type: 'stroke',
+      points: [
+        [0, 500],
+        [192, 500],
+      ],
+      width: 10,
+    });
+    expect(doc.markers[added[0]!]).toMatchObject({
+      drawingId,
+      segmentId,
+      shape: 'highlighter',
+      esdv: null,
+      geometry: {
+        points: [
+          [208, 500],
+          [400, 500],
+        ],
+        width: 10,
+      },
+    });
+    // Strokes on other drawings, or clear of the ESDV, are left alone.
+    expect(doc.markers.elsewhere!.geometry).toEqual(pipe());
+    expect((doc.markers.beside!.geometry as StrokeGeometry).points).toHaveLength(2);
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
+  });
+
+  it('only cuts at ESDVs', () => {
+    const { doc, drawingId } = setup();
+    addMarker(doc, highlight(drawingId, 'hl', null));
+    // An equipment ring on the pipe is not a boundary.
+    addMarker(
+      doc,
+      makeCircleMarker(drawingId, {
+        id: 'valve',
+        geometry: { type: 'circle', cx: 200, cy: 500, r: 12 },
+      }),
+    );
+    expect(cutStrokesAtEsdv(doc, 'valve')).toEqual([]);
+    expect(cutStrokesAtEsdv(doc, 'missing')).toEqual([]);
+    expect(doc.markers.hl!.geometry).toEqual(pipe());
+  });
+
+  it('cuts a new stroke at the ESDVs on its drawing', () => {
+    const { doc, drawingId } = setup();
+    expect(strokeAtEsdvs(doc, drawingId, pipe())).toEqual([pipe()]);
+    addMarker(doc, esdv(drawingId));
+    expect(strokeAtEsdvs(doc, drawingId, pipe()).map((s) => s.points)).toEqual([
+      [
+        [0, 500],
+        [192, 500],
+      ],
+      [
+        [208, 500],
+        [400, 500],
+      ],
+    ]);
   });
 });

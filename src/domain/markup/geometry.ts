@@ -3,7 +3,13 @@
  * testing, moving and resizing. Pure functions, shared by the canvas tools and
  * the annotated PDF export.
  */
-import type { CircleGeometry, MarkerGeometry, MarkerSymbol, Point } from '../schema/types';
+import type {
+  CircleGeometry,
+  DoubleLineGeometry,
+  MarkerGeometry,
+  MarkerSymbol,
+  Point,
+} from '../schema/types';
 
 export interface XY {
   x: number;
@@ -90,6 +96,12 @@ export function geometryBounds(geometry: MarkerGeometry): Box {
       }
       return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
     }
+    case 'doubleLine':
+      return unionBoxes(
+        doubleLineStrokes(geometry)
+          .flat()
+          .map((p) => boxFromPoints(p, p)),
+      )!;
   }
 }
 
@@ -99,13 +111,49 @@ export function geometryCentre(geometry: MarkerGeometry): XY {
   return { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 };
 }
 
-export function distanceToSegment(p: XY, a: XY, b: XY): number {
+/**
+ * The two lines of a double line: its centre line moved `gap / 2` to either
+ * side, square to it.
+ */
+export function doubleLineStrokes(g: DoubleLineGeometry): [[XY, XY], [XY, XY]] {
+  const [[x1, y1], [x2, y2]] = g.points;
+  const length = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const nx = (-(y2 - y1) / length) * (g.gap / 2);
+  const ny = ((x2 - x1) / length) * (g.gap / 2);
+  return [
+    [
+      { x: x1 + nx, y: y1 + ny },
+      { x: x2 + nx, y: y2 + ny },
+    ],
+    [
+      { x: x1 - nx, y: y1 - ny },
+      { x: x2 - nx, y: y2 - ny },
+    ],
+  ];
+}
+
+/** The point of the line segment from `a` to `b` nearest to `p`. */
+export function closestOnSegment(p: XY, a: XY, b: XY): XY {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const lengthSq = dx * dx + dy * dy;
   const t = lengthSq === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq;
   const clamped = Math.max(0, Math.min(1, t));
-  return Math.hypot(p.x - (a.x + clamped * dx), p.y - (a.y + clamped * dy));
+  return { x: a.x + clamped * dx, y: a.y + clamped * dy };
+}
+
+/** Where a double line's label goes: its top end (the right-hand one when level). */
+export function doubleLineTop(g: DoubleLineGeometry): XY {
+  const ends = doubleLineStrokes(g).flat();
+  const eps = 1e-9 * (Math.abs(ends[0]!.y) + 1);
+  return ends.reduce((best, p) =>
+    p.y < best.y - eps || (Math.abs(p.y - best.y) <= eps && p.x > best.x) ? p : best,
+  );
+}
+
+export function distanceToSegment(p: XY, a: XY, b: XY): number {
+  const q = closestOnSegment(p, a, b);
+  return Math.hypot(p.x - q.x, p.y - q.y);
 }
 
 // ---------------------------------------------------------------------------
@@ -268,6 +316,13 @@ export function hitsGeometry(
       }
       return false;
     }
+    case 'doubleLine': {
+      // Either line, or the gap between them.
+      const [[x1, y1], [x2, y2]] = geometry.points;
+      return (
+        distanceToSegment(p, { x: x1, y: y1 }, { x: x2, y: y2 }) <= geometry.gap / 2 + tolerance
+      );
+    }
   }
 }
 
@@ -319,10 +374,20 @@ export function translateGeometry(
     case 'polyline':
     case 'stroke':
       return { ...geometry, points: geometry.points.map(([x, y]) => [x + dx, y + dy]) };
+    case 'doubleLine': {
+      const [[x1, y1], [x2, y2]] = geometry.points;
+      return {
+        ...geometry,
+        points: [
+          [x1 + dx, y1 + dy],
+          [x2 + dx, y2 + dy],
+        ],
+      };
+    }
   }
 }
 
-/** Resize handles: `n`…`nw` for rectangles and circles, `v<i>` for polyline vertices. */
+/** Resize handles: `n`…`nw` for rectangles and circles, `v<i>` for polyline and double line ends. */
 export type HandleId = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | `v${number}`;
 
 export interface Handle {
@@ -356,6 +421,7 @@ export function geometryHandles(geometry: MarkerGeometry): Handle[] {
       ];
     }
     case 'polyline':
+    case 'doubleLine':
       return geometry.points.map(([x, y], i) => ({ id: `v${i}` as const, x, y }));
     case 'stroke':
       // A hand-drawn stroke has too many points to drag one by one; its
@@ -397,6 +463,27 @@ export function resizeGeometry(geometry: MarkerGeometry, handle: HandleId, p: XY
         i === index ? [p.x, p.y] : [point[0], point[1]],
       );
       return { ...geometry, points };
+    }
+    case 'doubleLine': {
+      const [a, b] = geometry.points;
+      const index = handle === 'v0' ? 0 : handle === 'v1' ? 1 : -1;
+      if (index < 0) return geometry;
+      const other = index === 0 ? b : a;
+      // Both ends in one place would leave the lines without a direction.
+      if (Math.hypot(p.x - other[0], p.y - other[1]) < MIN_MARKER_SIZE) return geometry;
+      return {
+        ...geometry,
+        points:
+          index === 0
+            ? [
+                [p.x, p.y],
+                [b[0], b[1]],
+              ]
+            : [
+                [a[0], a[1]],
+                [p.x, p.y],
+              ],
+      };
     }
     case 'stroke':
       return geometry;

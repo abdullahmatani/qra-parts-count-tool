@@ -115,7 +115,10 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
 2. Select the **ESDV** tool (`E`) and click each ESD valve on the drawing. In the inspector on the
    right, enter its tag and size, and choose the segment **upstream** and **downstream** of it. The
    boundary rule decides which of the two counts the valve itself; an ESDV can override the project
-   rule if the study needs it.
+   rule if the study needs it. The bar under the toolbar sets how the ESDV is drawn: a red
+   **Circle** round the valve, or a red **Double line** across the pipe. Drag the double line
+   across the pipe (hold `Shift` for steps of 45°), or click a highlighter stroke to put one square
+   across it. Its ends can be dragged later to turn or lengthen it.
 3. Segments list the drawings they span. Markers link their drawing automatically; you can also link
    a drawing by hand, and open any linked drawing zoomed to the segment.
 4. To show the extent of a segment, pick the **Highlighter** (`H`) and drag over its pipework and
@@ -125,6 +128,12 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    pen: **Fine**, **Medium** or **Broad**. Highlights are not counted. Select a stroke to move it,
    change its pen, move it to another segment or delete it; `Ctrl+Z` takes back the last stroke.
    Strokes appear on the annotated PDFs.
+5. ESDVs are the boundaries of the highlighting. An ESDV placed on a highlighter stroke cuts it in
+   two, so the paint stops at the ESDV on each side; select the piece on the far side and move it
+   to its own segment. A stroke painted across an ESDV is cut the same way. The Highlighter is
+   drawn to ESDVs like a magnet: near one, a red ring shows where the stroke will snap, and a
+   stroke begun (or let go) there starts (or ends) at the ESDV. Hold `Alt` to paint without the
+   magnet.
 
 To change the segment of markers, select them and pick another segment in the inspector. To reshape
 segments as the study firms up:
