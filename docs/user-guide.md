@@ -134,6 +134,16 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    drawn to ESDVs like a magnet: near one, a red ring shows where the stroke will snap, and a
    stroke begun (or let go) there starts (or ends) at the ESDV. Hold `Alt` to paint without the
    magnet.
+6. Equipment follows the highlighting. A circle placed on a segment's highlighting goes to that
+   segment, whichever segment is active: on a highlighter stroke (its centre on the paint), on a
+   dashed line run (its ring touching the line), or inside a dashed zone (a rectangle, or dashed
+   points clicked round an area back to the first). Placed anywhere else, it goes to the active
+   segment. Drag or nudge a circle onto another segment's highlighting and it moves to that
+   segment with its item; moved off the highlighting, or along the same segment's highlighting, it
+   keeps its segment. Where highlights overlap, strokes and line runs win over zones, then the
+   nearest stroke or the smallest zone. Pasted and accepted **Find similar** circles follow the
+   same rule. Turn it off under **Settings › General › Assign equipment to the highlighted
+   segment**.
 
 To change the segment of markers, select them and pick another segment in the inspector. To reshape
 segments as the study firms up:

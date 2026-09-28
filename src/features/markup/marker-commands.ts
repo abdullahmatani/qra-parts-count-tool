@@ -24,6 +24,7 @@ import { addItem, nextTag, type ItemDefaults } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
 import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
+import { highlightsOn, segmentUnder } from '@/domain/markup/highlighted-segment';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { ProjectDoc } from '@/domain/model';
 import type {
@@ -37,19 +38,43 @@ import type {
 } from '@/domain/schema/types';
 import i18n from '@/i18n';
 import { newId } from '@/lib/ids';
+import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 
 const t = i18n.t.bind(i18n);
 
-function apply(label: string, recipe: (draft: Draft<ProjectDoc>) => void): boolean {
-  return useProjectStore.getState().apply(label, recipe);
+function apply(
+  label: string,
+  recipe: (draft: Draft<ProjectDoc>) => void,
+  options?: { coalesceKey?: string },
+): boolean {
+  return useProjectStore.getState().apply(label, recipe, options);
 }
 
 /** The active segment, when it still exists. */
 function activeSegmentIn(doc: ProjectDoc): string | null {
   const activeSegmentId = useUiStore.getState().activeSegmentId;
   return activeSegmentId && doc.segments[activeSegmentId] ? activeSegmentId : null;
+}
+
+/** Whether equipment goes to the segment whose highlighting it is placed or moved onto (Settings). */
+function followHighlights(): boolean {
+  return usePreferences.getState().autoAssignSegment;
+}
+
+/**
+ * The segment new equipment goes to: the segment whose highlighting it is
+ * placed on, when that setting is on, or else the active segment.
+ */
+function placementSegments(
+  doc: ProjectDoc,
+  drawingId: string,
+  geometries: readonly CircleGeometry[],
+): (string | null)[] {
+  const active = activeSegmentIn(doc);
+  const highlights = followHighlights() ? highlightsOn(doc, drawingId) : [];
+  return geometries.map((g) => segmentUnder(highlights, g) ?? active);
 }
 
 /** Selected markers that still exist on the active drawing. */
@@ -149,9 +174,10 @@ export function placeStroke(drawingId: string, geometry: StrokeGeometry): string
 
 /**
  * Places a circle, dashed highlight or highlighter stroke in the active
- * segment (ANN-01, ANN-03, SEG-06). A circle is drawn with `symbol` (a ring
- * unless given); a free-form symbol needs its `outline`. ESDVs are placed
- * with `placeEsdv`.
+ * segment (ANN-01, ANN-03, SEG-06). A circle placed on a segment's
+ * highlighting goes to that segment instead, when that setting is on. A
+ * circle is drawn with `symbol` (a ring unless given); a free-form symbol
+ * needs its `outline`. ESDVs are placed with `placeEsdv`.
  */
 export function placeMarker(
   drawingId: string,
@@ -161,7 +187,10 @@ export function placeMarker(
   if (geometry.type === 'stroke') return placeStroke(drawingId, geometry)[0] ?? null;
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId] || geometry.type === 'doubleLine') return null;
-  const segmentId = activeSegmentIn(doc);
+  const segmentId =
+    geometry.type === 'circle'
+      ? placementSegments(doc, drawingId, [geometry])[0]!
+      : activeSegmentIn(doc);
   const marker: Marker = {
     id: newId('mkr'),
     drawingId,
@@ -214,7 +243,8 @@ export function setHighlighterPenCommand(ids: readonly string[], pen: Highlighte
 
 /**
  * Roadmap #60: markers for accepted symbol suggestions, each with a count item
- * from `defaults`, in the active segment, as one undo step. Returns their ids.
+ * from `defaults`, in the active segment (or the segment whose highlighting it
+ * is on, as `placeMarker`), as one undo step. Returns their ids.
  */
 export function placeSuggestedMarkers(
   drawingId: string,
@@ -224,11 +254,11 @@ export function placeSuggestedMarkers(
 ): string[] {
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId] || geometries.length === 0) return [];
-  const segmentId = activeSegmentIn(doc);
-  const markers: Marker[] = geometries.map((geometry) => ({
+  const segmentIds = placementSegments(doc, drawingId, geometries);
+  const markers: Marker[] = geometries.map((geometry, i) => ({
     id: newId('mkr'),
     drawingId,
-    segmentId,
+    segmentId: segmentIds[i]!,
     shape: 'circle',
     geometry,
     style: newMarkerStyle(symbol),
@@ -245,10 +275,23 @@ export function placeSuggestedMarkers(
   return markers.map((m) => m.id);
 }
 
-export function moveMarkerIds(ids: readonly string[], dx: number, dy: number): boolean {
+/**
+ * Moves markers as one undo step; nudges pass a `coalesceKey` so a run of
+ * them is one step. Equipment moved onto another segment's highlighting goes
+ * to that segment, when that setting is on.
+ */
+export function moveMarkerIds(
+  ids: readonly string[],
+  dx: number,
+  dy: number,
+  options: { coalesceKey?: string } = {},
+): boolean {
   if (ids.length === 0 || (dx === 0 && dy === 0)) return false;
-  return apply(t('markup.history.move', { count: ids.length }), (draft) =>
-    moveMarkers(draft, ids, dx, dy),
+  const follow = followHighlights();
+  return apply(
+    t('markup.history.move', { count: ids.length }),
+    (draft) => moveMarkers(draft, ids, dx, dy, follow),
+    options,
   );
 }
 
@@ -339,7 +382,7 @@ export function pasteClipboard(): number {
   const offset = pasteOffset(clip, activeDrawingId, cursor, step, pasteCount);
   let pasted: string[] = [];
   const done = apply(t('markup.history.paste', { count: clip.markers.length }), (draft) => {
-    pasted = pasteMarkers(draft, clip, activeDrawingId, offset);
+    pasted = pasteMarkers(draft, clip, activeDrawingId, offset, followHighlights());
   });
   if (!done) return 0;
   useUiStore.getState().setSelection(pasted);

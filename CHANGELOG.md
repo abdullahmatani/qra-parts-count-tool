@@ -5,6 +5,12 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Equipment follows the highlighting**: a circle placed on a segment's highlighter stroke, on a
+  dashed line run or inside a dashed zone goes to that segment instead of the active one, and a
+  circle dragged or nudged onto another segment's highlighting moves to that segment with its
+  item. Pasted and accepted Find similar circles follow the same rule. It is on by default and
+  can be turned off under **Settings › General › Assign equipment to the highlighted segment**
+  (a browser preference, not stored in the project).
 - **ESDV as a double line**: while the ESDV tool (`E`) is in use, the bar under the toolbar
   chooses how the next ESDV is drawn: a red **Circle** round the valve (as before) or a red
   **Double line** across the pipe. Drag the double line across the pipe (`Shift` for 45° steps),

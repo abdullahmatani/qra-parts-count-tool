@@ -40,7 +40,6 @@ import {
   type HandleId,
   type XY,
 } from '@/domain/markup/geometry';
-import { moveMarkers } from '@/domain/actions/markers';
 import {
   doubleLine,
   doubleLineForClick,
@@ -724,15 +723,9 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         const origin = context.toDrawing({ x: 0, y: 0 });
         const moved = context.toDrawing({ x: arrow.x * step, y: arrow.y * step });
         event.preventDefault();
-        const dx = moved.x - origin.x;
-        const dy = moved.y - origin.y;
-        useProjectStore
-          .getState()
-          .apply(
-            t('markup.history.move', { count: selectedHere.length }),
-            (draft) => moveMarkers(draft, selectedHere, dx, dy),
-            { coalesceKey: `nudge:${selectedHere.join(',')}` },
-          );
+        moveMarkerIds(selectedHere, moved.x - origin.x, moved.y - origin.y, {
+          coalesceKey: `nudge:${selectedHere.join(',')}`,
+        });
         return true;
       }
       return false;

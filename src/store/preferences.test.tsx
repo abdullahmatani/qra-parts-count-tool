@@ -12,6 +12,7 @@ describe('preferences', () => {
       initials: '',
       cadColorMode: 'monochrome',
       language: 'en',
+      autoAssignSegment: true,
     });
     document.documentElement.className = '';
   });
@@ -36,7 +37,15 @@ describe('preferences', () => {
       initials: 'abm',
       cadColorMode: 'monochrome',
       language: 'en',
+      autoAssignSegment: true,
     });
+  });
+
+  it('assigns equipment to the highlighted segment until it is switched off', () => {
+    expect(usePreferences.getState().autoAssignSegment).toBe(true);
+    usePreferences.getState().setAutoAssignSegment(false);
+    const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
+    expect(stored.state.autoAssignSegment).toBe(false);
   });
 
   it('switches the interface to Arabic, right to left, and back (NFR-08)', () => {

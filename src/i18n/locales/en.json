@@ -267,6 +267,8 @@
     },
     "initials": "Your initials",
     "initialsHint": "Stamped on the notes you write, so checkers' comments stay separate.",
+    "autoAssign": "Assign equipment to the highlighted segment",
+    "autoAssignHint": "Equipment placed on a segment's highlighter stroke or dashed highlight goes to that segment instead of the active one. Moved onto another segment's highlighting, it moves to that segment.",
     "noProject": "Open a project to change its settings.",
     "privacyTitle": "Privacy",
     "privacy": "No project data leaves this browser. The app sends no telemetry, analytics or error reports, and after loading makes no network requests other than fetching its own files.",

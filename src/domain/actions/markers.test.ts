@@ -255,3 +255,72 @@ describe('ESDVs cut highlighter strokes (SEG-01)', () => {
     ]);
   });
 });
+
+describe('equipment follows the highlighting (SEG-06)', () => {
+  /** Two pipes, IS-01 along y = 100 and a second segment along y = 300. */
+  function highlighted() {
+    const { doc, drawingId, segmentId } = setup();
+    const other = makeSegment({ id: 'seg_b', label: 'IS-02', colour: 2 });
+    doc.segments[other.id] = other;
+    doc.segmentOrder.push(other.id);
+    const pipe = (id: string, segment: string, y: number): Marker =>
+      makeCircleMarker(drawingId, {
+        id,
+        segmentId: segment,
+        shape: 'highlighter',
+        geometry: {
+          type: 'stroke',
+          points: [
+            [0, y],
+            [1000, y],
+          ],
+          width: 10,
+        },
+      });
+    addMarker(doc, pipe('pipeA', segmentId, 100));
+    addMarker(doc, pipe('pipeB', other.id, 300));
+    // The fixture's first marker sits on the first pipe at (100, 100).
+    const valve = Object.keys(doc.markers)[0]!;
+    const item = Object.values(doc.items).find((i) => i.markerId === valve)!;
+    return { doc, drawingId, a: segmentId, b: other.id, valve, item };
+  }
+
+  it('moves equipment moved onto the highlighting of another segment to it, with its item', () => {
+    const { doc, drawingId, b, valve, item } = highlighted();
+    moveMarkers(doc, [valve], 50, 200, true);
+    expect(doc.markers[valve]!.segmentId).toBe(b);
+    expect(doc.items[item.id]!.segmentId).toBe(b);
+    expect(doc.segments[b]!.drawingIds).toContain(drawingId);
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
+  });
+
+  it('keeps the segment when equipment moves off the highlighting, or the setting is off', () => {
+    const { doc, a, valve } = highlighted();
+    moveMarkers(doc, [valve], 0, 200);
+    expect(doc.markers[valve]!.segmentId).toBe(a);
+    moveMarkers(doc, [valve], 0, -100, true);
+    expect(doc.markers[valve]!.segmentId).toBe(a);
+  });
+
+  it('keeps a segment chosen by hand while the equipment stays on the same highlighting', () => {
+    const { doc, b, valve } = highlighted();
+    assignMarkers(doc, [valve], b);
+    // Along the first pipe, then with it.
+    moveMarkers(doc, [valve], 20, 2, true);
+    moveMarkers(doc, [valve, 'pipeA'], 0, 50, true);
+    expect(doc.markers[valve]!.segmentId).toBe(b);
+  });
+
+  it('pastes equipment into the segment whose highlighting it lands on', () => {
+    const { doc, drawingId, a, b, valve } = highlighted();
+    const clip = copyMarkers(doc, [valve])!;
+    const [onB] = pasteMarkers(doc, clip, drawingId, { x: 0, y: 200 }, true);
+    expect(doc.markers[onB!]!.segmentId).toBe(b);
+    expect(Object.values(doc.items).find((i) => i.markerId === onB)?.segmentId).toBe(b);
+    // Off the highlighting, or with the setting off, it keeps the copied segment.
+    const [off] = pasteMarkers(doc, clip, drawingId, { x: 0, y: 100 }, true);
+    const [plain] = pasteMarkers(doc, clip, drawingId, { x: 0, y: 200 });
+    expect([off, plain].map((id) => doc.markers[id!]!.segmentId)).toEqual([a, a]);
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
+  });
+});

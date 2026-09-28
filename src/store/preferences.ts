@@ -22,11 +22,18 @@ export interface PreferencesState {
   initials: string;
   cadColorMode: CadColorMode;
   language: Language;
+  /**
+   * Equipment placed on a segment's highlighting (highlighter strokes and
+   * dashed highlights) goes to that segment, and moved onto another segment's
+   * highlighting it follows.
+   */
+  autoAssignSegment: boolean;
   setLanguage: (language: Language) => void;
   setTheme: (theme: ThemePreference) => void;
   setCadColorMode: (mode: CadColorMode) => void;
   setDensity: (density: Density) => void;
   setInitials: (initials: string) => void;
+  setAutoAssignSegment: (autoAssignSegment: boolean) => void;
 }
 
 export const usePreferences = create<PreferencesState>()(
@@ -37,22 +44,25 @@ export const usePreferences = create<PreferencesState>()(
       initials: '',
       cadColorMode: 'monochrome',
       language: 'en',
+      autoAssignSegment: true,
       setLanguage: (language) => set({ language }),
       setTheme: (theme) => set({ theme }),
       setCadColorMode: (cadColorMode) => set({ cadColorMode }),
       setDensity: (density) => set({ density }),
       setInitials: (initials) => set({ initials: initials.trim().slice(0, 8) }),
+      setAutoAssignSegment: (autoAssignSegment) => set({ autoAssignSegment }),
     }),
     {
       name: 'qrapc.preferences',
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ theme, density, initials, cadColorMode, language }) => ({
+      partialize: ({ theme, density, initials, cadColorMode, language, autoAssignSegment }) => ({
         theme,
         density,
         initials,
         cadColorMode,
         language,
+        autoAssignSegment,
       }),
     },
   ),
