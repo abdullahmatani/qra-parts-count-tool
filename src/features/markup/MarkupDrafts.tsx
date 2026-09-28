@@ -10,8 +10,9 @@ import type {
 /**
  * A shape being drawn: a circle (drawn as the chosen symbol), rectangle or
  * ESDV double line geometry, the points of a line run, a free-form outline
- * being traced, or a highlighter stroke being painted (as it will look, in
- * its segment's colour).
+ * being traced, a highlighter stroke being painted (as it will look, in
+ * its segment's colour), or the path the highlighter's line magnet is
+ * tracing, dashed, with a ring where it holds on to the line.
  */
 export type DraftShape =
   | (CircleGeometry & { symbol?: MarkerSymbol })
@@ -19,7 +20,8 @@ export type DraftShape =
   | DoubleLineGeometry
   | { type: 'line'; points: XY[] }
   | { type: 'outline'; points: XY[] }
-  | { type: 'stroke'; points: XY[]; width: number; colour: string };
+  | { type: 'stroke'; points: XY[]; width: number; colour: string }
+  | { type: 'trace'; points: XY[]; end: XY | null; colour: string };
 
 const points = (list: readonly XY[]) => list.map((p) => `${p.x},${p.y}`).join(' ');
 
@@ -83,6 +85,22 @@ export function Draft({ shape }: { shape: DraftShape | null }) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+      );
+    case 'trace':
+      return (
+        <g data-testid="trace" data-points={shape.points.length}>
+          <polyline points={points(shape.points)} className="mk-trace-halo" />
+          <polyline points={points(shape.points)} className="mk-trace" stroke={shape.colour} />
+          {shape.end && (
+            <circle
+              data-testid="trace-end"
+              cx={shape.end.x}
+              cy={shape.end.y}
+              className="mk-trace-end"
+              stroke={shape.colour}
+            />
+          )}
+        </g>
       );
   }
 }

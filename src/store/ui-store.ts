@@ -85,6 +85,8 @@ export interface UiState {
   markerSymbol: MarkerSymbol;
   /** The pen the Highlighter tool paints with. */
   highlighterPen: HighlighterPen;
+  /** The highlighter follows the drawing's lines (Alt paints freely while it is on). */
+  highlighterFollowsLines: boolean;
   /** How the ESDV tool draws the next ESDV: a ring, or a double line across the pipe. */
   esdvShape: EsdvShape;
   /** What a click with the ESDV double line places, away from a highlighter stroke. */
@@ -125,6 +127,7 @@ export interface UiState {
   setCircleRadiusFraction: (fraction: number) => void;
   setMarkerSymbol: (symbol: MarkerSymbol) => void;
   setHighlighterPen: (pen: HighlighterPen) => void;
+  setHighlighterFollowsLines: (on: boolean) => void;
   setEsdvShape: (shape: EsdvShape) => void;
   setDoubleLine: (doubleLine: DoubleLineMemory) => void;
   setLinkDeleteRequest: (linkId: string | null) => void;
@@ -171,6 +174,7 @@ const initial = {
   circleRadiusFraction: DEFAULT_CIRCLE_RADIUS_FRACTION,
   markerSymbol: 'circle' as MarkerSymbol,
   highlighterPen: 'medium' as HighlighterPen,
+  highlighterFollowsLines: true,
   esdvShape: 'circle' as EsdvShape,
   doubleLine: { lengthFraction: DOUBLE_LINE_LENGTH_FRACTION, angle: Math.PI / 2 },
   linkDeleteRequest: null,
@@ -246,6 +250,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
   setMarkerSymbol: (markerSymbol) => set({ markerSymbol }),
   setHighlighterPen: (highlighterPen) => set({ highlighterPen }),
+  setHighlighterFollowsLines: (highlighterFollowsLines) => set({ highlighterFollowsLines }),
   setEsdvShape: (esdvShape) => set({ esdvShape }),
   setDoubleLine: (doubleLine) => set({ doubleLine }),
   setLinkDeleteRequest: (linkDeleteRequest) => set({ linkDeleteRequest }),

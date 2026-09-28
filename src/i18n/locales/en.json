@@ -102,7 +102,9 @@
       "medium": "Medium",
       "broad": "Broad"
     },
-    "hint": "Drag over the segment's pipework and equipment. Hold Shift for a straight stroke. Strokes snap to ESDVs and stop at them; hold Alt to draw freely."
+    "hint": "Drag along the segment's pipework: the stroke follows the drawn line (dashed until you let go). Shift draws a straight stroke; Alt paints freely. Strokes snap to ESDVs and stop at them.",
+    "followLines": "Follow lines",
+    "followLinesHint": "Strokes follow the drawing's lines round bends and corners, shown dashed until you let go. Hold Alt to paint freely."
   },
   "esdvBar": {
     "label": "ESDV options",

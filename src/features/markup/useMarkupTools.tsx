@@ -11,8 +11,10 @@
  * - Dashed highlight: drag a rectangle around an area, or click points along a
  *   line run and double-click (or press Enter) to finish.
  * - Highlighter: drag to paint over a segment's pipework and equipment in its
- *   colour; hold Shift for a straight stroke. Near an ESDV the stroke snaps to
- *   it (the magnet; Alt drags freely), and it stops at the ESDV.
+ *   colour; hold Shift for a straight stroke. Dragged along a drawn line, the
+ *   stroke follows the line round bends and corners (shown dashed until it is
+ *   let go). Near an ESDV the stroke snaps to it, and it stops at the ESDV.
+ *   Alt paints freely, without either magnet.
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
@@ -48,6 +50,7 @@ import {
   snapToEsdv,
 } from '@/domain/markup/esdv-boundary';
 import { penWidth } from '@/domain/markup/highlighter';
+import { LineTracer, inkMap, type InkMap } from '@/domain/markup/line-trace';
 import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { Marker, MarkerGeometry, MarkerSymbol, StrokeGeometry } from '@/domain/schema/types';
@@ -92,6 +95,12 @@ type Gesture =
       width: number;
       /** The ESDV the stroke snapped to at its start: its end does not snap back to it. */
       fromEsdvId: string | null;
+      /** Shift is held: a straight stroke from the start. */
+      straight: boolean;
+      /** The path the line magnet has traced (drawing units), shown dashed; null without it. */
+      trace: XY[] | null;
+      /** Where the traced path holds on to a line, if it does. */
+      traceEnd: XY | null;
     }
   | { kind: 'doubleLine'; start: XY; startScreen: XY; current: XY; dragging: boolean }
   | { kind: 'rect'; start: XY; startScreen: XY; current: XY; dragging: boolean }
@@ -122,6 +131,39 @@ const NONE: Gesture = { kind: 'none' };
 
 function screenDistance(a: XY, b: XY): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/** The ink of the drawing as shown, read once per view (the line magnet). */
+const inkMaps = new WeakMap<ImageData, InkMap>();
+
+function inkOf(context: ViewerContext): InkMap | null {
+  const pixels = context.readPixels?.();
+  if (!pixels) return null;
+  let map = inkMaps.get(pixels);
+  if (!map) {
+    map = inkMap(pixels.data, pixels.width, pixels.height);
+    inkMaps.set(pixels, map);
+  }
+  return map;
+}
+
+/**
+ * The line magnet of a stroke being painted. It works in the pixels of the
+ * view the stroke began in, so a zoom during the stroke does not upset it.
+ */
+interface StrokeTrace {
+  tracer: LineTracer;
+  toScreen: (p: XY) => XY;
+  toDrawing: (p: XY) => XY;
+  unitsPerPixel: number;
+}
+
+function traceView(trace: StrokeTrace | null): { trace: XY[] | null; traceEnd: XY | null } {
+  if (!trace) return { trace: null, traceEnd: null };
+  return {
+    trace: trace.tracer.path().map(trace.toDrawing),
+    traceEnd: trace.tracer.onLine ? trace.toDrawing(trace.tracer.target) : null,
+  };
 }
 
 /** Pointer travel (CSS px) between the points kept for a free-form outline. */
@@ -185,6 +227,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     gestureRef.current = next;
     setGestureState(next);
   }, []);
+  const traceRef = useRef<StrokeTrace | null>(null);
   const [polyline, setPolylineState] = useState<{ points: XY[]; hover: XY | null } | null>(null);
   const polylineRef = useRef(polyline);
   const setPolyline = useCallback((next: typeof polyline) => {
@@ -305,6 +348,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       return true;
     }
     if (gestureRef.current.kind !== 'none') {
+      traceRef.current = null;
       setGesture(NONE);
       return true;
     }
@@ -357,17 +401,30 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         return;
       }
       if (tool === 'highlighter' && editable) {
-        const pen = useUiStore.getState().highlighterPen;
+        const ui = useUiStore.getState();
         // The magnet: a stroke begun near an ESDV starts on it.
         const snapped = snapAt(point, context, event.native.altKey);
+        const start = snapped?.point ?? point;
+        // The line magnet: the stroke follows the drawing's lines (not with Alt).
+        const ink = ui.highlighterFollowsLines && !event.native.altKey ? inkOf(context) : null;
+        traceRef.current = ink
+          ? {
+              tracer: new LineTracer(ink, context.toScreen(start), { exact: snapped !== null }),
+              toScreen: context.toScreen,
+              toDrawing: context.toDrawing,
+              unitsPerPixel: context.unitsPerPixel,
+            }
+          : null;
         setGesture({
           kind: 'stroke',
-          points: [snapped?.point ?? point],
+          points: [start],
           startScreen: screen,
           lastScreen: screen,
           dragging: false,
-          width: penWidth(pen, context.drawingSize),
+          width: penWidth(ui.highlighterPen, context.drawingSize),
           fromEsdvId: snapped?.marker.id ?? null,
+          straight: false,
+          ...traceView(traceRef.current),
         });
         setSnap(null);
         return;
@@ -461,9 +518,24 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           const dragging = g.dragging || screenDistance(screen, g.startScreen) > DRAG_THRESHOLD;
           // Shift draws a straight stroke from where it started, as along a pipe.
           if (event.native.shiftKey) {
-            setGesture({ ...g, points: [g.points[0]!, point], lastScreen: screen, dragging });
+            setGesture({
+              ...g,
+              points: [g.points[0]!, point],
+              lastScreen: screen,
+              dragging,
+              straight: true,
+            });
           } else if (screenDistance(screen, g.lastScreen) >= FREEFORM_STEP) {
-            setGesture({ ...g, points: [...g.points, point], lastScreen: screen, dragging });
+            const trace = traceRef.current;
+            trace?.tracer.moveTo(trace.toScreen(point));
+            setGesture({
+              ...g,
+              points: [...g.points, point],
+              lastScreen: screen,
+              dragging,
+              straight: false,
+              ...traceView(trace),
+            });
           }
           // Shows the ESDV the stroke will end on if it is let go here.
           setSnap(snapAt(point, context, event.native.altKey, g.fromEsdvId)?.point ?? null);
@@ -561,13 +633,25 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         }
         case 'stroke': {
           setSnap(null);
+          const trace = traceRef.current;
+          traceRef.current = null;
           // Let go near an ESDV, the stroke ends on it.
-          const last = snapAt(point, context, event.native.altKey, g.fromEsdvId)?.point ?? point;
-          const end = event.native.shiftKey ? [g.points[0]!, last] : [...g.points, last];
-          const path = dedupePoints(
-            simplifyPath(end, context.unitsPerPixel),
-            context.unitsPerPixel,
-          );
+          const esdvEnd = snapAt(point, context, event.native.altKey, g.fromEsdvId)?.point;
+          let end: XY[];
+          if (event.native.shiftKey) {
+            // A straight stroke goes where it is drawn: the line magnet leaves it alone.
+            end = [g.points[0]!, esdvEnd ?? point];
+          } else if (trace) {
+            // The traced path, in whole pixels: straightened to within a pixel below.
+            // Let go near an ESDV, it is traced to the ESDV, not past it.
+            trace.tracer.moveTo(trace.toScreen(esdvEnd ?? point));
+            end = trace.tracer.path().map(trace.toDrawing);
+            if (esdvEnd) end.push(esdvEnd);
+          } else {
+            end = [...g.points, esdvEnd ?? point];
+          }
+          const tolerance = trace?.unitsPerPixel ?? context.unitsPerPixel;
+          const path = dedupePoints(simplifyPath(end, tolerance), tolerance);
           if (!g.dragging || path.length < 2) {
             toast(t('markup.highlighterHint'), { duration: 2500 });
             return;
@@ -753,7 +837,11 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     draft = { type: 'outline', points: gesture.points };
   } else if (gesture.kind === 'stroke') {
     const colour = activeSegment ? segmentAppearance(activeSegment.colour).hex : UNASSIGNED_COLOUR;
-    draft = { type: 'stroke', points: gesture.points, width: gesture.width, colour };
+    // Following a line, the path shows dashed until it is let go.
+    draft =
+      gesture.trace && !gesture.straight
+        ? { type: 'trace', points: gesture.trace, end: gesture.traceEnd, colour }
+        : { type: 'stroke', points: gesture.points, width: gesture.width, colour };
   } else if (gesture.kind === 'doubleLine' && drawingSize) {
     draft = gesture.dragging
       ? doubleLine(gesture.start, gesture.current, doubleLineGap(drawingSize))

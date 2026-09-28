@@ -5,6 +5,11 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Highlighter follows the lines**: dragged roughly along a pipe, a highlighter stroke is drawn to
+  the drawing's own line and follows it round bends, curves and corners, on PDF, DWG and DXF
+  drawings alike. While dragging, the traced path shows as a dashed line with a ring where it
+  holds on to the line; away from lines the stroke follows the pointer. **Follow lines** in the
+  highlighter bar turns it off; `Alt` paints freely and `Shift` still draws a straight stroke.
 - **Rename and delete drawings** from the drawing list: hover a drawing and click **⋯** (or
   right-click it). **Rename** edits the drawing number in place (`F2` too); **Delete…** asks for
   confirmation, saying how many markers and count items go with it, and can be undone. The

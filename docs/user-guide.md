@@ -135,6 +135,15 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    pen: **Fine**, **Medium** or **Broad**. Highlights are not counted. Select a stroke to move it,
    change its pen, move it to another segment or delete it; `Ctrl+Z` takes back the last stroke.
    Strokes appear on the annotated PDFs.
+
+   The Highlighter follows the drawn lines. Drag roughly along a pipe: the stroke is drawn to the
+   nearest line on the drawing and follows it round bends, curves and corners, even where your
+   hand cuts across. While you drag, the path it has found shows as a **dashed line**, with a ring
+   where it holds on to the line; let go and it becomes the stroke. Away from any line, the stroke
+   follows the pointer. It works on PDF, DWG and DXF drawings alike, on the lines you see, so zoom
+   in where lines run close together. Turn it off with **Follow lines** in the bar, or hold `Alt`
+   to paint freely; a `Shift` stroke is always straight.
+
 5. ESDVs are the boundaries of the highlighting. An ESDV placed on a highlighter stroke cuts it in
    two, so the paint stops at the ESDV on each side; select the piece on the far side and move it
    to its own segment. A stroke painted across an ESDV is cut the same way. The Highlighter is
