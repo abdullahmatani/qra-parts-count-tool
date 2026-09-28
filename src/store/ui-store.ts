@@ -91,6 +91,8 @@ export interface UiState {
   doubleLine: DoubleLineMemory;
   /** A drawing link with a target, waiting for the user to confirm its deletion. */
   linkDeleteRequest: string | null;
+  /** A drawing waiting for the user to confirm its deletion (DeleteDrawingDialog). */
+  drawingDeleteRequest: string | null;
   /** Set by double-clicking or placing a marker: the edit panel shows and focuses it (ANN-07). */
   editRequest: { markerId: string; field: EditField; at: number } | null;
   /** The last type and actuation used, for the next item (FDS section 6). */
@@ -126,6 +128,7 @@ export interface UiState {
   setEsdvShape: (shape: EsdvShape) => void;
   setDoubleLine: (doubleLine: DoubleLineMemory) => void;
   setLinkDeleteRequest: (linkId: string | null) => void;
+  setDrawingDeleteRequest: (drawingId: string | null) => void;
   requestEdit: (markerId: string, field?: EditField) => void;
   setItemDefaults: (defaults: Partial<ItemDefaults>) => void;
   setLastItem: (itemId: string | null) => void;
@@ -171,6 +174,7 @@ const initial = {
   esdvShape: 'circle' as EsdvShape,
   doubleLine: { lengthFraction: DOUBLE_LINE_LENGTH_FRACTION, angle: Math.PI / 2 },
   linkDeleteRequest: null,
+  drawingDeleteRequest: null,
   editRequest: null,
   itemDefaults: { equipmentTypeId: null, actuation: null },
   lastItemId: null,
@@ -245,6 +249,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setEsdvShape: (esdvShape) => set({ esdvShape }),
   setDoubleLine: (doubleLine) => set({ doubleLine }),
   setLinkDeleteRequest: (linkDeleteRequest) => set({ linkDeleteRequest }),
+  setDrawingDeleteRequest: (drawingDeleteRequest) => set({ drawingDeleteRequest }),
   requestEdit: (markerId, field = 'auto') =>
     set({ selection: [markerId], editRequest: { markerId, field, at: Date.now() } }),
   setItemDefaults: (defaults) =>

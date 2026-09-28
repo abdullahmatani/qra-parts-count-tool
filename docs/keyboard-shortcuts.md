@@ -44,6 +44,7 @@ Change or add keys in **Project › Equipment library** (column **Key**).
 | `←` `↑` `→` `↓`          | Nudge selected markers (hold `Shift` for 10 px)                                     |
 | `Enter`                  | Finish a dashed line run; in a field, confirm the value                             |
 | `Esc`                    | Cancel drawing and return to the Select tool; press again to clear the selection    |
+| `F2`                     | Rename the drawing selected in the drawing list                                     |
 
 ## View
 

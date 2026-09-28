@@ -75,7 +75,7 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
     await createProject(app.page, { name: 'Register study' });
     const page = app.page;
     await importDrawings(page, ['PEFS-2000_multipage.pdf']);
-    await expect(page.getByTestId('drawing-list').getByRole('button')).toHaveCount(3);
+    await expect(page.getByTestId('drawing-list').locator('li[data-drawing-id]')).toHaveCount(3);
 
     await openMenu(page, 'Drawing register');
     const register = page.getByTestId('drawing-register');
@@ -91,20 +91,21 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
       .poll(async () => {
         const saved = JSON.parse(await app.readText(dir, 'project.qrapc.json'));
         const d = saved.drawings.find((x: { page: number }) => x.page === 2);
-        return `${d.title}|${d.revision}`;
+        // Until the edit is saved, the file may not hold the drawing yet.
+        return `${d?.title}|${d?.revision}`;
       })
       .toBe('2ND STAGE COMPRESSOR K-200|C');
 
-    await register.getByRole('button', { name: 'Remove PEFS-2003 / 3' }).click();
-    await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
+    await register.getByRole('button', { name: 'Delete PEFS-2003 / 3' }).click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Delete drawing' }).click();
     await expect(register.locator('tbody tr[data-drawing-id]')).toHaveCount(2);
     await expect(page.getByRole('alertdialog')).toBeHidden();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('drawing-list').getByRole('button')).toHaveCount(2);
+    await expect(page.getByTestId('drawing-list').locator('li[data-drawing-id]')).toHaveCount(2);
 
     // Undo brings it back.
     await page.getByRole('button', { name: 'Undo' }).click();
-    await expect(page.getByTestId('drawing-list').getByRole('button')).toHaveCount(3);
+    await expect(page.getByTestId('drawing-list').locator('li[data-drawing-id]')).toHaveCount(3);
     await app.removeDirectory(dir);
   });
 });

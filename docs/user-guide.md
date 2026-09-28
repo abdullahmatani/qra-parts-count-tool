@@ -68,6 +68,17 @@ The app reads the drawing number, title, sheet and revision from the title block
 and correct them in **Project › Drawing register**: they appear in the count, the stamps and the
 export file names.
 
+**Rename or delete a drawing.** Hover a drawing in the drawing list and click **⋯** (or right-click
+the drawing):
+
+- **Rename** edits its drawing number in place; `Enter` keeps the new name, `Esc` keeps the old
+  one. `F2` renames the drawing selected in the list. The name changes wherever the drawing is
+  shown, and in the stamps and export file names. The file in `drawings/` keeps its name.
+- **Delete…** asks first, and says what goes with the drawing: its markers and their count items,
+  and the drawing links on it (links to it from other drawings lose their target). The drawing is
+  taken off its segments. The file stays in `drawings/`, and `Ctrl+Z` brings the drawing back.
+  The drawing register has the same **Delete** button on each row.
+
 **New revisions.** When a drawing is reissued, use **Replace with a new revision** on its row in the
 drawing register and choose the new file (and page or layout). The drawing keeps its markers, items,
 segments and drawing links; the old file stays in `drawings/`. If the new sheet has another size,

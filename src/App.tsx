@@ -13,6 +13,7 @@ import { openSampleFromPicker } from '@/features/sample/create-sample';
 import { OpenZipDialog } from '@/features/project/OpenZipDialog';
 import { LinkSuggestionsDialog } from '@/features/links/LinkSuggestionsDialog';
 import { DeleteLinkDialog } from '@/features/links/DeleteLinkDialog';
+import { DeleteDrawingDialog } from '@/features/drawings/DeleteDrawingDialog';
 import { DrawingRegisterDialog } from '@/features/drawings/DrawingRegisterDialog';
 import { importWithFeedback, openDrawingImport } from '@/features/drawings/import-actions';
 import { SpacePickerDialog } from '@/features/drawings/SpacePickerDialog';
@@ -76,6 +77,7 @@ export function App() {
       {hasProject && <LinkSuggestionsDialog />}
       {hasProject && <DeleteLinkDialog />}
       {hasProject && <DrawingRegisterDialog />}
+      {hasProject && <DeleteDrawingDialog />}
       {hasProject && <SpacePickerDialog />}
       <ShortcutsDialog />
       {hasProject && <NewSegmentDialog />}

@@ -119,6 +119,23 @@
     "empty": "No drawings yet.",
     "import": "Import drawings",
     "noMatch": "No drawings match.",
+    "actions": "Actions for {{name}}",
+    "rename": "Rename",
+    "renameLabel": "Drawing number for {{name}}",
+    "delete": "Delete…",
+    "deleteDialog": {
+      "title": "Delete {{name}}?",
+      "body": "The drawing is removed from the project and from the segments it is linked to.",
+      "markers_one": "Its marker and count item are deleted too.",
+      "markers_other": "Its {{count}} markers and their count items are deleted too.",
+      "links": "Drawing links on it are deleted, and links to it from other drawings lose their target.",
+      "undo": "The file stays in the drawings folder, and Undo brings the drawing back.",
+      "confirm": "Delete drawing"
+    },
+    "history": {
+      "rename": "rename drawing to {{name}}",
+      "delete": "delete drawing {{name}}"
+    },
     "review": {
       "flag": "Needs review: new revision with another sheet size",
       "banner": "This drawing was replaced by a revision with another sheet size. Check that the markers still sit on their symbols, then mark it as reviewed.",
@@ -447,14 +464,11 @@
     },
     "page": "p. {{page}}",
     "open": "Open",
-    "remove": "Remove",
-    "removeTitle": "Remove {{name}} from the project?",
-    "removeBody": "Its markers, count items and drawing links are removed too. The file stays in the drawings folder. You can undo this.",
+    "delete": "Delete {{name}}",
     "empty": "No drawings. Import PDF drawings to start the register.",
     "count_one": "{{count}} drawing",
     "count_other": "{{count}} drawings",
     "historyEdit": "Edit drawing",
-    "historyRemove": "Remove drawing",
     "cadPlotHint": "PDF plot of a DWG drawing (DRW-10)",
     "replace": "Replace with a new revision"
   },
@@ -585,6 +599,7 @@
     "selectAll": "Select all markers on the drawing",
     "delete": "Delete selected markers, or the selected link (asks first if it has a target)",
     "deselect": "Cancel drawing and return to Select; press again to clear the selection",
+    "renameDrawing": "Rename the drawing selected in the drawing list",
     "nudge": "Nudge selected markers (Shift: 10 px)",
     "finish": "Finish a dashed line run",
     "addToSelection": "Add to or remove from the selection",

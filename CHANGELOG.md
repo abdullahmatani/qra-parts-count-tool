@@ -5,6 +5,10 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Rename and delete drawings** from the drawing list: hover a drawing and click **⋯** (or
+  right-click it). **Rename** edits the drawing number in place (`F2` too); **Delete…** asks for
+  confirmation, saying how many markers and count items go with it, and can be undone. The
+  drawing register's remove button is now **Delete** and uses the same confirmation.
 - **English only**: the Arabic interface, the **Language** setting and the right-to-left layout
   are removed. The interface is English, as exported files always were.
 - **Equipment follows the highlighting**: a circle placed on a segment's highlighter stroke, on a

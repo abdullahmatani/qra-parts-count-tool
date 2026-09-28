@@ -9,16 +9,6 @@ import {
 import { ExternalLink, FileUp, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { VirtualTable } from '@/components/data/VirtualTable';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,7 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { removeDrawing, updateDrawing, type DrawingMetadata } from '@/domain/actions/drawings';
+import { updateDrawing, type DrawingMetadata } from '@/domain/actions/drawings';
 import { drawingDisplayName, paperSizeName } from '@/domain/drawings';
 import { segmentAppearance } from '@/domain/palette';
 import type { Drawing, Segment } from '@/domain/schema/types';
@@ -42,6 +32,7 @@ import {
   useOrderedSegments,
 } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
+import { requestDeleteDrawing } from './drawing-commands';
 import { openDrawingImport } from './import-actions';
 import { ReplaceRevisionDialog } from './ReplaceRevisionDialog';
 
@@ -114,7 +105,6 @@ export function DrawingRegisterDialog() {
   const markerCounts = useMarkerCountsByDrawing();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState('');
-  const [removing, setRemoving] = useState<Drawing | null>(null);
   const [replacing, setReplacing] = useState<Drawing | null>(null);
 
   const rows = useMemo<Row[]>(
@@ -293,9 +283,9 @@ export function DrawingRegisterDialog() {
               size="icon-sm"
               variant="ghost"
               disabled={readOnly}
-              aria-label={`${t('register.remove')} ${drawingDisplayName(row.original.drawing)}`}
-              title={t('register.remove')}
-              onClick={() => setRemoving(row.original.drawing)}
+              aria-label={t('register.delete', { name: drawingDisplayName(row.original.drawing) })}
+              title={t('common.delete')}
+              onClick={() => requestDeleteDrawing(row.original.drawing.id)}
             >
               <Trash2 />
             </Button>
@@ -361,32 +351,6 @@ export function DrawingRegisterDialog() {
       {replacing && (
         <ReplaceRevisionDialog drawing={replacing} onClose={() => setReplacing(null)} />
       )}
-      <AlertDialog open={removing !== null} onOpenChange={(next) => !next && setRemoving(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {removing && t('register.removeTitle', { name: drawingDisplayName(removing) })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>{t('register.removeBody')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (!removing) return;
-                const id = removing.id;
-                useProjectStore
-                  .getState()
-                  .apply(t('register.historyRemove'), (doc) => removeDrawing(doc, id));
-                useUiStore.getState().closeDrawing(id);
-                setRemoving(null);
-              }}
-            >
-              {t('register.remove')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
