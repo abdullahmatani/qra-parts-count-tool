@@ -92,7 +92,7 @@ function Table({ table }: { table: CountTable }) {
                   title={bin.label}
                   className="py-1 text-end font-medium"
                 >
-                  <bdi dir="ltr">{shortBinLabel(bin)}</bdi>
+                  {shortBinLabel(bin)}
                 </th>
               ))}
               <th scope="col" className="w-12 py-1 text-end font-semibold">
@@ -151,7 +151,7 @@ function Table({ table }: { table: CountTable }) {
             <tr className="border-b text-muted-foreground">
               {lengths.binSet.bins.map((bin) => (
                 <th key={bin.id} title={bin.label} className="py-1 text-end font-medium">
-                  <bdi dir="ltr">{shortBinLabel(bin)}</bdi>
+                  {shortBinLabel(bin)}
                 </th>
               ))}
               <th className="w-12 py-1 text-end font-semibold">{t('count.table.total')}</th>
@@ -283,7 +283,7 @@ export function CountTablePanel() {
                       onClick={() => unacceptDuplicateCommand(duplicate.tag)}
                       disabled={readOnly}
                     >
-                      <Undo2 className="size-3 rtl:-scale-x-100" /> {t('count.duplicates.undo')}
+                      <Undo2 className="size-3" /> {t('count.duplicates.undo')}
                     </Button>
                   ) : (
                     <Button

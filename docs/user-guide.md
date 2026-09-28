@@ -14,10 +14,6 @@ a folder on your computer and are never uploaded anywhere.
   cannot, a project sent as a `.zip` opens read-only (section 11).
 - Open the app once while online. After that it works with no network: the header shows
   **Offline ready** when everything is cached.
-- **Language**: Settings › General › Language switches the interface between English and Arabic.
-  Arabic lays the interface out right to left; drawings, the template preview and fields such as
-  tags and file names stay left to right. Exported workbooks, CSV files and PDFs are always in
-  English, the language of client templates. The Arabic text is a draft awaiting review.
 - Make an empty folder for each study, for example on a project share. This is the **working
   directory**: the project file, the drawings, the exports and automatic backups all live in it, so
   you can zip it, archive it or hand it to a checker.

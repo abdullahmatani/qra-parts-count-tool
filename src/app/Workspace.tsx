@@ -24,8 +24,7 @@ export interface WorkspaceProps {
 /**
  * Three-pane workspace (FDS section 6): drawings and segments on the left, the
  * canvas in the centre, and the active segment's panels on the right. Pane
- * sizes are remembered in the browser. A right-to-left interface (NFR-08)
- * mirrors the panes.
+ * sizes are remembered in the browser.
  */
 export function Workspace({
   onCloseProject,
@@ -37,8 +36,7 @@ export function Workspace({
   statusBar,
   children,
 }: WorkspaceProps) {
-  const { t, i18n } = useTranslation();
-  const dir = i18n.dir();
+  const { t } = useTranslation();
   const layout = useDefaultLayout({ id: 'qrapc.workspace', storage: localStorage });
   const [dragging, setDragging] = useState(false);
   const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes('Files');
@@ -69,62 +67,29 @@ export function Workspace({
         </div>
       )}
       <Header onCloseProject={onCloseProject} />
-      {/*
-        The panel group resizes in screen direction only, so it stays left to
-        right and a right-to-left interface lists the panes in reverse.
-      */}
       <ResizablePanelGroup
-        dir="ltr"
         orientation="horizontal"
         className="min-h-0 flex-1"
         defaultLayout={layout.defaultLayout}
         onLayoutChanged={layout.onLayoutChanged}
       >
-        {inOrder(dir, [
-          <ResizablePanel
-            key="left"
-            id="left"
-            dir={dir}
-            defaultSize="18%"
-            minSize={200}
-            maxSize="35%"
-          >
-            <nav className="flex h-full flex-col divide-y bg-panel" data-testid="left-pane">
-              <DrawingList onImport={onImportDrawings} />
-              <SegmentList onAdd={onAddSegment} />
-            </nav>
-          </ResizablePanel>,
-          <ResizablePanel key="centre" id="centre" dir={dir} minSize="30%">
-            <CanvasArea renderDrawing={renderDrawing} />
-          </ResizablePanel>,
-          <ResizablePanel
-            key="right"
-            id="right"
-            dir={dir}
-            defaultSize="24%"
-            minSize={280}
-            maxSize="40%"
-          >
-            <RightPane {...rightPane} />
-          </ResizablePanel>,
-        ])}
+        <ResizablePanel id="left" defaultSize="18%" minSize={200} maxSize="35%">
+          <nav className="flex h-full flex-col divide-y bg-panel" data-testid="left-pane">
+            <DrawingList onImport={onImportDrawings} />
+            <SegmentList onAdd={onAddSegment} />
+          </nav>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel id="centre" minSize="30%">
+          <CanvasArea renderDrawing={renderDrawing} />
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel id="right" defaultSize="24%" minSize={280} maxSize="40%">
+          <RightPane {...rightPane} />
+        </ResizablePanel>
       </ResizablePanelGroup>
       <StatusBar {...statusBar} />
       {children}
     </div>
-  );
-}
-
-/** The three panes with resize handles between them, mirrored for right to left. */
-function inOrder(dir: string, [start, centre, end]: [ReactNode, ReactNode, ReactNode]) {
-  const [first, last] = dir === 'rtl' ? [end, start] : [start, end];
-  return (
-    <>
-      {first}
-      <ResizableHandle />
-      {centre}
-      <ResizableHandle />
-      {last}
-    </>
   );
 }

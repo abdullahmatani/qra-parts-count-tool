@@ -5,6 +5,8 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **English only**: the Arabic interface, the **Language** setting and the right-to-left layout
+  are removed. The interface is English, as exported files always were.
 - **Equipment follows the highlighting**: a circle placed on a segment's highlighter stroke, on a
   dashed line run or inside a dashed zone goes to that segment instead of the active one, and a
   circle dragged or nudged onto another segment's highlighting moves to that segment with its

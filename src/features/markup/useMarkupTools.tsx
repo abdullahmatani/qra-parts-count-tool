@@ -158,7 +158,7 @@ export interface MarkupTools {
 }
 
 export function useMarkupTools(drawingId: string): MarkupTools {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const tool = useUiStore((s) => s.tool);
   const markerSymbol = useUiStore((s) => s.markerSymbol);
   const symbol = placedSymbol(tool, markerSymbol);
@@ -817,7 +817,6 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         {polyline && (
           <div
             role="status"
-            dir={i18n.dir()}
             className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-md bg-foreground/85 px-3 py-1 text-xs text-background shadow"
           >
             {t('markup.polylineHint')}

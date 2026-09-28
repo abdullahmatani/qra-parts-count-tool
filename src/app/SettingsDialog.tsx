@@ -12,12 +12,10 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LANGUAGES } from '@/i18n';
 import {
   usePreferences,
   type CadColorMode,
   type Density,
-  type Language,
   type ThemePreference,
 } from '@/store/preferences';
 import { useUiStore } from '@/store/ui-store';
@@ -69,8 +67,6 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
   const setInitials = usePreferences((s) => s.setInitials);
   const cadColorMode = usePreferences((s) => s.cadColorMode);
   const setCadColorMode = usePreferences((s) => s.setCadColorMode);
-  const language = usePreferences((s) => s.language);
-  const setLanguage = usePreferences((s) => s.setLanguage);
   const autoAssignSegment = usePreferences((s) => s.autoAssignSegment);
   const setAutoAssignSegment = usePreferences((s) => s.setAutoAssignSegment);
 
@@ -89,12 +85,6 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
           </TabsList>
 
           <TabsContent value="general" className="grid gap-6 pt-4">
-            <Choice<Language>
-              label={t('settings.language')}
-              value={language}
-              onChange={setLanguage}
-              options={LANGUAGES.map((l) => ({ value: l.code, label: l.name }))}
-            />
             <Choice<ThemePreference>
               label={t('settings.theme')}
               value={theme}

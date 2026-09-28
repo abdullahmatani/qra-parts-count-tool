@@ -84,7 +84,7 @@ export function Toolbar() {
               disabled={!undoLabel || readOnly}
               onClick={() => undo()}
             >
-              <Undo2 className="rtl:-scale-x-100" />
+              <Undo2 />
             </Button>
           </span>
         </TooltipTrigger>
@@ -103,7 +103,7 @@ export function Toolbar() {
               disabled={!redoLabel || readOnly}
               onClick={() => redo()}
             >
-              <Redo2 className="rtl:-scale-x-100" />
+              <Redo2 />
             </Button>
           </span>
         </TooltipTrigger>

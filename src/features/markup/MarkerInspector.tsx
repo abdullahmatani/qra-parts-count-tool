@@ -195,9 +195,7 @@ export function MarkerInspector() {
           {geometrySummary(first, t).map(([label, value]) => (
             <div key={label} className="contents">
               <dt>{label}</dt>
-              <dd className="font-mono text-foreground tabular-nums">
-                <bdi dir="ltr">{value}</bdi>
-              </dd>
+              <dd className="font-mono text-foreground tabular-nums">{value}</dd>
             </div>
           ))}
         </dl>
