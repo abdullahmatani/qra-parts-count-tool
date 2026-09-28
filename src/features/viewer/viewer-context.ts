@@ -13,6 +13,12 @@ export interface ViewerContext {
   toScreen(drawing: Point2): Point2;
   /** Drawing units per CSS pixel at the current zoom (for hit tolerances). */
   unitsPerPixel: number;
+  /**
+   * The drawing as it is shown, one pixel per CSS pixel of the canvas (no
+   * markers), or null when it cannot be read. Tools that follow the linework
+   * read it; it is kept until the view changes.
+   */
+  readPixels?(): ImageData | null;
 }
 
 export interface ViewerPointerEvent {

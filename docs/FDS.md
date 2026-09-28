@@ -339,7 +339,7 @@ The user supplies the Excel layout; the tool never imposes one. A mapping, built
 | NFR-05 | No data loss on browser crash: at most the last 2 s of edits are lost. |
 | NFR-06 | Excel export of 150 segments completes in under 30 s. |
 | NFR-07 | Annotated PDFs keep the original vector content (no rasterising of PDF drawings). |
-| NFR-08 | English UI in v1; strings externalised for later Arabic (RTL) support. |
+| NFR-08 | English UI; strings externalised in one catalogue. |
 | NFR-09 | Every count total is reproducible from the item list (checker can audit any number). |
 
 ### 8.2 Proposed architecture
@@ -429,7 +429,7 @@ The app is built with React 19 and TypeScript in strict mode, bundled by Vite in
 | Notifications | sonner | Autosave and export status |
 | Rich text notes | Tiptap (minimal: bold, bullets) | Segment notes (NTE-01) |
 | Drawing overlay | Custom React SVG components | Markers and links need drawing-coordinate control that no UI kit provides |
-| Internationalisation | i18next + react-i18next | English in v1; Tailwind logical properties (`ms-`, `me-`) keep layouts ready for Arabic RTL |
+| Internationalisation | i18next + react-i18next | English only; every interface string in `locales/en.json` |
 | Fonts | Bundled with @fontsource: Inter (UI), JetBrains Mono (tags, sizes) | No Google Fonts or other external requests |
 
 ### 9.3 Design tokens

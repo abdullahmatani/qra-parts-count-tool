@@ -1,7 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ltr } from '@/lib/bidi';
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
 import { Label } from '@/components/ui/label';
@@ -35,7 +34,7 @@ function focusCanvas(): void {
  * and pressing Enter logs the item and returns to the drawing.
  */
 export function ItemEditor({ item }: { item: CountItem }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const readOnly = useProjectStore((s) => s.readOnly);
   const library = useProjectStore((s) => s.doc?.library);
   const pipeLengthCounting = useProjectStore((s) => s.doc?.settings.pipeLengthCounting ?? false);
@@ -200,7 +199,7 @@ export function ItemEditor({ item }: { item: CountItem }) {
         {sizeError
           ? t('count.item.sizeInvalid')
           : bin
-            ? t('count.item.bin', { bin: ltr(bin.label, i18n.dir()) })
+            ? t('count.item.bin', { bin: bin.label })
             : t('count.item.enterHint')}
       </p>
 

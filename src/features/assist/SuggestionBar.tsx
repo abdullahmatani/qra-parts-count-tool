@@ -89,7 +89,7 @@ export function SuggestionBar() {
             aria-label={t('assist.previous')}
             onClick={() => go(-1)}
           >
-            <ChevronLeft className="rtl:-scale-x-100" />
+            <ChevronLeft />
           </Button>
           <span className="tabular-nums" data-testid="suggestion-status" aria-live="polite">
             {t('assist.position', { index: current + 1, count: shown.length })}
@@ -100,7 +100,7 @@ export function SuggestionBar() {
             aria-label={t('assist.next')}
             onClick={() => go(1)}
           >
-            <ChevronRight className="rtl:-scale-x-100" />
+            <ChevronRight />
           </Button>
           <span className="text-xs text-muted-foreground tabular-nums">
             {t('assist.score', { score: percent(suggestion.score) })}

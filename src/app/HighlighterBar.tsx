@@ -1,6 +1,7 @@
-import { Highlighter } from 'lucide-react';
+import { Highlighter, Magnet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Separator } from '@/components/ui/separator';
+import { Toggle } from '@/components/ui/toggle';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { HIGHLIGHTER_PENS, type HighlighterPen } from '@/domain/markup/highlighter';
 import { HIGHLIGHTER_ALPHA, segmentAppearance } from '@/domain/palette';
@@ -12,13 +13,16 @@ const SAMPLE: Record<HighlighterPen, number> = { fine: 3, medium: 6, broad: 11 }
 
 /**
  * Takes the equipment bar's place while the Highlighter tool is in use: which
- * segment the strokes go to (in its colour) and the pen they are painted with.
+ * segment the strokes go to (in its colour), the pen they are painted with,
+ * and whether strokes follow the drawing's lines.
  */
 export function HighlighterBar() {
   const { t } = useTranslation();
   const readOnly = useProjectStore((s) => s.readOnly);
   const pen = useUiStore((s) => s.highlighterPen);
   const setPen = useUiStore((s) => s.setHighlighterPen);
+  const followsLines = useUiStore((s) => s.highlighterFollowsLines);
+  const setFollowsLines = useUiStore((s) => s.setHighlighterFollowsLines);
   const activeSegmentId = useUiStore((s) => s.activeSegmentId);
   const segment = useProjectStore((s) =>
     activeSegmentId ? (s.doc?.segments[activeSegmentId] ?? null) : null,
@@ -77,6 +81,20 @@ export function HighlighterBar() {
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
+
+      <Separator orientation="vertical" className="mx-1 h-5!" />
+
+      <Toggle
+        size="sm"
+        pressed={followsLines}
+        onPressedChange={setFollowsLines}
+        disabled={readOnly}
+        title={t('highlighter.followLinesHint')}
+        data-testid="highlighter-follow-lines"
+        className="shrink-0 gap-1.5 px-2 text-xs"
+      >
+        <Magnet /> {t('highlighter.followLines')}
+      </Toggle>
 
       <span className="ms-auto hidden min-w-0 truncate ps-2 text-xs text-muted-foreground lg:inline">
         {t('highlighter.hint')}

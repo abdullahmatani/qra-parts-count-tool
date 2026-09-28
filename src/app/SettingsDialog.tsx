@@ -10,13 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LANGUAGES } from '@/i18n';
 import {
   usePreferences,
   type CadColorMode,
   type Density,
-  type Language,
   type ThemePreference,
 } from '@/store/preferences';
 import { useUiStore } from '@/store/ui-store';
@@ -68,8 +67,8 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
   const setInitials = usePreferences((s) => s.setInitials);
   const cadColorMode = usePreferences((s) => s.cadColorMode);
   const setCadColorMode = usePreferences((s) => s.setCadColorMode);
-  const language = usePreferences((s) => s.language);
-  const setLanguage = usePreferences((s) => s.setLanguage);
+  const autoAssignSegment = usePreferences((s) => s.autoAssignSegment);
+  const setAutoAssignSegment = usePreferences((s) => s.setAutoAssignSegment);
 
   return (
     <Dialog open={open} onOpenChange={(next) => openDialog(next ? 'settings' : null)}>
@@ -86,12 +85,6 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
           </TabsList>
 
           <TabsContent value="general" className="grid gap-6 pt-4">
-            <Choice<Language>
-              label={t('settings.language')}
-              value={language}
-              onChange={setLanguage}
-              options={LANGUAGES.map((l) => ({ value: l.code, label: l.name }))}
-            />
             <Choice<ThemePreference>
               label={t('settings.theme')}
               value={theme}
@@ -130,6 +123,17 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
                 className="font-mono uppercase"
               />
               <p className="text-xs text-muted-foreground">{t('settings.initialsHint')}</p>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-md border p-3">
+              <div className="grid gap-1">
+                <Label htmlFor="settings-auto-assign">{t('settings.autoAssign')}</Label>
+                <p className="text-xs text-muted-foreground">{t('settings.autoAssignHint')}</p>
+              </div>
+              <Switch
+                id="settings-auto-assign"
+                checked={autoAssignSegment}
+                onCheckedChange={setAutoAssignSegment}
+              />
             </div>
           </TabsContent>
 

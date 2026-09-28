@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import i18n from '@/i18n';
 import { resolveTheme, useApplyPreferences, usePreferences } from './preferences';
 
 describe('preferences', () => {
@@ -11,7 +10,7 @@ describe('preferences', () => {
       density: 'compact',
       initials: '',
       cadColorMode: 'monochrome',
-      language: 'en',
+      autoAssignSegment: true,
     });
     document.documentElement.className = '';
   });
@@ -35,20 +34,15 @@ describe('preferences', () => {
       density: 'compact',
       initials: 'abm',
       cadColorMode: 'monochrome',
-      language: 'en',
+      autoAssignSegment: true,
     });
   });
 
-  it('switches the interface to Arabic, right to left, and back (NFR-08)', () => {
-    renderHook(() => useApplyPreferences());
-    act(() => usePreferences.getState().setLanguage('ar'));
-    expect(document.documentElement).toHaveAttribute('lang', 'ar');
-    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
-    expect(i18n.t('header.settings')).toBe('الإعدادات');
-
-    act(() => usePreferences.getState().setLanguage('en'));
-    expect(document.documentElement).toHaveAttribute('dir', 'ltr');
-    expect(i18n.t('header.settings')).toBe('Settings');
+  it('assigns equipment to the highlighted segment until it is switched off', () => {
+    expect(usePreferences.getState().autoAssignSegment).toBe(true);
+    usePreferences.getState().setAutoAssignSegment(false);
+    const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
+    expect(stored.state.autoAssignSegment).toBe(false);
   });
 
   it('resolves explicit themes directly', () => {

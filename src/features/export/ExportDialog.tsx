@@ -1,7 +1,6 @@
 import { AlertTriangle, CheckCircle2, Download, FolderOutput, Loader2 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ltr } from '@/lib/bidi';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -83,7 +82,7 @@ function PreExportCheck({
   issues: CheckResult[];
   onShow: (c: CheckResult) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   return (
     <section className="space-y-2" data-testid="pre-export-check" aria-labelledby="export-check">
       <h3 id="export-check" className="text-sm font-medium">
@@ -119,10 +118,7 @@ function PreExportCheck({
                     <p className="text-sm">{text}</p>
                     {issue.names.length > 0 && (
                       <p className="truncate text-xs text-muted-foreground">
-                        {issue.names
-                          .slice(0, NAMES_SHOWN)
-                          .map((name) => ltr(name, i18n.dir()))
-                          .join(', ')}
+                        {issue.names.slice(0, NAMES_SHOWN).join(', ')}
                         {more > 0 ? ` +${more}` : ''}
                       </p>
                     )}

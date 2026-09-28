@@ -102,7 +102,9 @@
       "medium": "Medium",
       "broad": "Broad"
     },
-    "hint": "Drag over the segment's pipework and equipment. Hold Shift for a straight stroke. Strokes snap to ESDVs and stop at them; hold Alt to draw freely."
+    "hint": "Drag along the segment's pipework: the stroke follows the drawn line (dashed until you let go). Shift draws a straight stroke; Alt paints freely. Strokes snap to ESDVs and stop at them.",
+    "followLines": "Follow lines",
+    "followLinesHint": "Strokes follow the drawing's lines round bends and corners, shown dashed until you let go. Hold Alt to paint freely."
   },
   "esdvBar": {
     "label": "ESDV options",
@@ -119,6 +121,23 @@
     "empty": "No drawings yet.",
     "import": "Import drawings",
     "noMatch": "No drawings match.",
+    "actions": "Actions for {{name}}",
+    "rename": "Rename",
+    "renameLabel": "Drawing number for {{name}}",
+    "delete": "Delete…",
+    "deleteDialog": {
+      "title": "Delete {{name}}?",
+      "body": "The drawing is removed from the project and from the segments it is linked to.",
+      "markers_one": "Its marker and count item are deleted too.",
+      "markers_other": "Its {{count}} markers and their count items are deleted too.",
+      "links": "Drawing links on it are deleted, and links to it from other drawings lose their target.",
+      "undo": "The file stays in the drawings folder, and Undo brings the drawing back.",
+      "confirm": "Delete drawing"
+    },
+    "history": {
+      "rename": "rename drawing to {{name}}",
+      "delete": "delete drawing {{name}}"
+    },
     "review": {
       "flag": "Needs review: new revision with another sheet size",
       "banner": "This drawing was replaced by a revision with another sheet size. Check that the markers still sit on their symbols, then mark it as reviewed.",
@@ -253,7 +272,6 @@
       "project": "Project",
       "about": "About"
     },
-    "language": "Language",
     "theme": "Theme",
     "themes": {
       "system": "System",
@@ -267,6 +285,8 @@
     },
     "initials": "Your initials",
     "initialsHint": "Stamped on the notes you write, so checkers' comments stay separate.",
+    "autoAssign": "Assign equipment to the highlighted segment",
+    "autoAssignHint": "Equipment placed on a segment's highlighter stroke or dashed highlight goes to that segment instead of the active one. Moved onto another segment's highlighting, it moves to that segment.",
     "noProject": "Open a project to change its settings.",
     "privacyTitle": "Privacy",
     "privacy": "No project data leaves this browser. The app sends no telemetry, analytics or error reports, and after loading makes no network requests other than fetching its own files.",
@@ -446,14 +466,11 @@
     },
     "page": "p. {{page}}",
     "open": "Open",
-    "remove": "Remove",
-    "removeTitle": "Remove {{name}} from the project?",
-    "removeBody": "Its markers, count items and drawing links are removed too. The file stays in the drawings folder. You can undo this.",
+    "delete": "Delete {{name}}",
     "empty": "No drawings. Import PDF drawings to start the register.",
     "count_one": "{{count}} drawing",
     "count_other": "{{count}} drawings",
     "historyEdit": "Edit drawing",
-    "historyRemove": "Remove drawing",
     "cadPlotHint": "PDF plot of a DWG drawing (DRW-10)",
     "replace": "Replace with a new revision"
   },
@@ -584,6 +601,7 @@
     "selectAll": "Select all markers on the drawing",
     "delete": "Delete selected markers, or the selected link (asks first if it has a target)",
     "deselect": "Cancel drawing and return to Select; press again to clear the selection",
+    "renameDrawing": "Rename the drawing selected in the drawing list",
     "nudge": "Nudge selected markers (Shift: 10 px)",
     "finish": "Finish a dashed line run",
     "addToSelection": "Add to or remove from the selection",

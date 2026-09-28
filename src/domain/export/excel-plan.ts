@@ -56,7 +56,7 @@ export interface ExcelPlan {
   warnings: string[];
 }
 
-/** Column headings and fixed words for the extra sheets, from the UI language. */
+/** Column headings and fixed words for the extra sheets. */
 export interface ExcelLabels {
   notesSheet: string;
   itemsSheet: string;

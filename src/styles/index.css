@@ -188,6 +188,25 @@
   stroke-width: calc(var(--upp) * 2px);
   stroke-dasharray: calc(var(--upp) * 9px) calc(var(--upp) * 5px);
 }
+.mk-trace-halo {
+  fill: none;
+  stroke: #ffffff;
+  stroke-opacity: 0.85;
+  stroke-width: calc(var(--upp) * 5px);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mk-trace {
+  fill: none;
+  stroke-width: calc(var(--upp) * 2.5px);
+  stroke-dasharray: calc(var(--upp) * 8px) calc(var(--upp) * 5px);
+  stroke-linejoin: round;
+}
+.mk-trace-end {
+  r: calc(var(--upp) * 4px);
+  fill: #ffffff;
+  stroke-width: calc(var(--upp) * 2px);
+}
 .mk-draft-double {
   stroke: var(--marker-selection);
   stroke-width: calc(var(--upp) * 2px);

@@ -5,6 +5,23 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Highlighter follows the lines**: dragged roughly along a pipe, a highlighter stroke is drawn to
+  the drawing's own line and follows it round bends, curves and corners, on PDF, DWG and DXF
+  drawings alike. While dragging, the traced path shows as a dashed line with a ring where it
+  holds on to the line; away from lines the stroke follows the pointer. **Follow lines** in the
+  highlighter bar turns it off; `Alt` paints freely and `Shift` still draws a straight stroke.
+- **Rename and delete drawings** from the drawing list: hover a drawing and click **⋯** (or
+  right-click it). **Rename** edits the drawing number in place (`F2` too); **Delete…** asks for
+  confirmation, saying how many markers and count items go with it, and can be undone. The
+  drawing register's remove button is now **Delete** and uses the same confirmation.
+- **English only**: the Arabic interface, the **Language** setting and the right-to-left layout
+  are removed. The interface is English, as exported files always were.
+- **Equipment follows the highlighting**: a circle placed on a segment's highlighter stroke, on a
+  dashed line run or inside a dashed zone goes to that segment instead of the active one, and a
+  circle dragged or nudged onto another segment's highlighting moves to that segment with its
+  item. Pasted and accepted Find similar circles follow the same rule. It is on by default and
+  can be turned off under **Settings › General › Assign equipment to the highlighted segment**
+  (a browser preference, not stored in the project).
 - **ESDV as a double line**: while the ESDV tool (`E`) is in use, the bar under the toolbar
   chooses how the next ESDV is drawn: a red **Circle** round the valve (as before) or a red
   **Double line** across the pipe. Drag the double line across the pipe (`Shift` for 45° steps),

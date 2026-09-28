@@ -81,6 +81,7 @@ export function ShortcutsDialog() {
               [t('shortcuts.nudge'), ['←', '↑', '→', '↓']],
               [t('shortcuts.finish'), ['Enter']],
               [t('shortcuts.deselect'), ['Esc']],
+              [t('shortcuts.renameDrawing'), ['F2']],
             ]}
           />
           <Section

@@ -237,6 +237,7 @@ function ViewerSurface({
   const cursorFrame = useRef<number | null>(null);
   const { view, matrix } = context;
   const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
+  const pixelsRef = useRef<{ key: unknown[]; pixels: ImageData | null } | null>(null);
 
   // Preview layer: repaint on every view change (cheap GPU image draw).
   useEffect(() => {
@@ -319,6 +320,40 @@ function ViewerSurface({
     }
   }
 
+  // The drawing as shown, for tools that follow its linework: the preview,
+  // with the sharp render over it when it matches the view. The page's shadow
+  // is left out, so its edge does not read as a line.
+  const detailCurrent =
+    detailVisible && rendered !== null && sameView(rendered.view, view) && rendered.size === size;
+  const readPixels = useCallback((): ImageData | null => {
+    const key = [matrix, size, preview, detailCurrent ? rendered : null];
+    const cached = pixelsRef.current;
+    if (cached && cached.key.every((part, i) => part === key[i])) return cached.pixels;
+    let pixels: ImageData | null = null;
+    const width = Math.round(size.width);
+    const height = Math.round(size.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx =
+      width > 0 && height > 0 ? canvas.getContext('2d', { willReadFrequently: true }) : null;
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(preview, 0, 0, source.size.width, source.size.height);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (detailCurrent && detailRef.current) {
+        ctx.drawImage(detailRef.current, 0, 0, width, height);
+      }
+      pixels = ctx.getImageData(0, 0, width, height);
+    }
+    pixelsRef.current = { key, pixels };
+    return pixels;
+  }, [matrix, size, preview, source, detailCurrent, rendered]);
+  const toolContext = useMemo(() => ({ ...context, readPixels }), [context, readPixels]);
+
   // Wheel zoom at the cursor (non-passive listener so the page does not scroll).
   useEffect(() => {
     const element = surfaceRef.current;
@@ -338,7 +373,7 @@ function ViewerSurface({
   const toEvent = (event: PointerEvent<HTMLDivElement>): ViewerPointerEvent => {
     const rect = event.currentTarget.getBoundingClientRect();
     const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-    return { screen, point: context.toDrawing(screen), native: event };
+    return { screen, point: toolContext.toDrawing(screen), native: event };
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -353,7 +388,7 @@ function ViewerSurface({
       setPanning(true);
       return;
     }
-    interaction?.onPointerDown?.(toEvent(event), context);
+    interaction?.onPointerDown?.(toEvent(event), toolContext);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -372,7 +407,7 @@ function ViewerSurface({
         onCursor(viewerEvent.point);
       });
     }
-    interaction?.onPointerMove?.(viewerEvent, context);
+    interaction?.onPointerMove?.(viewerEvent, toolContext);
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -381,7 +416,7 @@ function ViewerSurface({
       setPanning(false);
       return;
     }
-    interaction?.onPointerUp?.(toEvent(event), context);
+    interaction?.onPointerUp?.(toEvent(event), toolContext);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -390,7 +425,7 @@ function ViewerSurface({
       event.preventDefault();
       return;
     }
-    if (interaction?.onKeyDown?.(event, context)) return;
+    if (interaction?.onKeyDown?.(event, toolContext)) return;
     // Modified keys belong to the workspace shortcuts (e.g. Alt+← for Back).
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     const step = 80;
@@ -429,9 +464,6 @@ function ViewerSurface({
   return (
     <div
       ref={surfaceRef}
-      // Drawings are laid out left to right whatever the interface language:
-      // canvas text and SVG anchors follow the element's direction (NFR-08).
-      dir="ltr"
       tabIndex={0}
       role="application"
       aria-roledescription="drawing canvas"
@@ -448,7 +480,7 @@ function ViewerSurface({
       onDoubleClick={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-        interaction?.onDoubleClick?.({ screen, point: context.toDrawing(screen) }, context);
+        interaction?.onDoubleClick?.({ screen, point: toolContext.toDrawing(screen) }, toolContext);
       }}
       onKeyDown={onKeyDown}
       onKeyUp={(event) => {

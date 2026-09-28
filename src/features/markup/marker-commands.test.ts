@@ -5,18 +5,21 @@ import { projectToDoc } from '@/domain/model';
 import { doubleLine } from '@/domain/markup/esdv-boundary';
 import { penWidth } from '@/domain/markup/highlighter';
 import { updateItemCommand } from '@/features/count/item-commands';
-import { makePopulatedProject } from '@/test/fixtures';
+import { makePopulatedProject, makeSegment } from '@/test/fixtures';
+import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import {
   assignMarkerIds,
   copySelection,
   deleteMarkerIds,
+  moveMarkerIds,
   pasteClipboard,
   pasteOffset,
   placeEsdv,
   placeMarker,
   placeStroke,
+  placeSuggestedMarkers,
   resetClipboard,
   selectAllOnDrawing,
   selectedMarkerIds,
@@ -43,6 +46,7 @@ describe('marker commands', () => {
   afterEach(() => {
     project().close();
     ui().reset();
+    usePreferences.setState({ autoAssignSegment: true });
   });
 
   it('places a marker in the active segment and selects it (ANN-03, SEG-06)', () => {
@@ -194,6 +198,64 @@ describe('marker commands', () => {
     // One stroke painted, one step to take it back.
     project().undo();
     expect(ids.some((id) => project().doc!.markers[id])).toBe(false);
+  });
+
+  describe('equipment on a highlighted segment (SEG-06)', () => {
+    let other: string;
+    /** A second segment's pipe, highlighted along y = 600. */
+    beforeEach(() => {
+      const segment = makeSegment({ label: 'IS-02', colour: 2 });
+      project().apply('add segment', (draft) => {
+        draft.segments[segment.id] = segment;
+        draft.segmentOrder.push(segment.id);
+      });
+      other = segment.id;
+      ui().setActiveSegment(other);
+      placeStroke(drawingId, {
+        type: 'stroke',
+        points: [
+          [0, 600],
+          [400, 600],
+        ],
+        width: 10,
+      });
+      ui().setActiveSegment(segmentId);
+    });
+
+    const onPipe = { type: 'circle' as const, cx: 200, cy: 602, r: 6 };
+
+    it('places equipment in the segment it is placed on, not the active one', () => {
+      const id = placeMarker(drawingId, onPipe)!;
+      expect(project().doc!.markers[id]!.segmentId).toBe(other);
+      expect(itemForMarker(project().doc!, id)?.segmentId).toBe(other);
+      // Off the highlighting it goes to the active segment.
+      const off = placeMarker(drawingId, { ...onPipe, cy: 700 })!;
+      expect(project().doc!.markers[off]!.segmentId).toBe(segmentId);
+      const [accepted] = placeSuggestedMarkers(drawingId, [onPipe], {
+        equipmentTypeId: null,
+        actuation: null,
+      });
+      expect(project().doc!.markers[accepted!]!.segmentId).toBe(other);
+    });
+
+    it('moves equipment dragged or nudged onto the highlighting to its segment', () => {
+      const id = placeMarker(drawingId, { ...onPipe, cy: 700 })!;
+      const steps = project().past.length;
+      moveMarkerIds([id], 0, -50, { coalesceKey: 'nudge' });
+      moveMarkerIds([id], 0, -48, { coalesceKey: 'nudge' });
+      expect(project().doc!.markers[id]!.segmentId).toBe(other);
+      expect(project().past).toHaveLength(steps + 1);
+      project().undo();
+      expect(project().doc!.markers[id]!.segmentId).toBe(segmentId);
+    });
+
+    it('uses the active segment when the setting is off', () => {
+      usePreferences.getState().setAutoAssignSegment(false);
+      const id = placeMarker(drawingId, onPipe)!;
+      expect(project().doc!.markers[id]!.segmentId).toBe(segmentId);
+      moveMarkerIds([id], 1, 0);
+      expect(project().doc!.markers[id]!.segmentId).toBe(segmentId);
+    });
   });
 
   it('places unassigned markers when there is no active segment', () => {

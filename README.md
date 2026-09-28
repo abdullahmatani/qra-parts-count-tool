@@ -50,7 +50,7 @@ or exports) ever leaves the browser.
 | Notes         | Formatted segment notes with timestamps and author initials                                                                                                                                                                       | NTE     |
 | Drawing links | Hotspots that jump between drawings, with Back history, suggested from off-page connector text; never exported                                                                                                                    | LNK     |
 | Export        | Pre-export checks; fill the client's Excel template (four layout modes, one-step mapping for the A2.1 parts count sheet) touching only its input cells; annotated vector PDFs with legend and stamp; CSV item list; export log    | EXP     |
-| Interface     | English or Arabic with a right-to-left layout (exported files stay in English); light and dark themes; keyboard shortcuts                                                                                                         | NFR-08  |
+| Interface     | English; light and dark themes; keyboard shortcuts                                                                                                                                                                                | NFR-08  |
 
 ## How it works
 
@@ -92,7 +92,7 @@ autosaves:
 | CAD viewing  | Own DXF parser; LibreDWG (WebAssembly) for native DWG, in an isolated worker; canvas renderer                                                                         |
 | Excel        | Own XML-level writer: only the mapped input cells change, so formulas, protection, links and named ranges stay intact; ExcelJS reads templates for the mapper preview |
 | PDF export   | pdf-lib (draws markers as vector content onto copies of the originals)                                                                                                |
-| i18n         | i18next; English and Arabic (right to left); exported files are always written in English                                                                             |
+| i18n         | i18next; English only, with every interface string in one catalogue                                                                                                   |
 | Tests        | Vitest + React Testing Library (unit), Playwright on Chromium (end-to-end, including offline)                                                                         |
 
 ## Getting started
@@ -384,8 +384,8 @@ Progress against the [roadmap](docs/ROADMAP.md). The detailed per-task status is
 | 1.0.0   | First production release                        | Done ³ |
 | 1.1.0   | Productivity features                           | Done   |
 | 1.2.0   | Revisions, search and portability               | Done   |
-| 1.3.0   | Navigation aids                                 | Done ⁴ |
-| 2.0.0   | Assisted counting                               | Done ⁵ |
+| 1.3.0   | Navigation aids                                 | Done   |
+| 2.0.0   | Assisted counting                               | Done ⁴ |
 
 ¹ The DWG reader is licensed under the GPL, and the app with it; the reader choice is still to be
 re-run on the client's sample drawings.
@@ -397,10 +397,7 @@ the yellow input cells written, results recalculated.
 connecting the repository to Cloudflare once for the live site (#47); the synthetic 300-drawing
 test, the zipped site and the Cloudflare deployment setup are done.
 
-⁴ The Arabic interface text is a draft translation. It needs review by a native-speaking
-process-safety engineer before it is used on a client study.
-
-⁵ Symbol suggestions match by example (no trained model). A trained detector needs a labelled
+⁴ Symbol suggestions match by example (no trained model). A trained detector needs a labelled
 set of the client's drawings; see [the research note](docs/spikes/symbol-detection.md).
 
 ## Licence
@@ -424,7 +421,7 @@ Components and their licences are listed in `THIRD_PARTY_LICENSES.txt` in every 
 - Keep TypeScript `strict` clean and ESLint at zero warnings. Format with Prettier.
 - Put pure logic in `src/domain/` with unit tests, and keep React components thin.
 - Reference requirement IDs (e.g. `CNT-05`) in tests and commit messages where they apply.
-- Put every user-facing string in `src/i18n/locales/en.json` (NFR-08), and use logical CSS
-  properties (`ms-`/`me-`, `ps-`/`pe-`) so the layout can mirror for RTL.
+- Put every user-facing string in `src/i18n/locales/en.json` (NFR-08). The interface is English
+  only.
 - Never add a runtime dependency that makes network requests or loads from a CDN.
 - Run `pnpm verify` before pushing.

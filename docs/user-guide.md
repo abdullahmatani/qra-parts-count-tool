@@ -14,10 +14,6 @@ a folder on your computer and are never uploaded anywhere.
   cannot, a project sent as a `.zip` opens read-only (section 11).
 - Open the app once while online. After that it works with no network: the header shows
   **Offline ready** when everything is cached.
-- **Language**: Settings › General › Language switches the interface between English and Arabic.
-  Arabic lays the interface out right to left; drawings, the template preview and fields such as
-  tags and file names stay left to right. Exported workbooks, CSV files and PDFs are always in
-  English, the language of client templates. The Arabic text is a draft awaiting review.
 - Make an empty folder for each study, for example on a project share. This is the **working
   directory**: the project file, the drawings, the exports and automatic backups all live in it, so
   you can zip it, archive it or hand it to a checker.
@@ -71,6 +67,17 @@ Click **Import drawings** (or drop files on the drawing list):
 The app reads the drawing number, title, sheet and revision from the title block where it can. Check
 and correct them in **Project › Drawing register**: they appear in the count, the stamps and the
 export file names.
+
+**Rename or delete a drawing.** Hover a drawing in the drawing list and click **⋯** (or right-click
+the drawing):
+
+- **Rename** edits its drawing number in place; `Enter` keeps the new name, `Esc` keeps the old
+  one. `F2` renames the drawing selected in the list. The name changes wherever the drawing is
+  shown, and in the stamps and export file names. The file in `drawings/` keeps its name.
+- **Delete…** asks first, and says what goes with the drawing: its markers and their count items,
+  and the drawing links on it (links to it from other drawings lose their target). The drawing is
+  taken off its segments. The file stays in `drawings/`, and `Ctrl+Z` brings the drawing back.
+  The drawing register has the same **Delete** button on each row.
 
 **New revisions.** When a drawing is reissued, use **Replace with a new revision** on its row in the
 drawing register and choose the new file (and page or layout). The drawing keeps its markers, items,
@@ -128,12 +135,31 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    pen: **Fine**, **Medium** or **Broad**. Highlights are not counted. Select a stroke to move it,
    change its pen, move it to another segment or delete it; `Ctrl+Z` takes back the last stroke.
    Strokes appear on the annotated PDFs.
+
+   The Highlighter follows the drawn lines. Drag roughly along a pipe: the stroke is drawn to the
+   nearest line on the drawing and follows it round bends, curves and corners, even where your
+   hand cuts across. While you drag, the path it has found shows as a **dashed line**, with a ring
+   where it holds on to the line; let go and it becomes the stroke. Away from any line, the stroke
+   follows the pointer. It works on PDF, DWG and DXF drawings alike, on the lines you see, so zoom
+   in where lines run close together. Turn it off with **Follow lines** in the bar, or hold `Alt`
+   to paint freely; a `Shift` stroke is always straight.
+
 5. ESDVs are the boundaries of the highlighting. An ESDV placed on a highlighter stroke cuts it in
    two, so the paint stops at the ESDV on each side; select the piece on the far side and move it
    to its own segment. A stroke painted across an ESDV is cut the same way. The Highlighter is
    drawn to ESDVs like a magnet: near one, a red ring shows where the stroke will snap, and a
    stroke begun (or let go) there starts (or ends) at the ESDV. Hold `Alt` to paint without the
    magnet.
+6. Equipment follows the highlighting. A circle placed on a segment's highlighting goes to that
+   segment, whichever segment is active: on a highlighter stroke (its centre on the paint), on a
+   dashed line run (its ring touching the line), or inside a dashed zone (a rectangle, or dashed
+   points clicked round an area back to the first). Placed anywhere else, it goes to the active
+   segment. Drag or nudge a circle onto another segment's highlighting and it moves to that
+   segment with its item; moved off the highlighting, or along the same segment's highlighting, it
+   keeps its segment. Where highlights overlap, strokes and line runs win over zones, then the
+   nearest stroke or the smallest zone. Pasted and accepted **Find similar** circles follow the
+   same rule. Turn it off under **Settings › General › Assign equipment to the highlighted
+   segment**.
 
 To change the segment of markers, select them and pick another segment in the inspector. To reshape
 segments as the study firms up:
