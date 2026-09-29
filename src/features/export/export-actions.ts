@@ -71,6 +71,7 @@ export function pdfLabels(): PdfLabels {
   return {
     legendTitle: tFile('export.pdf.legend'),
     esdv: tFile('export.pdf.esdv'),
+    endFlange: tFile('export.pdf.endFlange'),
     unassigned: tFile('export.pdf.unassigned'),
     warning: tFile('export.pdf.warning'),
     drawing: (drawing) => {

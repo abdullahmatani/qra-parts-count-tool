@@ -497,7 +497,8 @@
             "circle",
             "dashedHighlight",
             "highlighter",
-            "doubleLine"
+            "doubleLine",
+            "endFlange"
           ]
         },
         "geometry": {
@@ -757,6 +758,17 @@
               "type": "null"
             }
           ]
+        },
+        "endFlange": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EndFlangeData"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -765,7 +777,7 @@
         "shape",
         "geometry"
       ],
-      "description": "A circle (drawn as a ring, dot, square or free-form outline), dashed highlight, highlighter stroke or ESDV double line in drawing coordinates (ANN-01..03)."
+      "description": "A circle (drawn as a ring, dot, square or free-form outline), dashed highlight, highlighter stroke, ESDV double line or end flange in drawing coordinates (ANN-01..03)."
     },
     "EsdvData": {
       "type": "object",
@@ -840,6 +852,26 @@
         }
       },
       "description": "ESDV tag, size, adjoining segments and boundary rule override (SEG-01, SEG-08)."
+    },
+    "EndFlangeData": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        },
+        "destination": {
+          "default": "closedDrain",
+          "type": "string",
+          "enum": [
+            "closedDrain",
+            "flare",
+            "other"
+          ]
+        }
+      },
+      "description": "An end flange: where an isolatable segment ends at a closed drain, the flare or another end point."
     },
     "CountItem": {
       "type": "object",

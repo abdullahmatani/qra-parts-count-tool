@@ -85,6 +85,7 @@ export function makeCircleMarker(drawingId: string, overrides: Partial<Marker> =
     geometry: { type: 'circle', cx: 100, cy: 100, r: 12 },
     style: { labelOffset: null, symbol: 'circle', outline: null },
     esdv: null,
+    endFlange: null,
     ...overrides,
   };
 }

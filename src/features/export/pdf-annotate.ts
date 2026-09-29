@@ -45,12 +45,19 @@ import {
   type PDFPage,
 } from 'pdf-lib';
 import {
+  doubleLineBand,
   doubleLineStrokes,
   doubleLineTop,
   symbolPolygon,
   type SymbolStyle,
 } from '@/domain/markup/geometry';
-import { DOT_ALPHA, HIGHLIGHTER_ALPHA, hexToRgb01, MARKER_WARNING } from '@/domain/palette';
+import {
+  DOT_ALPHA,
+  END_FLANGE_ALPHA,
+  HIGHLIGHTER_ALPHA,
+  hexToRgb01,
+  MARKER_WARNING,
+} from '@/domain/palette';
 import type { Overlay } from '@/domain/export/pdf-plan';
 import type { MarkerGeometry, Size2D } from '@/domain/schema/types';
 import type { CadColorMode } from '@/store/preferences';
@@ -120,9 +127,21 @@ function circlePath(ops: Ops, cx: number, cy: number, r: number): void {
   );
 }
 
-/** A marker's outline; circles take their symbol's shape, as on screen. */
-function geometryPath(ops: Ops, g: MarkerGeometry, style?: SymbolStyle): void {
-  const polygon = g.type === 'circle' ? symbolPolygon(g, style) : null;
+/**
+ * A marker's outline; circles take their symbol's shape, and an end flange
+ * its bar, as on screen.
+ */
+function geometryPath(
+  ops: Ops,
+  g: MarkerGeometry,
+  style?: SymbolStyle & { endFlange?: boolean },
+): void {
+  const polygon =
+    g.type === 'circle'
+      ? symbolPolygon(g, style)
+      : g.type === 'doubleLine' && style?.endFlange
+        ? doubleLineBand(g)
+        : null;
   if (polygon) {
     polygon.forEach(({ x, y }, i) => ops.push(i === 0 ? moveTo(x, y) : lineTo(x, y)));
     ops.push(closePath());
@@ -266,6 +285,7 @@ export function drawOverlay(
   ];
   const faint = alphaState(page, 0.08);
   const dotFill = alphaState(page, DOT_ALPHA);
+  const barFill = alphaState(page, END_FLANGE_ALPHA);
   const highlighter = alphaState(page, 1, HIGHLIGHTER_ALPHA);
   const run = alphaState(page, 1, 0.18);
   const solid = alphaState(page, 1, 1);
@@ -324,16 +344,20 @@ export function drawOverlay(
       geometryPath(ops, m.geometry);
       ops.push(stroke(), setLineCap(LineCapStyle.Butt));
     }
-    if (m.geometry.type !== 'polyline' && m.geometry.type !== 'doubleLine') {
-      ops.push(setGraphicsState(dot ? dotFill : faint), setFillingRgbColor(r, g, b));
+    if (m.geometry.type !== 'polyline' && (m.geometry.type !== 'doubleLine' || m.endFlange)) {
+      ops.push(
+        setGraphicsState(m.endFlange ? barFill : dot ? dotFill : faint),
+        setFillingRgbColor(r, g, b),
+      );
       geometryPath(ops, m.geometry, m);
       ops.push(fill());
     }
-    // An ESDV double line is solid, and lighter than a ring so its gap shows.
+    // An ESDV double line is solid, and lighter than a ring so its gap shows;
+    // an end flange's bar is outlined as thinly.
     const line = m.geometry.type === 'doubleLine';
     const circle = m.geometry.type === 'circle';
     const dash = circle ? m.dash.map((d) => d * k) : line ? [] : [6 * k, 3.5 * k];
-    const width = line ? 1.5 : m.esdv ? 2.2 : dot ? 0.8 : circle ? 1.5 : 1.8;
+    const width = m.endFlange ? 1 : line ? 1.5 : m.esdv ? 2.2 : dot ? 0.8 : circle ? 1.5 : 1.8;
     ops.push(
       setGraphicsState(solid),
       setStrokingRgbColor(r, g, b),
@@ -399,7 +423,7 @@ export function drawOverlay(
       const sx = margin + pad + 5 * k;
       const [r, g, b] = colour(entry.colour);
       const width =
-        entry.kind === 'esdvLine'
+        entry.kind === 'esdvLine' || entry.kind === 'endFlange'
           ? 1.4
           : entry.kind === 'esdv'
             ? 2
@@ -418,6 +442,15 @@ export function drawOverlay(
         for (const x of [sx - 1.3 * k, sx + 1.3 * k]) {
           ops.push(moveTo(x, cy - 3.5 * k), lineTo(x, cy + 3.5 * k));
         }
+      } else if (entry.kind === 'endFlange') {
+        // The bar, at the end of a short pipe.
+        ops.push(
+          setFillingRgbColor(r, g, b),
+          rectangle(sx - 1.2 * k, cy - 3.5 * k, 2.4 * k, 7 * k),
+          fill(),
+          moveTo(sx - 4.5 * k, cy),
+          lineTo(sx - 1.2 * k, cy),
+        );
       } else {
         circlePath(ops, sx, cy, 3.5 * k);
       }

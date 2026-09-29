@@ -10,6 +10,7 @@ import { itemForMarker } from '@/domain/actions/items';
 import { updateItemCommand } from '@/features/count/item-commands';
 import { goBack, requestDeleteLink } from '@/features/links/link-commands';
 import { useSearchStore } from '@/features/search/search-store';
+import { toggleAutoTrace } from '@/features/trace/auto-trace-actions';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -41,7 +42,8 @@ export type ShortcutAction =
   | { kind: 'escape' }
   | { kind: 'equipmentType'; typeId: string }
   | { kind: 'back' }
-  | { kind: 'find' };
+  | { kind: 'find' }
+  | { kind: 'autoTrace' };
 
 /**
  * Maps a key press to a workspace action. `typeKeys` maps equipment type
@@ -69,7 +71,8 @@ export function shortcutFor(
   const typeId = typeKeys.get(key);
   if (typeId) return { kind: 'equipmentType', typeId };
   const tool = TOOLS.find((def) => def.shortcut.toLowerCase() === key);
-  return tool ? { kind: 'tool', tool: tool.tool } : null;
+  if (tool) return { kind: 'tool', tool: tool.tool };
+  return key === 't' ? { kind: 'autoTrace' } : null;
 }
 
 const t = i18n.t.bind(i18n);
@@ -97,6 +100,9 @@ export function runShortcut(action: ShortcutAction): boolean {
     case 'find':
       useSearchStore.getState().openFind();
       return true;
+    case 'autoTrace':
+      if (project.readOnly) return false;
+      return toggleAutoTrace();
     case 'copy': {
       const count = copySelection();
       if (count) toast(t('markup.copied', { count }), { duration: 1500 });

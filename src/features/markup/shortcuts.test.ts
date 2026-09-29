@@ -18,6 +18,8 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
     expect(shortcutFor(key('c'))).toEqual({ kind: 'tool', tool: 'circle' });
     expect(shortcutFor(key('D'))).toEqual({ kind: 'tool', tool: 'dashed' });
     expect(shortcutFor(key('v'))).toEqual({ kind: 'tool', tool: 'select' });
+    expect(shortcutFor(key('f'))).toEqual({ kind: 'tool', tool: 'endFlange' });
+    expect(shortcutFor(key('t'))).toEqual({ kind: 'autoTrace' });
     expect(shortcutFor(key('x'))).toBeNull();
   });
 

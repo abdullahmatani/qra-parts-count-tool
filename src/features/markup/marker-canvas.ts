@@ -6,8 +6,15 @@
  * labels are drawn in screen space so they stay upright and a constant size.
  */
 import type { MarkerGeometry, MarkerSymbol, Point } from '@/domain/schema/types';
-import { DOT_ALPHA, HIGHLIGHTER_ALPHA, MARKER_SELECTION, MARKER_WARNING } from '@/domain/palette';
 import {
+  DOT_ALPHA,
+  END_FLANGE_ALPHA,
+  HIGHLIGHTER_ALPHA,
+  MARKER_SELECTION,
+  MARKER_WARNING,
+} from '@/domain/palette';
+import {
+  doubleLineBand,
   doubleLineStrokes,
   doubleLineTop,
   symbolPolygon,
@@ -28,6 +35,8 @@ export interface MarkerEntry {
   highlighted: boolean;
   warning: boolean;
   esdv: boolean;
+  /** An end flange: its double line geometry is drawn as a solid bar across the pipe. */
+  endFlange: boolean;
   /** How a circle is drawn: a ring, a filled dot, a square or a free-form outline. */
   symbol: MarkerSymbol;
   /** A free-form symbol's outline, relative to the circle (see MarkerStyle). */
@@ -93,6 +102,13 @@ function tracePath(ctx: CanvasRenderingContext2D, [entry, g]: Drawn): void {
       break;
     }
     case 'doubleLine':
+      if (entry.endFlange) {
+        doubleLineBand(g).forEach((p, i) =>
+          i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y),
+        );
+        ctx.closePath();
+        break;
+      }
       for (const [a, b] of doubleLineStrokes(g)) {
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
@@ -216,7 +232,8 @@ export function drawMarkers(
   const rects = drawn.filter(([, g]) => g.type === 'rect');
   const runs = drawn.filter(([, g]) => g.type === 'polyline');
   const strokes = drawn.filter(([, g]) => g.type === 'stroke');
-  const doubleLines = drawn.filter(([, g]) => g.type === 'doubleLine');
+  const doubleLines = drawn.filter(([e, g]) => g.type === 'doubleLine' && !e.endFlange);
+  const endFlanges = drawn.filter(([e, g]) => g.type === 'doubleLine' && e.endFlange);
 
   // Halos behind the markers: count-table highlight, selection, hover and
   // warnings (amber outline).
@@ -295,6 +312,11 @@ export function drawMarkers(
   // ESDV double lines across the pipe, a little lighter than a ring so the
   // gap between them shows (SEG-01).
   for (const group of groupBy(doubleLines, () => 2.5)) {
+    strokeAll(ctx, group.shapes, group.colour, group.width * upp);
+  }
+  // End flanges: a solid bar across the pipe where the segment ends.
+  for (const group of groupBy(endFlanges, () => 1.5)) {
+    fillAll(ctx, group.shapes, group.colour, END_FLANGE_ALPHA);
     strokeAll(ctx, group.shapes, group.colour, group.width * upp);
   }
   ctx.setLineDash([]);

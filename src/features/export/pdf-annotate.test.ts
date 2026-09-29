@@ -61,6 +61,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       dash: [],
       label,
       esdv: false,
+      endFlange: false,
       warning: false,
     },
     {
@@ -71,6 +72,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       dash: [],
       label: 'ESDV-1',
       esdv: true,
+      endFlange: false,
       warning: true,
     },
     // The other equipment shapes, unlabelled so the label checks stay exact.
@@ -82,6 +84,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       dash: [],
       label: '',
       esdv: false,
+      endFlange: false,
       warning: i === 1,
     })),
     // Highlighter strokes, one flagged (unassigned).
@@ -100,6 +103,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       dash: [],
       label: '',
       esdv: false,
+      endFlange: false,
       warning,
     })),
     // An ESDV drawn as a double line across the pipe.
@@ -118,6 +122,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       dash: [],
       label: 'ESDV-2',
       esdv: true,
+      endFlange: false,
       warning: false,
     },
     {
@@ -133,6 +138,26 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
       dash: [4, 2],
       label: '',
       esdv: false,
+      endFlange: false,
+      warning: false,
+    },
+    // An end flange: a bar across the pipe where the segment ends.
+    {
+      geometry: {
+        type: 'doubleLine',
+        points: [
+          [x + 150, y - 12],
+          [x + 150, y + 12],
+        ],
+        gap: 3,
+      },
+      symbol: 'circle',
+      outline: null,
+      colour: '#16a34a',
+      dash: [],
+      label: '',
+      esdv: false,
+      endFlange: true,
       warning: false,
     },
   ],
@@ -141,6 +166,7 @@ const overlay = (label: string, x: number, y: number): Overlay => ({
     { label: 'IS-01 Gas', colour: '#dc2626', dash: [], kind: 'circle' },
     { label: 'ESDV', colour: '#2563eb', dash: [], kind: 'esdv' },
     { label: 'ESDV', colour: '#2563eb', dash: [], kind: 'esdvLine' },
+    { label: 'End flange', colour: '#64748b', dash: [], kind: 'endFlange' },
   ],
   stamp: ['Plant A QRA', 'PEFS-1001 rev B', 'Count rev 0', '2026-09-23'],
 });

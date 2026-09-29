@@ -100,7 +100,7 @@ export const MarkerList = memo(function MarkerList({
   return (
     <ul className="sr-only" aria-label={t('markup.layer')} data-testid="marker-list">
       {entries.map((entry) => {
-        const shape = entry.esdv ? 'esdv' : entry.geometry.type;
+        const shape = entry.esdv ? 'esdv' : entry.endFlange ? 'endFlange' : entry.geometry.type;
         const kind = entry.esdv || entry.geometry.type !== 'circle' ? shape : entry.symbol;
         return (
           <li

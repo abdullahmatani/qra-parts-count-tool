@@ -340,6 +340,7 @@ describe('marker commands', () => {
           geometry: { type: 'circle' as const, cx: 10, cy: 10, r: 2 },
           style: { labelOffset: null, symbol: 'circle' as const, outline: null },
           esdv: null,
+          endFlange: null,
         },
       ],
       items: [],

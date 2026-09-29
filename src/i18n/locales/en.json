@@ -57,6 +57,7 @@
     "highlighter": "Highlighter",
     "link": "Drawing link",
     "esdv": "ESDV",
+    "endFlange": "End flange",
     "stamp": "Stamp",
     "undo": "Undo",
     "redo": "Redo",
@@ -102,7 +103,7 @@
       "medium": "Medium",
       "broad": "Broad"
     },
-    "hint": "Drag along the segment's pipework: the stroke follows the drawn line (dashed until you let go). Shift draws a straight stroke; Alt paints freely. Strokes snap to ESDVs and stop at them.",
+    "hint": "Drag along the segment's pipework: the stroke follows the drawn line (dashed until you let go). Shift draws a straight stroke; Alt paints freely. Strokes snap to ESDVs and end flanges and stop at them.",
     "followLines": "Follow lines",
     "followLinesHint": "Strokes follow the drawing's lines round bends and corners, shown dashed until you let go. Hold Alt to paint freely."
   },
@@ -111,9 +112,46 @@
     "shape": "Shape",
     "hints": {
       "circle": "Click an ESD valve to ring it, or drag out the size of the ring.",
-      "doubleLine": "Drag across the pipe, or click a highlighter stroke to cross it. Hold Shift for 45° steps."
+      "doubleLine": "Drag across the pipe, or click on it (or on a highlighter stroke) to cross it. Hold Shift for 45° steps."
     },
     "split": "An ESDV cuts the highlighter strokes it crosses."
+  },
+  "autoTrace": {
+    "button": "Auto trace",
+    "hint": "Highlights the active segment's pipework out to its ESDVs and end flanges, and up to the drawing links of off-page connectors. While it is on, click any pipe to trace it too.",
+    "needsBoundary": "Place an ESDV, an end flange or a drawing link on this drawing first: the trace runs out to them.",
+    "armed": "Auto trace: click a pipe to highlight it out to its ESDVs and end flanges. Esc to stop.",
+    "tracing": "Tracing…",
+    "history": "auto trace {{segment}}",
+    "historyUnassigned": "auto trace",
+    "ends": {
+      "esdv_one": "{{count}} ESDV",
+      "esdv_other": "{{count}} ESDVs",
+      "endFlange_one": "{{count}} end flange",
+      "endFlange_other": "{{count}} end flanges",
+      "link_one": "{{count}} off-page connector",
+      "link_other": "{{count}} off-page connectors",
+      "none": "the ends of its lines"
+    },
+    "done": "Highlighted {{segment}} out to {{ends}}.",
+    "doneUnassigned": "Highlighted the pipe out to {{ends}}. It is in no segment: choose one in the panel.",
+    "continues": "It carries on on {{drawings}}.",
+    "open": "Open {{drawing}}",
+    "already": "That pipework is highlighted already.",
+    "undecided": "The dashed pipe could be {{segment}} or the segment next to it: click it to add it to {{segment}}.",
+    "nothing": "No pipe of {{segment}} leaves its ESDVs or end flanges on this drawing. Click one of its pipes to trace it.",
+    "noBoundaries": "{{segment}} has no ESDV or end flange on this drawing yet. Click one of its pipes to trace it.",
+    "clickPipe": "Click a pipe to highlight it out to its ESDVs and end flanges. Choose a segment first to highlight it in the segment's colour.",
+    "noLine": "No drawn line there: click on a pipe.",
+    "failed": "The drawing could not be traced: {{message}}",
+    "errors": {
+      "render": "the drawing could not be rendered."
+    }
+  },
+  "endFlangeBar": {
+    "label": "End flange options",
+    "destination": "Goes to",
+    "hint": "Where the segment ends at a closed drain or the flare: drag across the pipe, or click on it to put the bar square across it. Hold Shift for 45° steps."
   },
   "drawings": {
     "title": "Drawings",
@@ -205,6 +243,8 @@
       "esdvsHint": "Set on each ESDV: its upstream and downstream segments.",
       "esdvsFew_one": "Only {{count}} bounding ESDV: a segment usually has two or more.",
       "esdvsFew_other": "Only {{count}} bounding ESDVs: a segment usually has two or more.",
+      "boundariesFew_one": "Only {{count}} segment end: a segment usually ends at two or more ESDVs or end flanges.",
+      "boundariesFew_other": "Only {{count}} segment ends: a segment usually ends at two or more ESDVs or end flanges.",
       "esdvSide": {
         "upstream": "flows out through it",
         "downstream": "flows in through it"
@@ -504,7 +544,9 @@
       "assign_one": "move marker to {{segment}}",
       "assign_other": "move {{count}} markers to {{segment}}",
       "addEsdv": "add ESDV",
-      "editEsdv": "edit ESDV"
+      "editEsdv": "edit ESDV",
+      "addEndFlange": "add end flange",
+      "editEndFlange": "edit end flange"
     },
     "shapes": {
       "circle": "Circle",
@@ -515,7 +557,8 @@
       "polyline": "Dashed line run",
       "stroke": "Highlighter stroke",
       "doubleLine": "Double line",
-      "esdv": "ESDV"
+      "esdv": "ESDV",
+      "endFlange": "End flange"
     },
     "unassigned": "Unassigned",
     "noSegment": "No segment",
@@ -558,6 +601,7 @@
     "freeformHint": "Drag around a symbol to draw a free-form outline.",
     "highlighterHint": "Drag over the pipework and equipment to highlight them.",
     "esdvSplit": "The highlighter is cut at the ESDV: select a piece to move it to another segment.",
+    "endFlangeSplit": "The highlighter is cut at the end flange.",
     "filters": {
       "button": "Marker filters",
       "segments": "Segments",
@@ -586,6 +630,17 @@
       "countedIn": "This ESDV is counted in: {{segments}}",
       "countedNowhere": "This ESDV is not counted in any segment.",
       "none": "None"
+    },
+    "endFlange": {
+      "tag": "Tag",
+      "tagPlaceholder": "e.g. 2\"-CD-1001 or FL-101",
+      "destination": "Goes to",
+      "destinations": {
+        "closedDrain": "Closed drain",
+        "flare": "Flare",
+        "other": "Other end point"
+      },
+      "about": "The segment ends here. The highlighter and the auto trace stop at it; it is not counted (circle the flange to count it)."
     }
   },
   "shortcuts": {
@@ -615,7 +670,8 @@
     "space": "Space",
     "types": "Equipment types (sets the selected item and the next one)",
     "back": "Back after following a drawing link",
-    "find": "Find text on the drawing"
+    "find": "Find text on the drawing",
+    "autoTrace": "Auto trace: highlight the segment out to its ESDVs and end flanges, then click pipes to trace them"
   },
   "count": {
     "history": {
@@ -938,6 +994,7 @@
     "pdf": {
       "legend": "Legend",
       "esdv": "ESDV (segment boundary)",
+      "endFlange": "End flange (segment end at closed drain, flare or other)",
       "unassigned": "Not in a segment",
       "warning": "Needs attention",
       "rev": "rev {{rev}}",

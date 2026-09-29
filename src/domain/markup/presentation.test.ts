@@ -5,6 +5,7 @@ import {
   NO_FILTERS,
   isMarkerVisible,
   itemsByMarker,
+  markerKind,
   markerLabel,
   markerPaint,
 } from './presentation';
@@ -49,6 +50,28 @@ describe('labels (ANN-05)', () => {
     expect(markerLabel(marker, makeItem(marker, 7))).toBe('#7');
     expect(markerLabel(marker, makeItem(marker, 7, { tag: 'HV-101' }))).toBe('HV-101');
     expect(markerLabel(makeCircleMarker('d', { esdv }), undefined)).toBe('ESDV-101');
+  });
+
+  it('labels an end flange with its tag, or where it goes', () => {
+    const flange = (endFlange: { tag: string; destination: 'closedDrain' | 'flare' | 'other' }) =>
+      makeCircleMarker('d', {
+        shape: 'endFlange',
+        geometry: {
+          type: 'doubleLine',
+          points: [
+            [0, 0],
+            [0, 10],
+          ],
+          gap: 2,
+        },
+        endFlange,
+      });
+    expect(markerLabel(flange({ tag: '', destination: 'closedDrain' }), undefined)).toBe(
+      'To closed drain',
+    );
+    expect(markerLabel(flange({ tag: '', destination: 'flare' }), undefined)).toBe('To flare');
+    expect(markerLabel(flange({ tag: 'FL-2', destination: 'flare' }), undefined)).toBe('FL-2');
+    expect(markerKind(flange({ tag: '', destination: 'other' }))).toBe('endFlange');
   });
 });
 

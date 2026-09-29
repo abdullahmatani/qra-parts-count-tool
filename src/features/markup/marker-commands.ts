@@ -7,7 +7,7 @@ import {
   addMarker,
   assignMarkers,
   copyMarkers,
-  cutStrokesAtEsdv,
+  cutStrokesAtBoundary,
   deleteMarkers,
   moveMarkers,
   newMarkerStyle,
@@ -15,13 +15,16 @@ import {
   setHighlighterPen,
   setMarkerGeometry,
   setMarkerSymbol,
-  strokeAtEsdvs,
+  strokeAtBoundaries,
+  updateEndFlange,
+  type EndFlangePatch,
   type MarkerClip,
 } from '@/domain/actions/markers';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { Draft } from 'immer';
 import { addItem, nextTag, type ItemDefaults } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
+import { newEndFlangeData } from '@/domain/end-flange';
 import { newEsdvData } from '@/domain/esdv';
 import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
 import { highlightsOn, segmentUnder } from '@/domain/markup/highlighted-segment';
@@ -30,6 +33,7 @@ import type { ProjectDoc } from '@/domain/model';
 import type {
   CircleGeometry,
   DoubleLineGeometry,
+  EndFlangeDestination,
   Marker,
   MarkerGeometry,
   MarkerStyle,
@@ -106,16 +110,61 @@ export function placeEsdv(
     geometry,
     style: newMarkerStyle(),
     esdv: newEsdvData(doc.settings.units.size),
+    endFlange: null,
   };
   let split = false;
   const done = apply(t('markup.history.addEsdv'), (draft) => {
     addMarker(draft, marker);
-    split = cutStrokesAtEsdv(draft, marker.id).length > 0;
+    split = cutStrokesAtBoundary(draft, marker.id).length > 0;
   });
   if (!done) return null;
   useUiStore.getState().requestEdit(marker.id);
   if (split) toast(t('markup.esdvSplit'), { duration: 4000 });
   return marker.id;
+}
+
+/**
+ * Places an end flange: a bar across the pipe where a segment ends at a
+ * closed drain, the flare or another end point that is not an ESDV. It goes
+ * to the active segment and opens for editing. Like an ESDV, it cuts the
+ * highlighter strokes that run through it, in the same undo step.
+ */
+export function placeEndFlange(
+  drawingId: string,
+  geometry: DoubleLineGeometry,
+  destination: EndFlangeDestination,
+): string | null {
+  const doc = useProjectStore.getState().doc;
+  if (!doc?.drawings[drawingId]) return null;
+  const marker: Marker = {
+    id: newId('mkr'),
+    drawingId,
+    segmentId: activeSegmentIn(doc),
+    shape: 'endFlange',
+    geometry,
+    style: newMarkerStyle(),
+    esdv: null,
+    endFlange: newEndFlangeData(destination),
+  };
+  let split = false;
+  const done = apply(t('markup.history.addEndFlange'), (draft) => {
+    addMarker(draft, marker);
+    split = cutStrokesAtBoundary(draft, marker.id).length > 0;
+  });
+  if (!done) return null;
+  useUiStore.getState().requestEdit(marker.id);
+  if (split) toast(t('markup.endFlangeSplit'), { duration: 4000 });
+  return marker.id;
+}
+
+/** Edits an end flange's tag or destination; typing merges into one undo step. */
+export function updateEndFlangeCommand(markerId: string, patch: EndFlangePatch): boolean {
+  const fields = Object.keys(patch).sort().join(',');
+  return apply(
+    t('markup.history.editEndFlange'),
+    (draft) => updateEndFlange(draft, markerId, patch),
+    { coalesceKey: `endFlange:${markerId}:${fields}` },
+  );
 }
 
 /** Edits an ESDV's data; typing merges into one undo step per field. */
@@ -155,7 +204,7 @@ export function placeStroke(drawingId: string, geometry: StrokeGeometry): string
   const doc = useProjectStore.getState().doc;
   if (!doc?.drawings[drawingId]) return [];
   const segmentId = activeSegmentIn(doc);
-  const markers = strokeAtEsdvs(doc, drawingId, geometry).map((piece): Marker => ({
+  const markers = strokeAtBoundaries(doc, drawingId, geometry).map((piece): Marker => ({
     id: newId('mkr'),
     drawingId,
     segmentId,
@@ -163,8 +212,43 @@ export function placeStroke(drawingId: string, geometry: StrokeGeometry): string
     geometry: piece,
     style: newMarkerStyle(),
     esdv: null,
+    endFlange: null,
   }));
   const done = apply(t('markup.history.addHighlighter'), (draft) => {
+    for (const marker of markers) addMarker(draft, marker);
+  });
+  if (!done) return [];
+  useUiStore.getState().setSelection([]);
+  return markers.map((m) => m.id);
+}
+
+/**
+ * Paints the strokes of an auto trace in a segment (or unassigned with
+ * null), cut at the ESDVs and end flanges they run into, as one undo step.
+ * Returns the ids of the new strokes.
+ */
+export function placeTracedStrokes(
+  drawingId: string,
+  strokes: readonly StrokeGeometry[],
+  segmentId: string | null,
+  label: string,
+): string[] {
+  const doc = useProjectStore.getState().doc;
+  if (!doc?.drawings[drawingId] || strokes.length === 0) return [];
+  const segment = segmentId && doc.segments[segmentId] ? segmentId : null;
+  const markers = strokes.flatMap((stroke) =>
+    strokeAtBoundaries(doc, drawingId, stroke).map((piece): Marker => ({
+      id: newId('mkr'),
+      drawingId,
+      segmentId: segment,
+      shape: 'highlighter',
+      geometry: piece,
+      style: newMarkerStyle(),
+      esdv: null,
+      endFlange: null,
+    })),
+  );
+  const done = apply(label, (draft) => {
     for (const marker of markers) addMarker(draft, marker);
   });
   if (!done) return [];
@@ -202,6 +286,7 @@ export function placeMarker(
         ? newMarkerStyle(options.symbol, options.outline ?? null)
         : newMarkerStyle(),
     esdv: null,
+    endFlange: null,
   };
   // Circles carry a count item with the last-used type (FDS section 6); line runs
   // carry a pipe item when the project counts pipe lengths (CNT-12).
@@ -263,6 +348,7 @@ export function placeSuggestedMarkers(
     geometry,
     style: newMarkerStyle(symbol),
     esdv: null,
+    endFlange: null,
   }));
   const done = apply(t('assist.history', { count: markers.length }), (draft) => {
     for (const marker of markers) {

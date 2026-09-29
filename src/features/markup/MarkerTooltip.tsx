@@ -52,7 +52,7 @@ export function MarkerTooltip({
           style={{ background: paint.colour }}
         />
         <span className="truncate">
-          {marker.esdv?.tag || item?.tag || t(`markup.shapes.${shape}`)}
+          {marker.esdv?.tag || marker.endFlange?.tag || item?.tag || t(`markup.shapes.${shape}`)}
         </span>
       </div>
       <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-muted-foreground">
@@ -79,6 +79,13 @@ export function MarkerTooltip({
                 <dd className="text-foreground">{item.quantity}</dd>
               </>
             )}
+          </>
+        ) : marker.endFlange ? (
+          <>
+            <dt>{t('markup.endFlange.destination')}</dt>
+            <dd className="truncate text-foreground">
+              {t(`markup.endFlange.destinations.${marker.endFlange.destination}`)}
+            </dd>
           </>
         ) : marker.esdv || marker.shape === 'highlighter' ? null : (
           <dd className="col-span-2">{t('markup.tooltip.noItem')}</dd>

@@ -5,6 +5,29 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **End flanges** (`F`): mark where an isolatable segment ends without an ESDV, such as a flanged
+  tie-in to the closed drain or flare header. The bar under the toolbar chooses where the pipe
+  goes (**Closed drain**, **Flare** or **Other end point**); drag a bar across the pipe (`Shift`
+  for 45° steps) or click on the pipe to put one square across it. An end flange belongs to the
+  active segment, is drawn as a solid bar in its colour, carries a tag, and is a segment boundary
+  like an ESDV: it cuts the highlighter strokes it crosses and the highlighter's magnet snaps to
+  it. It is not counted (circle the flange to count it). Annotated PDFs draw it with its own
+  legend entry. Stored as `endFlange` markers with `doubleLine` geometry (the bar's centre line
+  and thickness) and an `endFlange` object (`tag`, `destination`); older builds cannot open a
+  project that has one.
+- **Auto trace** (`T`, or **Auto trace** in the highlighter, ESDV and end flange bars): takes the
+  highlighter and highlights the active segment's pipework out to its ESDVs and end flanges, and
+  up to the drawing links of off-page connectors, as one undo step. It follows the drawn lines
+  round bends and curves, takes every branch at a tee and runs straight over lines that cross
+  without being joined, on PDF, DWG and DXF drawings. The side of each ESDV and end flange that
+  is the segment's is worked out from the segments set on the ESDVs; pipe it cannot tell is shown
+  dashed, to be clicked. While auto trace is on, a click on any pipe traces that pipe in the
+  active segment. The message says which boundaries the trace ran into and on which drawings the
+  pipe carries on, with a button to open the first of them. The trace runs in a web worker on the
+  sheet rendered once, so tracing again on the same drawing is quick. It is available once the
+  drawing has an ESDV, an end flange or a drawing link.
+- **Double lines and end flanges placed with a click** sit square across the drawn line under the
+  pointer, not only across a highlighter stroke.
 - **Highlighter follows the lines**: dragged roughly along a pipe, a highlighter stroke is drawn to
   the drawing's own line and follows it round bends, curves and corners, on PDF, DWG and DXF
   drawings alike. While dragging, the traced path shows as a dashed line with a ring where it

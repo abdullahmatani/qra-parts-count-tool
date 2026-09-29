@@ -14,6 +14,7 @@ import {
 import { drawingName, planPdfExport, stampDate, type PdfLabels } from './pdf-plan';
 
 const labels: PdfLabels = {
+  endFlange: 'End flange',
   legendTitle: 'Legend',
   esdv: 'ESDV',
   unassigned: 'Not in a segment',
@@ -181,6 +182,40 @@ describe('planPdfExport (EXP-03, EXP-05)', () => {
       kind: 'esdvLine',
     });
     expect(overlay.legend.filter((e) => e.kind === 'esdv')).toEqual([]);
+  });
+
+  it('draws an end flange in the colour of its segment, with its own legend entry', () => {
+    const doc = setup();
+    doc.markers.fl = makeCircleMarker('drw_2', {
+      id: 'fl',
+      segmentId: 'seg_a',
+      shape: 'endFlange',
+      geometry: {
+        type: 'doubleLine',
+        points: [
+          [100, 80],
+          [100, 120],
+        ],
+        gap: 4,
+      },
+      endFlange: { tag: '', destination: 'flare' },
+    });
+    const plans = planPdfExport({
+      doc,
+      entries: countEntries(doc),
+      drawings: true,
+      segments: false,
+      now,
+      labels,
+    });
+    const overlay = plans[1]!.pages[0]!.overlay;
+    expect(overlay.markers.find((m) => m.endFlange)).toMatchObject({
+      colour: SEGMENT_PALETTE[0],
+      label: 'To flare',
+      esdv: false,
+      warning: false,
+    });
+    expect(overlay.legend.map((e) => e.kind)).toEqual(['circle', 'endFlange', 'circle', 'warning']);
   });
 
   it('plans a combined PDF per segment with only that segment on each page', () => {

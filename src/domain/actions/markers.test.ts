@@ -13,14 +13,16 @@ import {
   addMarker,
   assignMarkers,
   copyMarkers,
-  cutStrokesAtEsdv,
+  cutStrokesAtBoundary,
   deleteMarkers,
   moveMarkers,
   pasteMarkers,
   setMarkerGeometry,
   setMarkerSymbol,
-  strokeAtEsdvs,
+  strokeAtBoundaries,
+  updateEndFlange,
 } from './markers';
+import { newEndFlangeData } from '../end-flange';
 import { newEsdvData } from '../esdv';
 import { doubleLine } from '../markup/esdv-boundary';
 import { DOT_SCALE } from '../markup/geometry';
@@ -193,7 +195,7 @@ describe('ESDVs cut highlighter strokes (SEG-01)', () => {
     });
     addMarker(doc, esdv(drawingId));
 
-    const added = cutStrokesAtEsdv(doc, 'esdv');
+    const added = cutStrokesAtBoundary(doc, 'esdv');
     expect(added).toHaveLength(1);
     // The paint stops at the double line: gap 3 plus half the pen either side.
     expect(doc.markers.hl!.geometry).toEqual({
@@ -209,6 +211,7 @@ describe('ESDVs cut highlighter strokes (SEG-01)', () => {
       segmentId,
       shape: 'highlighter',
       esdv: null,
+      endFlange: null,
       geometry: {
         points: [
           [208, 500],
@@ -234,16 +237,53 @@ describe('ESDVs cut highlighter strokes (SEG-01)', () => {
         geometry: { type: 'circle', cx: 200, cy: 500, r: 12 },
       }),
     );
-    expect(cutStrokesAtEsdv(doc, 'valve')).toEqual([]);
-    expect(cutStrokesAtEsdv(doc, 'missing')).toEqual([]);
+    expect(cutStrokesAtBoundary(doc, 'valve')).toEqual([]);
+    expect(cutStrokesAtBoundary(doc, 'missing')).toEqual([]);
     expect(doc.markers.hl!.geometry).toEqual(pipe());
+  });
+
+  it('cuts at end flanges as at ESDVs', () => {
+    const { doc, drawingId, segmentId } = setup();
+    addMarker(doc, highlight(drawingId, 'hl', segmentId));
+    addMarker(
+      doc,
+      makeCircleMarker(drawingId, {
+        id: 'flange',
+        segmentId,
+        shape: 'endFlange',
+        geometry: doubleLine({ x: 300, y: 480 }, { x: 300, y: 520 }, 4),
+        endFlange: newEndFlangeData('flare'),
+      }),
+    );
+    expect(cutStrokesAtBoundary(doc, 'flange')).toHaveLength(1);
+    expect((doc.markers.hl!.geometry as StrokeGeometry).points.at(-1)).toEqual([293, 500]);
+    expect(strokeAtBoundaries(doc, drawingId, pipe())).toHaveLength(2);
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
+  });
+
+  it('edits the tag of an end flange and where it goes', () => {
+    const { doc, drawingId } = setup();
+    addMarker(
+      doc,
+      makeCircleMarker(drawingId, {
+        id: 'flange',
+        shape: 'endFlange',
+        geometry: doubleLine({ x: 300, y: 480 }, { x: 300, y: 520 }, 4),
+        endFlange: newEndFlangeData(),
+      }),
+    );
+    updateEndFlange(doc, 'flange', { tag: 'FL-7', destination: 'other' });
+    expect(doc.markers.flange!.endFlange).toEqual({ tag: 'FL-7', destination: 'other' });
+    // Other markers have no end flange data to edit.
+    updateEndFlange(doc, 'hl', { tag: 'x' });
+    expect(doc.markers.hl).toBeUndefined();
   });
 
   it('cuts a new stroke at the ESDVs on its drawing', () => {
     const { doc, drawingId } = setup();
-    expect(strokeAtEsdvs(doc, drawingId, pipe())).toEqual([pipe()]);
+    expect(strokeAtBoundaries(doc, drawingId, pipe())).toEqual([pipe()]);
     addMarker(doc, esdv(drawingId));
-    expect(strokeAtEsdvs(doc, drawingId, pipe()).map((s) => s.points)).toEqual([
+    expect(strokeAtBoundaries(doc, drawingId, pipe()).map((s) => s.points)).toEqual([
       [
         [0, 500],
         [192, 500],

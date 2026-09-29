@@ -132,6 +132,12 @@ export function doubleLineStrokes(g: DoubleLineGeometry): [[XY, XY], [XY, XY]] {
   ];
 }
 
+/** The band between a double line's two lines, as a closed outline (an end flange's bar). */
+export function doubleLineBand(g: DoubleLineGeometry): XY[] {
+  const [[a1, b1], [a2, b2]] = doubleLineStrokes(g);
+  return [a1, b1, b2, a2];
+}
+
 /** The point of the line segment from `a` to `b` nearest to `p`. */
 export function closestOnSegment(p: XY, a: XY, b: XY): XY {
   const dx = b.x - a.x;
