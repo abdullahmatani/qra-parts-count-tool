@@ -218,6 +218,37 @@ describe('parseProjectFile validation (PRJ-03)', () => {
     );
   });
 
+  it('keeps end flanges, their bar and their data together', () => {
+    const drawing = makeDrawing();
+    const parse = (marker: unknown) => ProjectV1.shape.markers.safeParse([marker]).success;
+    const bar = {
+      type: 'doubleLine',
+      points: [
+        [10, 0],
+        [10, 30],
+      ],
+      gap: 4,
+    };
+    const base = {
+      ...makeCircleMarker(drawing.id),
+      shape: 'endFlange',
+      geometry: bar,
+      endFlange: { tag: 'FL-1', destination: 'flare' },
+    };
+    expect(parse(base)).toBe(true);
+    // Where it goes defaults to the closed drain; files without end flanges still read.
+    const read = ProjectV1.shape.markers.parse([{ ...base, endFlange: {} }])[0]!;
+    expect(read.endFlange).toEqual({ tag: '', destination: 'closedDrain' });
+    expect(ProjectV1.shape.markers.parse([makeCircleMarker(drawing.id)])[0]!.endFlange).toBeNull();
+    expect(parse({ ...base, endFlange: { destination: 'sea' } })).toBe(false);
+    // An end flange is a bar across the pipe, with its data; only it has the data.
+    expect(parse({ ...base, endFlange: null })).toBe(false);
+    expect(parse({ ...base, geometry: { type: 'circle', cx: 0, cy: 0, r: 5 } })).toBe(false);
+    expect(parse({ ...makeCircleMarker(drawing.id), endFlange: { tag: '' } })).toBe(false);
+    // It is not an ESDV.
+    expect(parse({ ...base, esdv: { tag: 'ESDV-1' } })).toBe(false);
+  });
+
   it('rejects a bin whose upper edge is below its lower edge', () => {
     const library = {
       binSets: [

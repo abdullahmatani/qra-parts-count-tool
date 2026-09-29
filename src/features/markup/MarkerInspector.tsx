@@ -26,6 +26,7 @@ import { ItemEditor } from '@/features/count/ItemEditor';
 import { findSimilarSymbols } from '@/features/assist/find-similar';
 import { addItemCommand } from '@/features/count/item-commands';
 import { LinkEditor } from '@/features/links/LinkEditor';
+import { EndFlangeEditor } from '@/features/segments/EndFlangeEditor';
 import { EsdvEditor } from '@/features/segments/EsdvEditor';
 import { splitSegmentCommand } from '@/features/segments/segment-commands';
 import {
@@ -117,10 +118,10 @@ export function MarkerInspector() {
   useEffect(() => {
     if (!editRequest) return;
     rootRef.current?.scrollIntoView({ block: 'nearest' });
-    // ESDV and item editors focus their own fields.
+    // ESDV, end flange and item editors focus their own fields.
     const marker = markersRecord?.[editRequest.markerId];
     const doc = useProjectStore.getState().doc;
-    if (!marker?.esdv && !(doc && itemForMarker(doc, editRequest.markerId))) {
+    if (!marker?.esdv && !marker?.endFlange && !(doc && itemForMarker(doc, editRequest.markerId))) {
       triggerRef.current?.focus();
     }
     // Only a new request moves the focus, not later marker edits.
@@ -168,6 +169,7 @@ export function MarkerInspector() {
           : t('markup.inspector.selected', { count: markers.length })}
       </p>
       {markers.length === 1 && first.esdv && <EsdvEditor key={first.id} marker={first} />}
+      {markers.length === 1 && first.endFlange && <EndFlangeEditor key={first.id} marker={first} />}
       {bulkItems.length > 0 && (
         <div className="space-y-2 rounded-md border p-2">
           <p className="text-xs font-medium">

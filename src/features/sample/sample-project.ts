@@ -135,6 +135,7 @@ export function buildSampleProject(
               boundaryRuleOverride: null,
             }
           : null,
+        endFlange: null,
       };
       addMarker(doc, marker);
       if (symbol.between) {
@@ -177,6 +178,7 @@ export function buildSampleProject(
     geometry: { type: 'rect', x: 455, y: 225, width: 320, height: 150 },
     style: { labelOffset: null, symbol: 'circle', outline: null },
     esdv: null,
+    endFlange: null,
   });
 
   // Off-page connectors link the sheets (LNK-01).

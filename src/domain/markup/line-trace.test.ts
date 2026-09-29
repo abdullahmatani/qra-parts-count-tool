@@ -4,6 +4,7 @@ import {
   LineTracer,
   cheapestPath,
   inkMap,
+  lineAt,
   nearestLine,
   pathLength,
   type InkMap,
@@ -156,5 +157,27 @@ describe('the highlighter line magnet', () => {
       { x: 30, y: 25 },
     ]);
     expect(new LineTracer(lined, { x: 30, y: 25 }).path()[0]!.y).toBeCloseTo(21.5);
+  });
+});
+
+describe('the drawn line under a click', () => {
+  it('gives a point on the middle of the line and its direction', () => {
+    const map = sheet(100, 100, (plot) => {
+      segment(plot, { x: 10, y: 50 }, { x: 90, y: 50 });
+      segment(plot, { x: 20, y: 10 }, { x: 80, y: 70 });
+    });
+    const level = lineAt(map, { x: 30, y: 55 }, 8)!;
+    expect(level.angle).toBeCloseTo(0, 5);
+    expect(level.point.y).toBeCloseTo(51, 0);
+    const slant = lineAt(map, { x: 40, y: 27 }, 8)!;
+    expect(slant.angle).toBeCloseTo(Math.PI / 4, 1);
+    expect(Math.abs(slant.point.y - slant.point.x - (10 - 20) - 1)).toBeLessThan(1.5);
+    // Nothing near, or a crossing with no one direction.
+    expect(lineAt(map, { x: 50, y: 90 }, 8)).toBeNull();
+    const cross = sheet(100, 100, (plot) => {
+      segment(plot, { x: 10, y: 50 }, { x: 90, y: 50 });
+      segment(plot, { x: 50, y: 10 }, { x: 50, y: 90 });
+    });
+    expect(lineAt(cross, { x: 50, y: 50 }, 8)).toBeNull();
   });
 });

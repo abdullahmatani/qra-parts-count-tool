@@ -13,7 +13,9 @@ same list is in the app under **Project › Keyboard shortcuts**. On a Mac, use 
 | `H` | Highlighter: paint over a segment's pipework in its colour, following the drawn lines; `Shift` for a straight stroke; `Alt` paints freely (no line or ESDV magnet) |
 | `L` | Drawing link: drag a hotspot, then choose the target drawing                                                                                                       |
 | `E` | ESDV: click an ESD valve (or drag a double line across the pipe, `Shift` for 45° steps), then set its tag, size and adjoining segments                             |
+| `F` | End flange: drag a bar across the pipe where a segment ends at a closed drain, the flare or another end point (or click on the pipe), then set its tag             |
 | `S` | Stamp: each click repeats the last item (type, actuation, size)                                                                                                    |
+| `T` | Auto trace: highlight the active segment out to its ESDVs, end flanges and off-page drawing links; then click any pipe to trace it                                 |
 
 ## Equipment types
 

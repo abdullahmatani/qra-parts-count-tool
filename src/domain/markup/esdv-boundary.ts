@@ -1,9 +1,10 @@
 /**
  * ESDVs as segment boundaries on a drawing (SEG-01). An ESDV is drawn as a
- * ring round the valve or as a double line across the pipe. Highlighter
- * strokes stop at it: a stroke that runs through an ESDV is cut there, into a
- * piece on each side, and the highlighter's magnet starts a stroke on an ESDV
- * when the pointer is near one.
+ * ring round the valve or as a double line across the pipe; an end flange,
+ * where a segment ends without an ESDV, as a bar across the pipe (a double
+ * line's geometry). Highlighter strokes stop at them: a stroke that runs
+ * through one is cut there, into a piece on each side, and the highlighter's
+ * magnet starts a stroke on one when the pointer is near it.
  */
 import type {
   CircleGeometry,
@@ -79,6 +80,7 @@ export function snapAngle(angle: number): number {
 /**
  * A double line placed with a click at `p`: across the highlighter stroke
  * under it (centred on the stroke, square to it and longer than it is wide),
+ * else across the drawn line under it (`line`, its middle and direction),
  * otherwise at the angle and length used last. `tolerance` is the hit
  * tolerance in drawing units.
  */
@@ -88,6 +90,7 @@ export function doubleLineForClick(
   last: { angle: number; length: number },
   gap: number,
   tolerance: number,
+  line: { point: XY; angle: number } | null = null,
 ): DoubleLineGeometry {
   let best: { centre: XY; angle: number; width: number } | null = null;
   let bestDistance = Infinity;
@@ -105,6 +108,7 @@ export function doubleLineForClick(
       best = { centre, angle: Math.atan2(by - ay, bx - ax) + Math.PI / 2, width: stroke.width };
     }
   }
+  if (!best && line) return doubleLineAt(line.point, line.angle + Math.PI / 2, last.length, gap);
   if (!best) return doubleLineAt(p, last.angle, last.length, gap);
   return doubleLineAt(best.centre, best.angle, Math.max(last.length, best.width * 1.5), gap);
 }

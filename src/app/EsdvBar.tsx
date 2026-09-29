@@ -6,6 +6,7 @@ import { ESDV_SHAPES, type EsdvShape } from '@/domain/esdv';
 import { EsdvIcon } from '@/features/markup/EsdvIcon';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { AutoTraceButton } from './AutoTraceButton';
 
 function ShapeIcon({ shape }: { shape: EsdvShape }) {
   return shape === 'doubleLine' ? <Equal className="rotate-90" /> : <Circle />;
@@ -14,7 +15,7 @@ function ShapeIcon({ shape }: { shape: EsdvShape }) {
 /**
  * Takes the equipment bar's place while the ESDV tool is in use: whether the
  * next ESDV is drawn as a ring round the valve or as a double line across the
- * pipe (SEG-01).
+ * pipe (SEG-01); and the auto trace, which highlights a segment out to its ESDVs.
  */
 export function EsdvBar() {
   const { t } = useTranslation();
@@ -53,6 +54,8 @@ export function EsdvBar() {
         ))}
       </ToggleGroup>
 
+      <Separator orientation="vertical" className="mx-1 h-5!" />
+      <AutoTraceButton />
       <Separator orientation="vertical" className="mx-1 h-5!" />
 
       <span className="min-w-0 truncate text-xs text-muted-foreground" data-testid="esdv-bar-hint">

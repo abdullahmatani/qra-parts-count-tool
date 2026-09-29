@@ -7,13 +7,10 @@
 import { itemForMarker } from '@/domain/actions/items';
 import { inkFromRgba, type SymbolMatch } from '@/domain/symbol-match';
 import { radiusForSymbol } from '@/domain/markup/geometry';
-import type { CircleGeometry, Drawing, Marker } from '@/domain/schema/types';
+import type { CircleGeometry, Marker } from '@/domain/schema/types';
 import type { DrawingSource } from '@/features/viewer/drawing-source';
-import type { PdfPageSource } from '@/features/viewer/pdf/pdf-source';
-import { BASE_SCALE } from '@/features/viewer/view-transform';
+import { closeSheetSource, openSheetSource, renderSheet } from '@/features/viewer/sheet-render';
 import i18n from '@/i18n';
-import { readFile } from '@/lib/fs/files';
-import type { FsDirHandle } from '@/lib/fs/types';
 import { getWorkingDirectory } from '@/services/session';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -38,43 +35,6 @@ export function matchScale(sheet: { width: number; height: number }, symbolSize:
   return Math.min(wanted, Math.sqrt(MAX_SHEET_PIXELS / (sheet.width * sheet.height)));
 }
 
-async function openSource(dir: FsDirHandle, drawing: Drawing): Promise<DrawingSource> {
-  if (drawing.fileType === 'pdf') {
-    const { pdfCache } = await import('@/features/viewer/load-source');
-    return pdfCache.openPage(
-      `${drawing.fileName}#${drawing.fileHash}`,
-      async () => (await readFile(dir, `drawings/${drawing.fileName}`)).arrayBuffer(),
-      drawing.page ?? 1,
-    );
-  }
-  // CAD drawings are matched in monochrome, as plotted, with the layers the user hid left out.
-  const [{ loadCadDisplayList }, { CadDrawingSource }] = await Promise.all([
-    import('@/features/cad/cad-drawings'),
-    import('@/features/cad/cad-source'),
-  ]);
-  const hidden = useUiStore.getState().hiddenLayers[drawing.id] ?? [];
-  return new CadDrawingSource(await loadCadDisplayList(dir, drawing), 'monochrome', hidden);
-}
-
-/** The whole sheet as canvas pixels at `scale` pixels per drawing unit. */
-async function renderSheet(source: DrawingSource, scale: number): Promise<ImageData> {
-  const width = Math.max(1, Math.round(source.size.width * scale));
-  const height = Math.max(1, Math.round(source.size.height * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const view = {
-    x: source.size.width / 2,
-    y: source.size.height / 2,
-    zoom: scale / BASE_SCALE,
-    rotation: 0 as const,
-  };
-  await source.render({ canvas, view, canvasSize: { width, height }, devicePixelRatio: 1 }).promise;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error(t('assist.errors.render'));
-  return ctx.getImageData(0, 0, width, height);
-}
-
 let current: MatchTask | null = null;
 let run = 0;
 
@@ -94,10 +54,10 @@ export async function findSimilarSymbols(exampleId: string): Promise<void> {
 
   let source: DrawingSource | null = null;
   try {
-    source = await openSource(dir, drawing);
+    source = await openSheetSource(dir, drawing);
     const scale = matchScale(source.size, 2 * r);
     if (2 * r * scale < MIN_TEMPLATE_PIXELS) throw new Error(t('assist.errors.tooSmall'));
-    const pixels = await renderSheet(source, scale);
+    const pixels = await renderSheet(source, scale, t('assist.errors.render'));
     if (token !== run) return;
     const sheet = inkFromRgba(pixels.data, pixels.width, pixels.height);
     const box = {
@@ -121,9 +81,7 @@ export async function findSimilarSymbols(exampleId: string): Promise<void> {
     if (token !== run) return;
     useAssistStore.getState().fail(error instanceof Error ? error.message : String(error));
   } finally {
-    // The viewer may be showing this page: leave its parsed state alone.
-    if (drawing.fileType === 'pdf') (source as PdfPageSource | null)?.dispose(false);
-    else source?.dispose();
+    closeSheetSource(drawing, source);
   }
 }
 

@@ -13,8 +13,9 @@ import type { MarkerEntry } from './marker-canvas';
 
 /**
  * The visible markers on a drawing with their resolved appearance, in paint
- * order: highlights first, circles and ESDV double lines on top. Recomputed only when the
- * project, selection or filters change, never on pan or zoom.
+ * order: highlights first; circles, ESDV double lines and end flanges on top.
+ * Recomputed only when the project, selection or filters change, never on pan
+ * or zoom.
  */
 export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const markers = useProjectStore((s) => s.doc?.markers);
@@ -47,6 +48,7 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         highlighted: highlighted.has(marker.id),
         warning: warnings.has(marker.id),
         esdv: marker.esdv !== null,
+        endFlange: marker.endFlange !== null,
         symbol: marker.style.symbol,
         outline: marker.style.outline,
         segmentId: marker.segmentId,

@@ -7,6 +7,7 @@ import { HIGHLIGHTER_PENS, type HighlighterPen } from '@/domain/markup/highlight
 import { HIGHLIGHTER_ALPHA, segmentAppearance } from '@/domain/palette';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { AutoTraceButton } from './AutoTraceButton';
 
 /** Pen sizes as they look in the bar, in px. */
 const SAMPLE: Record<HighlighterPen, number> = { fine: 3, medium: 6, broad: 11 };
@@ -14,7 +15,7 @@ const SAMPLE: Record<HighlighterPen, number> = { fine: 3, medium: 6, broad: 11 }
 /**
  * Takes the equipment bar's place while the Highlighter tool is in use: which
  * segment the strokes go to (in its colour), the pen they are painted with,
- * and whether strokes follow the drawing's lines.
+ * whether strokes follow the drawing's lines, and the auto trace.
  */
 export function HighlighterBar() {
   const { t } = useTranslation();
@@ -95,6 +96,7 @@ export function HighlighterBar() {
       >
         <Magnet /> {t('highlighter.followLines')}
       </Toggle>
+      <AutoTraceButton />
 
       <span className="ms-auto hidden min-w-0 truncate ps-2 text-xs text-muted-foreground lg:inline">
         {t('highlighter.hint')}

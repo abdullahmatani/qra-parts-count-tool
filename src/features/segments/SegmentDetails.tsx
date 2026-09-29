@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { isSegmentLabelTaken } from '@/domain/actions/segments';
 import { drawingDisplayName } from '@/domain/drawings';
 import { markerSegmentIds } from '@/domain/markup/presentation';
+import { EndFlangeIcon } from '@/features/markup/EndFlangeIcon';
 import type { Segment, SegmentStatus } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
 import { useActiveSegment, useOrderedDrawings } from '@/store/selectors';
@@ -38,8 +39,8 @@ function Heading({ children }: { children: React.ReactNode }) {
 
 /**
  * The active segment (SEG-02..05, SEG-09): label, colour, description,
- * process data, status, bounding ESDVs and linked drawings. Every field saves
- * as you go and each change can be undone.
+ * process data, status, bounding ESDVs and end flanges, and linked drawings.
+ * Every field saves as you go and each change can be undone.
  */
 export function SegmentDetails() {
   const segment = useActiveSegment();
@@ -78,6 +79,12 @@ function SegmentForm({ segment }: { segment: Segment }) {
     .map((id) => markers?.[id])
     .filter((m) => m?.esdv)
     .map((m) => m!);
+  // End flanges end the segment where there is no ESDV.
+  const flanges = useMemo(
+    () => Object.values(markers ?? {}).filter((m) => m.endFlange && m.segmentId === segment.id),
+    [markers, segment.id],
+  );
+  const boundaries = esdvs.length + flanges.length;
 
   const numberField = (
     key: 'pressure' | 'temperature' | 'h2sMoleFraction' | 'molecularWeightOrDensity',
@@ -223,7 +230,7 @@ function SegmentForm({ segment }: { segment: Segment }) {
       </div>
 
       <Heading>{t('segments.details.esdvs')}</Heading>
-      {esdvs.length === 0 ? (
+      {boundaries === 0 ? (
         <p className="text-xs text-muted-foreground">{t('segments.details.esdvsHint')}</p>
       ) : (
         <ul className="space-y-0.5" data-testid="segment-esdvs">
@@ -244,12 +251,31 @@ function SegmentForm({ segment }: { segment: Segment }) {
               </button>
             </li>
           ))}
+          {flanges.map((marker) => (
+            <li key={marker.id}>
+              <button
+                type="button"
+                onClick={() => showMarker(marker.id)}
+                className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-start hover:bg-accent"
+              >
+                <EndFlangeIcon className="size-3 shrink-0 text-muted-foreground" />
+                <span className="font-mono text-xs">
+                  {marker.endFlange!.tag || t('markup.shapes.endFlange')}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {t(`markup.endFlange.destinations.${marker.endFlange!.destination}`)}
+                </span>
+              </button>
+            </li>
+          ))}
         </ul>
       )}
-      {esdvs.length > 0 && esdvs.length < 2 && (
+      {boundaries > 0 && boundaries < 2 && (
         <p className="flex items-center gap-1 text-xs text-marker-warning">
           <AlertTriangle className="size-3.5 shrink-0" />
-          {t('segments.details.esdvsFew', { count: esdvs.length })}
+          {flanges.length
+            ? t('segments.details.boundariesFew', { count: boundaries })
+            : t('segments.details.esdvsFew', { count: esdvs.length })}
         </p>
       )}
 

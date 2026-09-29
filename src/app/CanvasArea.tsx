@@ -7,6 +7,7 @@ import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { SuggestionBar } from '@/features/assist/SuggestionBar';
 import { FindBar } from '@/features/search/FindBar';
+import { EndFlangeBar } from './EndFlangeBar';
 import { EquipmentBar } from './EquipmentBar';
 import { EsdvBar } from './EsdvBar';
 import { HighlighterBar } from './HighlighterBar';
@@ -40,6 +41,8 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
         <HighlighterBar />
       ) : tool === 'esdv' ? (
         <EsdvBar />
+      ) : tool === 'endFlange' ? (
+        <EndFlangeBar />
       ) : (
         <EquipmentBar />
       )}

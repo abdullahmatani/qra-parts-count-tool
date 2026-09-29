@@ -65,7 +65,10 @@ export function ShortcutsDialog() {
         <div className="grid gap-4">
           <Section
             title={t('shortcuts.tools')}
-            rows={TOOLS.map((tool) => [t(tool.labelKey), [tool.shortcut]])}
+            rows={[
+              ...TOOLS.map((tool): [string, string[]] => [t(tool.labelKey), [tool.shortcut]]),
+              [t('shortcuts.autoTrace'), ['T']],
+            ]}
           />
           {typeRows.length > 0 && <Section title={t('shortcuts.types')} rows={typeRows} />}
           <Section

@@ -9,9 +9,10 @@ import { DOUBLE_LINE_LENGTH_FRACTION } from '@/domain/markup/esdv-boundary';
 import type { Box } from '@/domain/markup/geometry';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { MarkerFilterState } from '@/domain/markup/presentation';
-import type { MarkerSymbol } from '@/domain/schema/types';
+import type { EndFlangeDestination, MarkerSymbol, Point } from '@/domain/schema/types';
 
-export type Tool = 'select' | 'circle' | 'dashed' | 'highlighter' | 'link' | 'esdv' | 'stamp';
+export type Tool =
+  'select' | 'circle' | 'dashed' | 'highlighter' | 'link' | 'esdv' | 'endFlange' | 'stamp';
 
 export interface Viewport {
   /** Drawing coordinate at the centre of the view. */
@@ -91,6 +92,14 @@ export interface UiState {
   esdvShape: EsdvShape;
   /** What a click with the ESDV double line places, away from a highlighter stroke. */
   doubleLine: DoubleLineMemory;
+  /** Where the pipe goes beyond the next end flange placed. */
+  endFlangeDestination: EndFlangeDestination;
+  /** Auto trace is on: a click with the highlighter traces the pipe out to its boundaries. */
+  autoTrace: boolean;
+  /** An auto trace is running. */
+  tracing: boolean;
+  /** Pipe the last auto trace could not assign, shown dashed for the user to click. */
+  traceHints: { drawingId: string; paths: Point[][] } | null;
   /** A drawing link with a target, waiting for the user to confirm its deletion. */
   linkDeleteRequest: string | null;
   /** A drawing waiting for the user to confirm its deletion (DeleteDrawingDialog). */
@@ -130,6 +139,10 @@ export interface UiState {
   setHighlighterFollowsLines: (on: boolean) => void;
   setEsdvShape: (shape: EsdvShape) => void;
   setDoubleLine: (doubleLine: DoubleLineMemory) => void;
+  setEndFlangeDestination: (destination: EndFlangeDestination) => void;
+  setAutoTrace: (on: boolean) => void;
+  setTracing: (tracing: boolean) => void;
+  setTraceHints: (hints: UiState['traceHints']) => void;
   setLinkDeleteRequest: (linkId: string | null) => void;
   setDrawingDeleteRequest: (drawingId: string | null) => void;
   requestEdit: (markerId: string, field?: EditField) => void;
@@ -177,6 +190,10 @@ const initial = {
   highlighterFollowsLines: true,
   esdvShape: 'circle' as EsdvShape,
   doubleLine: { lengthFraction: DOUBLE_LINE_LENGTH_FRACTION, angle: Math.PI / 2 },
+  endFlangeDestination: 'closedDrain' as EndFlangeDestination,
+  autoTrace: false,
+  tracing: false,
+  traceHints: null,
   linkDeleteRequest: null,
   drawingDeleteRequest: null,
   editRequest: null,
@@ -233,7 +250,9 @@ export const useUiStore = create<UiState>()((set, get) => ({
     }),
 
   setActiveSegment: (activeSegmentId) => set({ activeSegmentId }),
-  setTool: (tool) => set({ tool }),
+  // Auto trace is a mode of the highlighter: another tool ends it.
+  setTool: (tool) =>
+    set(tool === 'highlighter' ? { tool } : { tool, autoTrace: false, traceHints: null }),
   setSelection: (selection) =>
     set(selection.length ? { selection, selectedLinkId: null } : { selection }),
   setHighlighted: (highlighted) => set({ highlighted }),
@@ -253,6 +272,10 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setHighlighterFollowsLines: (highlighterFollowsLines) => set({ highlighterFollowsLines }),
   setEsdvShape: (esdvShape) => set({ esdvShape }),
   setDoubleLine: (doubleLine) => set({ doubleLine }),
+  setEndFlangeDestination: (endFlangeDestination) => set({ endFlangeDestination }),
+  setAutoTrace: (autoTrace) => set(autoTrace ? { autoTrace } : { autoTrace, traceHints: null }),
+  setTracing: (tracing) => set({ tracing }),
+  setTraceHints: (traceHints) => set({ traceHints }),
   setLinkDeleteRequest: (linkDeleteRequest) => set({ linkDeleteRequest }),
   setDrawingDeleteRequest: (drawingDeleteRequest) => set({ drawingDeleteRequest }),
   requestEdit: (markerId, field = 'auto') =>

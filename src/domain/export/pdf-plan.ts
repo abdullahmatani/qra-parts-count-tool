@@ -20,6 +20,8 @@ export interface OverlayMarker {
   dash: readonly number[];
   label: string;
   esdv: boolean;
+  /** An end flange: its double line geometry is drawn as a solid bar across the pipe. */
+  endFlange: boolean;
   warning: boolean;
 }
 
@@ -27,8 +29,8 @@ export interface LegendEntry {
   label: string;
   colour: string;
   dash: readonly number[];
-  /** The swatch: a ring, an ESDV ring or double line, or a warning outline. */
-  kind: 'circle' | 'esdv' | 'esdvLine' | 'warning';
+  /** The swatch: a ring, an ESDV ring or double line, an end flange bar, or a warning outline. */
+  kind: 'circle' | 'esdv' | 'esdvLine' | 'endFlange' | 'warning';
 }
 
 export interface Overlay {
@@ -56,6 +58,7 @@ export interface PlannedPdf {
 export interface PdfLabels {
   legendTitle: string;
   esdv: string;
+  endFlange: string;
   unassigned: string;
   warning: string;
   /** "PEFS-1001 rev B, sheet 2". */
@@ -95,7 +98,7 @@ export function drawingName(drawing: Drawing): string {
   return file.replace(/\.[^.]+$/, '');
 }
 
-/** Highlights and runs, drawn under the circles and ESDV double lines. */
+/** Highlights and runs, drawn under the circles, ESDV double lines and end flanges. */
 function isArea(marker: Marker): boolean {
   return marker.geometry.type !== 'circle' && marker.geometry.type !== 'doubleLine';
 }
@@ -121,11 +124,13 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
     const segmentIds = new Set<string>();
     let esdvRing = false;
     let esdvLine = false;
+    let endFlange = false;
     let unassigned = false;
     let warning = false;
     const out = ordered.map((marker): OverlayMarker => {
       const paint = markerPaint(marker, doc.segments);
       const flagged = warnings.has(marker.id);
+      if (marker.endFlange) endFlange = true;
       if (marker.esdv) {
         if (marker.geometry.type === 'doubleLine') esdvLine = true;
         else esdvRing = true;
@@ -141,6 +146,7 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
         dash: paint.dash,
         label: markerLabel(marker, items.get(marker.id)),
         esdv: marker.esdv !== null,
+        endFlange: marker.endFlange !== null,
         warning: flagged,
       };
     });
@@ -160,6 +166,15 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
     if (esdvRing) legend.push({ label: labels.esdv, colour: ESDV_COLOUR, dash: [], kind: 'esdv' });
     if (esdvLine) {
       legend.push({ label: labels.esdv, colour: ESDV_COLOUR, dash: [], kind: 'esdvLine' });
+    }
+    // End flanges take their segment's colour; the swatch shows the bar.
+    if (endFlange) {
+      legend.push({
+        label: labels.endFlange,
+        colour: UNASSIGNED_COLOUR,
+        dash: [],
+        kind: 'endFlange',
+      });
     }
     if (unassigned) {
       legend.push({

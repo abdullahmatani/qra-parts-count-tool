@@ -3,6 +3,7 @@
  * (ANN-06) and inline warnings (FDS section 6). Shared by the canvas and the
  * annotated PDF export.
  */
+import { endFlangeLabel } from '../end-flange';
 import { ESDV_COLOUR, UNASSIGNED_COLOUR, segmentAppearance } from '../palette';
 import type { CountItem, Marker, MarkerSymbol, Segment } from '../schema/types';
 
@@ -62,16 +63,24 @@ export function isMarkerVisible(
 }
 
 /** What a marker is, for its name in the interface (`markup.shapes.*`). */
-export type MarkerKind = 'esdv' | MarkerSymbol | 'rect' | 'polyline' | 'stroke' | 'doubleLine';
+export type MarkerKind =
+  'esdv' | 'endFlange' | MarkerSymbol | 'rect' | 'polyline' | 'stroke' | 'doubleLine';
 
-export function markerKind(marker: Pick<Marker, 'esdv' | 'geometry' | 'style'>): MarkerKind {
+export function markerKind(
+  marker: Pick<Marker, 'esdv' | 'endFlange' | 'geometry' | 'style'>,
+): MarkerKind {
   if (marker.esdv) return 'esdv';
+  if (marker.endFlange) return 'endFlange';
   return marker.geometry.type === 'circle' ? marker.style.symbol : marker.geometry.type;
 }
 
-/** ANN-05: the label beside a marker: the tag if there is one, otherwise the item number. */
+/**
+ * ANN-05: the label beside a marker: the tag if there is one, otherwise the
+ * item number; an end flange without a tag says where it goes.
+ */
 export function markerLabel(marker: Marker, item: CountItem | undefined): string {
   if (marker.esdv) return marker.esdv.tag || 'ESDV';
+  if (marker.endFlange) return endFlangeLabel(marker.endFlange);
   if (!item) return '';
   return item.tag || `#${item.seq}`;
 }

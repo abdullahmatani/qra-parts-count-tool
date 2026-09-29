@@ -4,7 +4,8 @@
  */
 import { isDraft, original } from 'immer';
 import { newId } from '@/lib/ids';
-import { cutStroke, isEsdvGeometry, type EsdvGeometry } from '../markup/esdv-boundary';
+import { isBoundaryMarker } from '../end-flange';
+import { cutStroke, type EsdvGeometry } from '../markup/esdv-boundary';
 import { radiusForSymbol, translateGeometry, type XY } from '../markup/geometry';
 import {
   highlightOf,
@@ -17,6 +18,7 @@ import { penWidth, type HighlighterPen } from '../markup/highlighter';
 import type { ProjectDoc } from '../model';
 import type {
   CountItem,
+  EndFlangeData,
   Marker,
   MarkerGeometry,
   MarkerStyle,
@@ -159,40 +161,40 @@ export function setHighlighterPen(
   }
 }
 
-/** The shapes of the ESDVs on a drawing. */
-function esdvsOn(doc: ProjectDoc, drawingId: string): EsdvGeometry[] {
+/** The shapes of the segment boundaries on a drawing: its ESDVs and end flanges. */
+export function boundariesOn(doc: Pick<ProjectDoc, 'markers'>, drawingId: string): EsdvGeometry[] {
   const out: EsdvGeometry[] = [];
   for (const marker of Object.values(doc.markers)) {
-    if (marker.drawingId === drawingId && marker.esdv && isEsdvGeometry(marker.geometry)) {
-      out.push(marker.geometry);
-    }
+    if (marker.drawingId !== drawingId || !isBoundaryMarker(marker)) continue;
+    out.push(marker.geometry as EsdvGeometry);
   }
   return out;
 }
 
 /**
- * A new highlighter stroke cut at the ESDVs on its drawing (SEG-01): the
- * pieces either side of each ESDV it runs through, or just the stroke.
+ * A new highlighter stroke cut at the ESDVs and end flanges on its drawing
+ * (SEG-01): the pieces either side of each one it runs through, or just the
+ * stroke.
  */
-export function strokeAtEsdvs(
+export function strokeAtBoundaries(
   doc: ProjectDoc,
   drawingId: string,
   stroke: StrokeGeometry,
 ): StrokeGeometry[] {
-  return cutStroke(stroke, esdvsOn(doc, drawingId)) ?? [stroke];
+  return cutStroke(stroke, boundariesOn(doc, drawingId)) ?? [stroke];
 }
 
 /**
- * An ESDV is a segment boundary (SEG-01): highlighter strokes on its drawing
- * that run through it are cut there, so the paint stops at it and each side
- * can go to its own segment. The first piece keeps the stroke (its id,
- * segment and note references); the others are new strokes in the same
+ * An ESDV or end flange is a segment boundary (SEG-01): highlighter strokes on
+ * its drawing that run through it are cut there, so the paint stops at it and
+ * each side can go to its own segment. The first piece keeps the stroke (its
+ * id, segment and note references); the others are new strokes in the same
  * segment. Returns the ids of the new strokes.
  */
-export function cutStrokesAtEsdv(doc: ProjectDoc, esdvId: string): string[] {
-  const esdv = doc.markers[esdvId];
-  if (!esdv?.esdv || !isEsdvGeometry(esdv.geometry)) return [];
-  const boundary = esdv.geometry;
+export function cutStrokesAtBoundary(doc: ProjectDoc, boundaryId: string): string[] {
+  const esdv = doc.markers[boundaryId];
+  if (!esdv || !isBoundaryMarker(esdv)) return [];
+  const boundary = esdv.geometry as EsdvGeometry;
   const added: string[] = [];
   for (const marker of Object.values(doc.markers)) {
     if (marker.drawingId !== esdv.drawingId || marker.geometry.type !== 'stroke') continue;
@@ -210,11 +212,24 @@ export function cutStrokesAtEsdv(doc: ProjectDoc, esdvId: string): string[] {
         geometry,
         style: newMarkerStyle(),
         esdv: null,
+        endFlange: null,
       });
       added.push(id);
     }
   }
   return added;
+}
+
+export type EndFlangePatch = Partial<EndFlangeData>;
+
+/** Edits an end flange's tag or where it goes; its segment is set like any marker's. */
+export function updateEndFlange(doc: ProjectDoc, markerId: string, patch: EndFlangePatch): void {
+  const data = doc.markers[markerId]?.endFlange;
+  if (!data) return;
+  if (patch.tag !== undefined && data.tag !== patch.tag) data.tag = patch.tag;
+  if (patch.destination !== undefined && data.destination !== patch.destination) {
+    data.destination = patch.destination;
+  }
 }
 
 /**

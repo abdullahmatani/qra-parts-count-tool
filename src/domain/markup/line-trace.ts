@@ -84,6 +84,61 @@ export function nearestLine(map: InkMap, p: XY, radius: number): XY | null {
   return best;
 }
 
+/**
+ * The drawn line under `p`: a point on its middle and its direction (radians,
+ * y down, in −π/2 … π/2), from the line pixels within `radius` of the
+ * nearest one (their principal axis). Null when no line is within `snap`
+ * pixels, or the ink there has no direction (a blob or a crossing).
+ */
+export function lineAt(
+  map: InkMap,
+  p: XY,
+  snap: number,
+  radius = 10,
+): { point: XY; angle: number } | null {
+  const near = nearestLine(map, p, snap);
+  if (!near) return null;
+  const r = Math.ceil(radius);
+  const c = cellOf(map, near);
+  let n = 0;
+  let sx = 0;
+  let sy = 0;
+  let sxx = 0;
+  let syy = 0;
+  let sxy = 0;
+  for (let y = Math.max(0, c.y - r); y <= Math.min(map.height - 1, c.y + r); y += 1) {
+    for (let x = Math.max(0, c.x - r); x <= Math.min(map.width - 1, c.x + r); x += 1) {
+      if ((x - c.x) ** 2 + (y - c.y) ** 2 > radius * radius) continue;
+      const w = strength(map, y * map.width + x);
+      if (w < SNAP_STRENGTH) continue;
+      n += w;
+      sx += w * x;
+      sy += w * y;
+      sxx += w * x * x;
+      syy += w * y * y;
+      sxy += w * x * y;
+    }
+  }
+  if (n === 0) return null;
+  const mx = sx / n;
+  const my = sy / n;
+  const vxx = sxx / n - mx * mx;
+  const vyy = syy / n - my * my;
+  const vxy = sxy / n - mx * my;
+  // Eigenvalues of the covariance: a line is long one way and thin the other.
+  const mean = (vxx + vyy) / 2;
+  const spread = Math.hypot((vxx - vyy) / 2, vxy);
+  const major = mean + spread;
+  const minor = mean - spread;
+  if (major <= 0 || minor > major * 0.25) return null;
+  const angle = 0.5 * Math.atan2(2 * vxy, vxx - vyy);
+  // The middle of the line: the pixel's position across it, from the mean.
+  const ux = Math.cos(angle);
+  const uy = Math.sin(angle);
+  const across = (near.x - 0.5 - mx) * -uy + (near.y - 0.5 - my) * ux;
+  return { point: { x: near.x + across * uy, y: near.y - across * ux }, angle };
+}
+
 /** A binary min-heap of pixel indices keyed by path cost. */
 class Heap {
   private keys = new Float64Array(1024);

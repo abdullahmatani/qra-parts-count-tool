@@ -61,10 +61,21 @@ export const DrawingFileType = z.enum(['pdf', 'dwg', 'dxf']);
 
 /**
  * ANN-01: circles (equipment and ESDVs) and dashed highlights, plus
- * highlighter strokes painted over a segment's pipework and equipment, and
- * ESDVs drawn as a double line across the pipe (SEG-01).
+ * highlighter strokes painted over a segment's pipework and equipment, ESDVs
+ * drawn as a double line across the pipe (SEG-01), and end flanges: a bar
+ * across the pipe where a segment ends at a closed drain, the flare or another
+ * end point that is not an ESDV.
  */
-export const MarkerShape = z.enum(['circle', 'dashedHighlight', 'highlighter', 'doubleLine']);
+export const MarkerShape = z.enum([
+  'circle',
+  'dashedHighlight',
+  'highlighter',
+  'doubleLine',
+  'endFlange',
+]);
+
+/** Where the pipe goes beyond an end flange. */
+export const EndFlangeDestination = z.enum(['closedDrain', 'flare', 'other']);
 
 /**
  * How an equipment (circle) marker is drawn: a ring, a filled dot, a square or
@@ -263,6 +274,8 @@ const SHAPE_GEOMETRY: Record<z.output<typeof MarkerShape>, readonly string[]> = 
   dashedHighlight: ['rect', 'polyline'],
   highlighter: ['stroke'],
   doubleLine: ['doubleLine'],
+  // The bar across the pipe: its centre line and its thickness.
+  endFlange: ['doubleLine'],
 };
 
 export const MarkerStyle = z.object({
@@ -294,6 +307,18 @@ export const EsdvData = z
     description: 'ESDV tag, size, adjoining segments and boundary rule override (SEG-01, SEG-08).',
   });
 
+/** Data carried by an end flange marker: the end point of its segment. */
+export const EndFlangeData = z
+  .object({
+    tag: ShortText,
+    destination: EndFlangeDestination.default('closedDrain'),
+  })
+  .meta({
+    id: 'EndFlangeData',
+    description:
+      'An end flange: where an isolatable segment ends at a closed drain, the flare or another end point.',
+  });
+
 export const Marker = z
   .object({
     id: Id,
@@ -305,6 +330,8 @@ export const Marker = z
     style: MarkerStyle.prefault({}),
     /** Present when the marker is an ESDV (SEG-01). ESDVs are circles or double lines. */
     esdv: EsdvData.nullable().default(null),
+    /** Present exactly when the marker is an end flange; its segment is `segmentId`. */
+    endFlange: EndFlangeData.nullable().default(null),
   })
   .superRefine((marker, ctx) => {
     const allowed = SHAPE_GEOMETRY[marker.shape];
@@ -329,6 +356,13 @@ export const Marker = z
         message: 'A double line marker must be an ESDV',
       });
     }
+    if ((marker.shape === 'endFlange') !== (marker.endFlange !== null)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['endFlange'],
+        message: 'An end flange marker needs end flange data, and only an end flange has it',
+      });
+    }
     const { symbol, outline } = marker.style;
     if (symbol !== 'circle' && (marker.shape !== 'circle' || marker.esdv)) {
       ctx.addIssue({
@@ -348,7 +382,7 @@ export const Marker = z
   .meta({
     id: 'Marker',
     description:
-      'A circle (drawn as a ring, dot, square or free-form outline), dashed highlight, highlighter stroke or ESDV double line in drawing coordinates (ANN-01..03).',
+      'A circle (drawn as a ring, dot, square or free-form outline), dashed highlight, highlighter stroke, ESDV double line or end flange in drawing coordinates (ANN-01..03).',
   });
 
 // ---------------------------------------------------------------------------

@@ -124,8 +124,17 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    boundary rule decides which of the two counts the valve itself; an ESDV can override the project
    rule if the study needs it. The bar under the toolbar sets how the ESDV is drawn: a red
    **Circle** round the valve, or a red **Double line** across the pipe. Drag the double line
-   across the pipe (hold `Shift` for steps of 45°), or click a highlighter stroke to put one square
-   across it. Its ends can be dragged later to turn or lengthen it.
+   across the pipe (hold `Shift` for steps of 45°), or click on the pipe (or a highlighter stroke)
+   to put one square across it. Its ends can be dragged later to turn or lengthen it.
+
+   Where a segment ends without an ESDV, for example at a flanged tie-in to the **closed drain**
+   or the **flare** header, mark an **end flange** (`F`). The bar under the toolbar sets where the
+   pipe goes: **Closed drain**, **Flare** or **Other end point**. Drag a bar across the pipe, or
+   click on the pipe to put one square across it; it goes to the active segment and is drawn as a
+   solid bar in the segment's colour, labelled with its tag or where it goes. Enter its tag in the
+   inspector. An end flange is a boundary of the segment like an ESDV, but it is not counted:
+   circle the flange as well if it is a leak source to count.
+
 3. Segments list the drawings they span. Markers link their drawing automatically; you can also link
    a drawing by hand, and open any linked drawing zoomed to the segment.
 4. To show the extent of a segment, pick the **Highlighter** (`H`) and drag over its pipework and
@@ -144,13 +153,28 @@ An isolatable segment is the inventory between ESD valves. It is the unit of the
    in where lines run close together. Turn it off with **Follow lines** in the bar, or hold `Alt`
    to paint freely; a `Shift` stroke is always straight.
 
-5. ESDVs are the boundaries of the highlighting. An ESDV placed on a highlighter stroke cuts it in
-   two, so the paint stops at the ESDV on each side; select the piece on the far side and move it
-   to its own segment. A stroke painted across an ESDV is cut the same way. The Highlighter is
-   drawn to ESDVs like a magnet: near one, a red ring shows where the stroke will snap, and a
-   stroke begun (or let go) there starts (or ends) at the ESDV. Hold `Alt` to paint without the
-   magnet.
-6. Equipment follows the highlighting. A circle placed on a segment's highlighting goes to that
+5. ESDVs and end flanges are the boundaries of the highlighting. One placed on a highlighter
+   stroke cuts it in two, so the paint stops at it on each side; select the piece on the far side
+   and move it to its own segment. A stroke painted across one is cut the same way. The
+   Highlighter is drawn to them like a magnet: near one, a red ring shows where the stroke will
+   snap, and a stroke begun (or let go) there starts (or ends) at it. Hold `Alt` to paint without
+   the magnet.
+6. **Auto trace** highlights a segment for you. Make the segment active, place its ESDVs (with
+   their upstream and downstream segments) and end flanges, then press `T` or click **Auto
+   trace** in the highlighter, ESDV or end flange bar. The Highlighter paints the segment's
+   pipework out to its ESDVs and end flanges, round bends and curves and into every branch, and
+   up to the drawing links of off-page connectors, where the pipe carries on on another drawing.
+   Lines that cross the pipe without joining it (four arms in two straight lines) are not
+   followed. It tells which side of each ESDV is the segment's from the segments set on the ESDVs
+   around it; pipe it cannot tell apart (an ESDV whose other side is unknown, say) is shown
+   **dashed**: click it to add it. While auto trace is on (the **Auto trace** button stays
+   pressed), a click on any pipe traces that pipe in the active segment; `Esc`, `T` or another
+   tool ends it. The message says what the trace ran into; when the pipe carries on on another
+   drawing, **Open** takes you there. The whole trace is one undo step, and pipe already
+   highlighted is not painted again. It works on PDF, DWG and DXF drawings, on the lines as
+   drawn: a pipe that touches text or another symbol is followed into it, so check the result and
+   undo or delete stray strokes.
+7. Equipment follows the highlighting. A circle placed on a segment's highlighting goes to that
    segment, whichever segment is active: on a highlighter stroke (its centre on the paint), on a
    dashed line run (its ring touching the line), or inside a dashed zone (a rectangle, or dashed
    points clicked round an area back to the first). Placed anywhere else, it goes to the active

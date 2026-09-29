@@ -5,6 +5,7 @@ import '@/lib/zod-config';
 import '@/i18n';
 import { App } from './App';
 import { ErrorBoundary } from './app/ErrorBoundary';
+import { stopWorker as stopTraceWorker } from './features/trace/auto-trace-protocol';
 import { installAutosave } from './services/autosave';
 import { registerSessionHook } from './services/session';
 
@@ -17,6 +18,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('demo')) {
 }
 
 installAutosave(registerSessionHook);
+// The sheet the auto trace worker holds belongs to the project.
+registerSessionHook({ onEnd: stopTraceWorker });
 
 createRoot(root).render(
   <StrictMode>

@@ -27,6 +27,8 @@ export const ESDV_COLOUR = '#dc2626';
 export const UNASSIGNED_COLOUR = '#64748b';
 /** Fill opacity of a dot marker: reads as a dot, still shows the symbol under it. */
 export const DOT_ALPHA = 0.7;
+/** Fill opacity of an end flange's bar: solid enough to read as a bar over the highlighter. */
+export const END_FLANGE_ALPHA = 0.75;
 /** Opacity of a highlighter stroke: the linework under it stays readable. */
 export const HIGHLIGHTER_ALPHA = 0.35;
 

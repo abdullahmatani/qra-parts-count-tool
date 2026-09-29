@@ -6,15 +6,21 @@
  *   Circles are drawn with the shape chosen in the equipment bar: a ring, a
  *   dot, a square, or a free-form outline dragged around the symbol.
  * - ESDV as a double line (chosen in the ESDV bar): drag across the pipe, with
- *   Shift for a multiple of 45°, or click on a highlighter stroke to put one
- *   square across it. Highlighter strokes are cut where an ESDV crosses them.
+ *   Shift for a multiple of 45°, or click on a highlighter stroke or a drawn
+ *   line to put one square across it. Highlighter strokes are cut where an
+ *   ESDV crosses them.
+ * - End flange: a bar across the pipe where a segment ends at a closed drain,
+ *   the flare or another end point, placed as an ESDV double line is. It cuts
+ *   the highlighter as an ESDV does.
  * - Dashed highlight: drag a rectangle around an area, or click points along a
  *   line run and double-click (or press Enter) to finish.
  * - Highlighter: drag to paint over a segment's pipework and equipment in its
  *   colour; hold Shift for a straight stroke. Dragged along a drawn line, the
  *   stroke follows the line round bends and corners (shown dashed until it is
- *   let go). Near an ESDV the stroke snaps to it, and it stops at the ESDV.
- *   Alt paints freely, without either magnet.
+ *   let go). Near an ESDV or end flange the stroke snaps to it, and stops there.
+ *   Alt paints freely, without either magnet. With auto trace on, a click
+ *   (no drag) traces the pipe under it out to its ESDVs, end flanges and
+ *   drawing links; pipe a trace could not assign shows dashed until clicked.
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
@@ -49,11 +55,18 @@ import {
   snapAngle,
   snapToEsdv,
 } from '@/domain/markup/esdv-boundary';
+import { endFlangeThickness, isBoundaryMarker } from '@/domain/end-flange';
 import { penWidth } from '@/domain/markup/highlighter';
-import { LineTracer, inkMap, type InkMap } from '@/domain/markup/line-trace';
+import { LineTracer, inkMap, lineAt, type InkMap } from '@/domain/markup/line-trace';
 import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
-import type { Marker, MarkerGeometry, MarkerSymbol, StrokeGeometry } from '@/domain/schema/types';
+import type {
+  DoubleLineGeometry,
+  Marker,
+  MarkerGeometry,
+  MarkerSymbol,
+  StrokeGeometry,
+} from '@/domain/schema/types';
 import type { ViewerContext, ViewerInteraction } from '@/features/viewer/viewer-context';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -64,9 +77,11 @@ import { linkAt, linkStatus } from '@/domain/actions/links';
 import { LinkLayer } from '@/features/links/LinkLayer';
 import { BackButton } from '@/features/links/BackButton';
 import { createLinkCommand, followLink } from '@/features/links/link-commands';
+import { autoTraceAt } from '@/features/trace/auto-trace-actions';
 import { Draft, SelectionBox, type DraftShape } from './MarkupDrafts';
 import {
   moveMarkerIds,
+  placeEndFlange,
   placeEsdv,
   placeMarker,
   placeStroke,
@@ -78,8 +93,10 @@ const DRAG_THRESHOLD = 4;
 /** Hit tolerance around markers and handles, in CSS px. */
 const HIT_TOLERANCE = 6;
 const HANDLE_TOLERANCE = 8;
-/** How near an ESDV (CSS px) a highlighter stroke snaps to it. */
+/** How near an ESDV or end flange (CSS px) a highlighter stroke snaps to it. */
 const MAGNET = 14;
+/** How near a drawn line (CSS px) a click puts a double line or end flange across it. */
+const LINE_SNAP = 12;
 
 type Gesture =
   | { kind: 'none' }
@@ -93,7 +110,7 @@ type Gesture =
       dragging: boolean;
       /** Width in drawing units, fixed when the stroke starts. */
       width: number;
-      /** The ESDV the stroke snapped to at its start: its end does not snap back to it. */
+      /** The ESDV or end flange the stroke snapped to at its start: its end does not snap back to it. */
       fromEsdvId: string | null;
       /** Shift is held: a straight stroke from the start. */
       straight: boolean;
@@ -220,6 +237,11 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const activeSegment = useProjectStore((s) =>
     activeSegmentId ? s.doc?.segments[activeSegmentId] : undefined,
   );
+  const autoTrace = useUiStore((s) => s.tool === 'highlighter' && s.autoTrace);
+  const tracing = useUiStore((s) => s.tracing);
+  const traceHints = useUiStore((s) =>
+    s.traceHints?.drawingId === drawingId ? s.traceHints.paths : null,
+  );
 
   const [gesture, setGestureState] = useState<Gesture>(NONE);
   const gestureRef = useRef<Gesture>(NONE);
@@ -270,19 +292,21 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   );
   const single: Marker | null =
     selectedHere.length === 1 ? (visibleById.get(selectedHere[0]!) ?? null) : null;
-  const esdvsHere = useMemo(() => visible.filter((m) => m.esdv), [visible]);
+  // Segment boundaries: the highlighter's magnet and cut.
+  const boundariesHere = useMemo(() => visible.filter(isBoundaryMarker), [visible]);
 
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
   // The ESDV tool draws a double line across the pipe, or a ring like the
-  // circle tool (SEG-01); stamp mode (ANN-09) draws circles too.
-  const doubleLineTool = tool === 'esdv' && esdvShape === 'doubleLine';
+  // circle tool (SEG-01); an end flange is a bar across the pipe, placed the
+  // same way as a double line; stamp mode (ANN-09) draws circles.
+  const doubleLineTool = (tool === 'esdv' && esdvShape === 'doubleLine') || tool === 'endFlange';
   const circleLike = tool === 'circle' || (tool === 'esdv' && !doubleLineTool) || tool === 'stamp';
   const drawingTool =
     circleLike || doubleLineTool || tool === 'dashed' || tool === 'highlighter' || tool === 'link';
   const selectLike = !drawingTool;
   const editable = !readOnly;
 
-  /** The ESDV a highlighter stroke snaps to at `point` (none while Alt is held). */
+  /** The ESDV or end flange a highlighter stroke snaps to at `point` (none while Alt is held). */
   const snapAt = (
     point: XY,
     context: ViewerContext,
@@ -290,11 +314,34 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     exceptId: string | null = null,
   ) => {
     if (altKey) return null;
-    const esdvs = exceptId ? esdvsHere.filter((m) => m.id !== exceptId) : esdvsHere;
-    return snapToEsdv(esdvs, point, MAGNET * context.unitsPerPixel);
+    const boundaries = exceptId ? boundariesHere.filter((m) => m.id !== exceptId) : boundariesHere;
+    return snapToEsdv(boundaries, point, MAGNET * context.unitsPerPixel);
   };
 
-  /** A double line placed with a click: across the highlighter stroke under it, if any. */
+  /** The gap of a double line: an end flange's bar is thinner than an ESDV's two lines. */
+  const barGap = (context: ViewerContext) =>
+    tool === 'endFlange'
+      ? endFlangeThickness(context.drawingSize)
+      : doubleLineGap(context.drawingSize);
+
+  /** The drawn line under a point, in drawing coordinates, when the drawing can be read. */
+  const drawnLineAt = (point: XY, context: ViewerContext) => {
+    const ink = inkOf(context);
+    const line = ink ? lineAt(ink, context.toScreen(point), LINE_SNAP) : null;
+    if (!line) return null;
+    const along = {
+      x: line.point.x + Math.cos(line.angle),
+      y: line.point.y + Math.sin(line.angle),
+    };
+    const a = context.toDrawing(line.point);
+    const b = context.toDrawing(along);
+    return { point: a, angle: Math.atan2(b.y - a.y, b.x - a.x) };
+  };
+
+  /**
+   * A double line or end flange placed with a click: across the highlighter
+   * stroke under it, else across the drawn line under it, if any.
+   */
   const clickedDoubleLine = (point: XY, context: ViewerContext) => {
     const memory = useUiStore.getState().doubleLine;
     const strokes = visible
@@ -304,9 +351,19 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       point,
       strokes,
       { angle: memory.angle, length: memory.lengthFraction * longSide },
-      doubleLineGap(context.drawingSize),
+      barGap(context),
       HIT_TOLERANCE * context.unitsPerPixel,
+      drawnLineAt(point, context),
     );
+  };
+
+  /** Places what the double line tool draws: an ESDV double line or an end flange. */
+  const placeDoubleLine = (geometry: DoubleLineGeometry) => {
+    if (tool === 'endFlange') {
+      placeEndFlange(drawingId, geometry, useUiStore.getState().endFlangeDestination);
+    } else {
+      placeEsdv(drawingId, geometry);
+    }
   };
 
   const handlesOf = (marker: Marker | null, geometry?: MarkerGeometry): Handle[] =>
@@ -356,19 +413,21 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   };
 
   const interaction: ViewerInteraction = {
-    cursor: drawingTool
-      ? 'crosshair'
-      : gesture.kind === 'move' && gesture.dragging
-        ? 'grabbing'
-        : hover.handle
-          ? (HANDLE_CURSORS[hover.handle] ?? 'move')
-          : hover.id
-            ? editable
-              ? 'move'
-              : 'pointer'
-            : hover.linkId
-              ? 'pointer'
-              : 'default',
+    cursor: tracing
+      ? 'progress'
+      : drawingTool
+        ? 'crosshair'
+        : gesture.kind === 'move' && gesture.dragging
+          ? 'grabbing'
+          : hover.handle
+            ? (HANDLE_CURSORS[hover.handle] ?? 'move')
+            : hover.id
+              ? editable
+                ? 'move'
+                : 'pointer'
+              : hover.linkId
+                ? 'pointer'
+                : 'default',
 
     onPointerDown(event, context) {
       if (event.native.button !== 0) return;
@@ -652,6 +711,11 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           }
           const tolerance = trace?.unitsPerPixel ?? context.unitsPerPixel;
           const path = dedupePoints(simplifyPath(end, tolerance), tolerance);
+          // With auto trace on, a click traces the pipe under it.
+          if (!g.dragging && useUiStore.getState().autoTrace) {
+            void autoTraceAt(drawingId, point, context.unitsPerPixel);
+            return;
+          }
           if (!g.dragging || path.length < 2) {
             toast(t('markup.highlighterHint'), { duration: 2500 });
             return;
@@ -665,7 +729,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         }
         case 'doubleLine': {
           if (!g.dragging) {
-            placeEsdv(drawingId, clickedDoubleLine(g.start, context));
+            placeDoubleLine(clickedDoubleLine(g.start, context));
             return;
           }
           const end = lineEnd(g.start, point, event.native.shiftKey);
@@ -675,7 +739,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             lengthFraction: length / longSide,
             angle: Math.atan2(end.y - g.start.y, end.x - g.start.x),
           });
-          placeEsdv(drawingId, doubleLine(g.start, end, doubleLineGap(context.drawingSize)));
+          placeDoubleLine(doubleLine(g.start, end, barGap(context)));
           return;
         }
         case 'freeform': {
@@ -843,9 +907,9 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         ? { type: 'trace', points: gesture.trace, end: gesture.traceEnd, colour }
         : { type: 'stroke', points: gesture.points, width: gesture.width, colour };
   } else if (gesture.kind === 'doubleLine' && drawingSize) {
-    draft = gesture.dragging
-      ? doubleLine(gesture.start, gesture.current, doubleLineGap(drawingSize))
-      : null;
+    const bar = tool === 'endFlange';
+    const gap = bar ? endFlangeThickness(drawingSize) : doubleLineGap(drawingSize);
+    draft = gesture.dragging ? { ...doubleLine(gesture.start, gesture.current, gap), bar } : null;
   } else if ((gesture.kind === 'rect' || gesture.kind === 'link') && gesture.dragging) {
     draft = rectGeometry(gesture.start, gesture.current);
   } else if (polyline) {
@@ -866,6 +930,25 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           selectedId={selectedLinkId}
           hoveredId={gesture.kind === 'none' ? (hover.linkId ?? null) : null}
         />
+      )}
+      {traceHints && (
+        <g data-testid="trace-hints" data-count={traceHints.length}>
+          {traceHints.map((path, i) => {
+            const points = path.map(([x, y]) => `${x},${y}`).join(' ');
+            return (
+              <g key={i}>
+                <polyline points={points} className="mk-trace-halo" />
+                <polyline
+                  points={points}
+                  className="mk-trace"
+                  stroke={
+                    activeSegment ? segmentAppearance(activeSegment.colour).hex : UNASSIGNED_COLOUR
+                  }
+                />
+              </g>
+            );
+          })}
+        </g>
       )}
       <Draft shape={draft} />
     </g>
@@ -908,6 +991,16 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-md bg-foreground/85 px-3 py-1 text-xs text-background shadow"
           >
             {t('markup.polylineHint')}
+          </div>
+        )}
+        {autoTrace && (
+          <div
+            role="status"
+            data-testid="auto-trace-status"
+            data-tracing={tracing ? 'true' : 'false'}
+            className="pointer-events-none absolute top-2 left-1/2 max-w-[90%] -translate-x-1/2 truncate rounded-md bg-foreground/85 px-3 py-1 text-xs text-background shadow"
+          >
+            {tracing ? t('autoTrace.tracing') : t('autoTrace.armed')}
           </div>
         )}
         {hoveredId && visibleById.get(hoveredId) && (
