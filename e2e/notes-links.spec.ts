@@ -5,6 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test, type AppFixture } from './fixtures';
+import { dismissToasts } from './helpers';
 import { openSeeded, seedProject } from './seed';
 
 const A1 = { width: 2384, height: 1684 };
@@ -95,6 +96,7 @@ test.describe('segment notes', () => {
     await expect(marker).toHaveAttribute('data-selected', 'true');
     await panel.getByRole('button', { name: 'Refer to the selected marker' }).click();
     await editor.fill('Check HV-7 rating');
+    await dismissToasts(page);
     await panel.getByRole('button', { name: 'Add note' }).click();
     await expect(note).toHaveCount(2);
     await page.getByTestId('drawing-list').getByText('PEFS-1001').click();
