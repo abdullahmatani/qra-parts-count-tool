@@ -6,6 +6,8 @@ import {
   markerPaint,
 } from '@/domain/markup/presentation';
 import type { Marker } from '@/domain/schema/types';
+import { isSegmentSetupMarker } from '@/domain/stage';
+import { useStage } from '@/features/stage/stage';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { useMarkerWarnings } from '@/features/count/useCount';
@@ -14,8 +16,8 @@ import type { MarkerEntry } from './marker-canvas';
 /**
  * The visible markers on a drawing with their resolved appearance, in paint
  * order: highlights first; circles, ESDV double lines and end flanges on top.
- * Recomputed only when the project, selection or filters change, never on pan
- * or zoom.
+ * While counting, the segments' set-up is dimmed. Recomputed only when the
+ * project, stage, selection or filters change, never on pan or zoom.
  */
 export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const markers = useProjectStore((s) => s.doc?.markers);
@@ -26,6 +28,8 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const filters = useUiStore((s) => s.filters);
   const showLabels = useUiStore((s) => s.showLabels);
   const warnings = useMarkerWarnings();
+  const counting = useStage() === 'count';
+  const pipeLengthCounting = useProjectStore((s) => s.doc?.settings.pipeLengthCounting ?? false);
 
   return useMemo(() => {
     const index = itemsByMarker(items ?? {});
@@ -52,10 +56,23 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         symbol: marker.style.symbol,
         outline: marker.style.outline,
         segmentId: marker.segmentId,
+        dimmed: counting && isSegmentSetupMarker(marker, pipeLengthCounting),
       };
       const onTop = marker.geometry.type === 'circle' || marker.geometry.type === 'doubleLine';
       (onTop ? circles : areas).push(entry);
     }
     return [...areas, ...circles];
-  }, [markers, items, segments, selection, highlight, filters, showLabels, drawingId, warnings]);
+  }, [
+    markers,
+    items,
+    segments,
+    selection,
+    highlight,
+    filters,
+    showLabels,
+    drawingId,
+    warnings,
+    counting,
+    pipeLengthCounting,
+  ]);
 }

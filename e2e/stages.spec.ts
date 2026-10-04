@@ -64,7 +64,10 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   }
   await expect(toolbar.getByRole('radio', { name: 'Circle' })).toHaveCount(0);
   await page.getByTestId('segment-list').getByRole('button', { name: /IS-01/ }).click();
-  await expect(page.getByTestId('segment-details').getByLabel('Fluid')).toHaveValue('Gas');
+  const details = page.getByTestId('segment-details');
+  await expect(details.getByTestId('process-summary')).toHaveText('Gas');
+  await details.getByTestId('process-toggle').click();
+  await expect(details.getByLabel('Fluid')).toHaveValue('Gas');
   await expect(page.getByRole('region', { name: 'Count table' })).toHaveCount(0);
   await expect(
     page.getByTestId('left-pane').getByRole('button', { name: 'Segment' }),
@@ -81,7 +84,9 @@ test('defines segments first, then counts with the segments locked', async ({ ap
     'true',
   );
 
-  // The ESDV can be selected and edited while defining segments.
+  // The ESDV can be selected and edited while defining segments, and is drawn in full.
+  const esdv = page.locator('[data-marker-id="mkr_e"]');
+  await expect(esdv).toHaveAttribute('data-dimmed', 'false');
   await clickCanvas(page, 0.5, 0.5);
   await expect(page.getByTestId('marker-inspector')).toContainText('ESDV');
   await page.keyboard.press('Escape');
@@ -113,7 +118,8 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   );
   await expect(page.getByTestId('segment-list')).toContainText('0 items');
 
-  // The ESDV is locked: Select clicks through it.
+  // The ESDV is dimmed and locked: Select clicks through it.
+  await expect(esdv).toHaveAttribute('data-dimmed', 'true');
   await page.keyboard.press('v');
   await clickCanvas(page, 0.5, 0.5);
   await expect(page.getByTestId('marker-inspector')).toHaveCount(0);
@@ -124,6 +130,7 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   await page.keyboard.press('c');
   await clickCanvas(page, 0.3, 0.3);
   await expect(page.getByTestId('marker-inspector')).toContainText('Item #1');
+  await expect(page.locator('[data-shape="circle"]')).toHaveAttribute('data-dimmed', 'false');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('segment-list')).toContainText('1 item');
 

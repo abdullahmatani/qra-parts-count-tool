@@ -238,6 +238,7 @@
     },
     "details": {
       "process": "Process data",
+      "processNone": "Nothing entered yet",
       "esdvs": "Bounding ESDVs",
       "esdvsHint": "Set on each ESDV: its upstream and downstream segments.",
       "esdvsFew_one": "Only {{count}} bounding ESDV: a segment usually has two or more.",

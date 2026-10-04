@@ -1,7 +1,17 @@
-import { AlertTriangle, ArrowDown, ArrowUp, FileText, Merge, Trash2, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ChevronRight,
+  FileText,
+  Merge,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -14,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { isSegmentLabelTaken } from '@/domain/actions/segments';
 import { drawingDisplayName } from '@/domain/drawings';
 import { markerSegmentIds } from '@/domain/markup/presentation';
+import { cn } from '@/lib/utils';
 import { EndFlangeIcon } from '@/features/markup/EndFlangeIcon';
 import type { Segment, SegmentStatus } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
@@ -22,6 +33,7 @@ import { DeleteSegmentDialog } from './DeleteSegmentDialog';
 import { MergeSegmentDialog } from './MergeSegmentDialog';
 import { ColourPicker, CommitInput } from './fields';
 import { parseOptionalNumber } from './parse';
+import { hasProcessData, processSummary } from './process-data';
 import {
   linkDrawingCommand,
   moveSegmentCommand,
@@ -143,6 +155,12 @@ function SegmentForm({ segment }: { segment: Segment }) {
   const drawings = useOrderedDrawings();
   const [deleting, setDeleting] = useState(false);
   const [merging, setMerging] = useState(false);
+  // Process data is entered once: open for a new segment, folded to one line after.
+  const [processOpen, setProcessOpen] = useState(() => !hasProcessData(segment));
+  const summary = processSummary(segment, {
+    pressure: units?.pressure ?? '',
+    temperature: units?.temperature ?? '',
+  });
   const order = useProjectStore((s) => s.doc?.segmentOrder);
   const position = order?.indexOf(segment.id) ?? -1;
   const segmentCount = order?.length ?? 0;
@@ -238,66 +256,91 @@ function SegmentForm({ segment }: { segment: Segment }) {
         className="min-h-14 resize-y"
       />
 
-      <Heading>{t('segments.details.process')}</Heading>
-      {/* The A2.1 sheet takes "Liquid" or "Gas"; other text is kept but flagged on export. */}
-      <datalist id="segment-phases">
-        <option value="Gas" />
-        <option value="Liquid" />
-      </datalist>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2 space-y-1">
-          <Label htmlFor="segment-equipment" className="text-xs">
-            {t('segments.fields.equipment')}
-          </Label>
-          {textField('equipment')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-fluid" className="text-xs">
-            {t('segments.fields.fluid')}
-          </Label>
-          {textField('fluid')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-phase" className="text-xs">
-            {t('segments.fields.phase')}
-          </Label>
-          {textField('phase')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-pressure" className="text-xs">
-            {t('segments.fields.pressure', { unit: units?.pressure ?? '' })}
-          </Label>
-          {numberField('pressure')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-temperature" className="text-xs">
-            {t('segments.fields.temperature', { unit: units?.temperature ?? '' })}
-          </Label>
-          {numberField('temperature')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-streamNumber" className="text-xs">
-            {t('segments.fields.streamNumber')}
-          </Label>
-          {textField('streamNumber')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-h2sMoleFraction" className="text-xs">
-            {t('segments.fields.h2s')}
-          </Label>
-          {numberField('h2sMoleFraction', (v) =>
-            v < 0 || v > 1 ? 'segments.errors.fraction' : null,
-          )}
-        </div>
-        <div className="col-span-2 space-y-1">
-          <Label htmlFor="segment-molecularWeightOrDensity" className="text-xs">
-            {t('segments.fields.molecularWeightOrDensity')}
-          </Label>
-          {numberField('molecularWeightOrDensity', (v) =>
-            v <= 0 ? 'segments.errors.positive' : null,
-          )}
-        </div>
-      </div>
+      <Collapsible open={processOpen} onOpenChange={setProcessOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            data-testid="process-toggle"
+            className="flex w-full min-w-0 items-center gap-1 rounded pt-1 text-start text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight
+              aria-hidden="true"
+              className={cn('size-3.5 shrink-0 transition-transform', processOpen && 'rotate-90')}
+            />
+            <span className="shrink-0">{t('segments.details.process')}</span>
+            {!processOpen && (
+              <span
+                className="min-w-0 truncate ps-1 font-normal"
+                title={summary}
+                data-testid="process-summary"
+              >
+                {summary || t('segments.details.processNone')}
+              </span>
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          {/* The A2.1 sheet takes "Liquid" or "Gas"; other text is kept but flagged on export. */}
+          <datalist id="segment-phases">
+            <option value="Gas" />
+            <option value="Liquid" />
+          </datalist>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="col-span-2 space-y-1">
+              <Label htmlFor="segment-equipment" className="text-xs">
+                {t('segments.fields.equipment')}
+              </Label>
+              {textField('equipment')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-fluid" className="text-xs">
+                {t('segments.fields.fluid')}
+              </Label>
+              {textField('fluid')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-phase" className="text-xs">
+                {t('segments.fields.phase')}
+              </Label>
+              {textField('phase')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-pressure" className="text-xs">
+                {t('segments.fields.pressure', { unit: units?.pressure ?? '' })}
+              </Label>
+              {numberField('pressure')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-temperature" className="text-xs">
+                {t('segments.fields.temperature', { unit: units?.temperature ?? '' })}
+              </Label>
+              {numberField('temperature')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-streamNumber" className="text-xs">
+                {t('segments.fields.streamNumber')}
+              </Label>
+              {textField('streamNumber')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-h2sMoleFraction" className="text-xs">
+                {t('segments.fields.h2s')}
+              </Label>
+              {numberField('h2sMoleFraction', (v) =>
+                v < 0 || v > 1 ? 'segments.errors.fraction' : null,
+              )}
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label htmlFor="segment-molecularWeightOrDensity" className="text-xs">
+                {t('segments.fields.molecularWeightOrDensity')}
+              </Label>
+              {numberField('molecularWeightOrDensity', (v) =>
+                v <= 0 ? 'segments.errors.positive' : null,
+              )}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Heading>{t('segments.details.esdvs')}</Heading>
       {boundaries === 0 ? (

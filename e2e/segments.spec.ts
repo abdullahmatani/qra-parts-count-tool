@@ -57,7 +57,11 @@ test.describe('isolatable segments', () => {
     // SEG-02: the label is suggested; the new segment becomes active (SEG-06).
     expect(await newSegment(page, { fluid: 'Gas' })).toBe('IS-01');
     await expect(page.getByTestId('active-segment-chip')).toHaveText('New markers go to IS-01');
-    await expect(page.getByTestId('segment-details').getByLabel('Fluid')).toHaveValue('Gas');
+    // Process data entered: folded to one line, opened on a click.
+    const details = page.getByTestId('segment-details');
+    await expect(details.getByTestId('process-summary')).toHaveText('Gas');
+    await details.getByTestId('process-toggle').click();
+    await expect(details.getByLabel('Fluid')).toHaveValue('Gas');
     expect(await newSegment(page)).toBe('IS-02');
     await expect(page.getByTestId('segment-list').getByRole('button')).toHaveCount(2);
 

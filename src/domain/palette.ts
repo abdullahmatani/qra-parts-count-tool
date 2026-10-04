@@ -31,6 +31,12 @@ export const DOT_ALPHA = 0.7;
 export const END_FLANGE_ALPHA = 0.75;
 /** Opacity of a highlighter stroke: the linework under it stays readable. */
 export const HIGHLIGHTER_ALPHA = 0.35;
+/**
+ * Opacity of the segments' set-up (highlights, zones, ESDVs, end flanges)
+ * while counting, relative to how it is drawn otherwise: still there to see
+ * where a segment runs, faint enough for the equipment to stand out.
+ */
+export const SETUP_DIMMED_ALPHA = 0.4;
 
 /** Stroke dash patterns used after the palette cycles; index 0 is solid. */
 export const SEGMENT_DASH_VARIANTS: readonly (readonly number[])[] = [

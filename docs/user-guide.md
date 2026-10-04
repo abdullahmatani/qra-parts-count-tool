@@ -124,7 +124,8 @@ stage says where it is, with a button to go there.
    go to it. The toolbar shows which segment is active. The segment panel on the right also holds
    what the A2.1 parts count sheet asks for: the object or equipment, the H&MB stream number, the
    phase (**Liquid** or **Gas**), the H2S mole fraction, and the molecular weight (gas) or density
-   in kg/m³ (liquid).
+   in kg/m³ (liquid). Once anything is entered, **Process data** folds to one line (fluid, phase,
+   pressure, temperature, equipment); click it to open the fields again.
 2. Select the **ESDV** tool (`E`) and click each ESD valve on the drawing. In the inspector on the
    right, enter its tag and size, and choose the segment **upstream** and **downstream** of it. The
    boundary rule decides which of the two counts the valve itself; an ESDV can override the project
@@ -240,9 +241,9 @@ While counting, the workspace shows only what counting needs:
   **item editor**, the **count table** and the notes. Process data, ESDVs and linked drawings are
   not shown;
 - the segment list shows how many items each segment has;
-- ESDVs, end flanges, highlighting and dashed zones stay on the drawing but are locked: clicks go
-  through them, so they cannot be moved or deleted by accident. Circles placed on a segment's
-  highlighting still go to that segment.
+- ESDVs, end flanges, highlighting and dashed zones stay on the drawing, drawn faint so the
+  equipment stands out, and are locked: clicks go through them, so they cannot be moved or deleted
+  by accident. Circles placed on a segment's highlighting still go to that segment.
 
 To change a segment, click **1 Segments** in the header; nothing is lost. The stage is saved with
 the project.

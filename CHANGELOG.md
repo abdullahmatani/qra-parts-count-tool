@@ -5,6 +5,14 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Segment set-up drawn faint while counting**: in the Parts count stage, highlights, dashed
+  zones, ESDVs and end flanges (and their labels) are drawn at 40 % of their usual strength,
+  under the equipment, so the circles being counted stand out. Exported PDFs are unchanged.
+- **Process data folds away**: in the segment panel, **Process data** is a section that opens and
+  closes. It starts open for a segment with nothing entered and folded to one line (fluid, phase,
+  pressure, temperature, equipment) once anything is, so the ESDVs, linked drawings and notes
+  sit higher in the pane.
+
 - **Two stages: Segments, then Parts count.** The header shows the study's stage, **1 Segments**
   then **2 Parts count**, and the workspace shows only what the stage needs. Defining segments:
   the Highlighter, Dashed highlight, ESDV, End flange and Drawing link tools, and the segment's

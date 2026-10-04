@@ -12,6 +12,7 @@ import {
   HIGHLIGHTER_ALPHA,
   MARKER_SELECTION,
   MARKER_WARNING,
+  SETUP_DIMMED_ALPHA,
 } from '@/domain/palette';
 import {
   doubleLineBand,
@@ -42,6 +43,8 @@ export interface MarkerEntry {
   /** A free-form symbol's outline, relative to the circle (see MarkerStyle). */
   outline: readonly Point[] | null;
   segmentId: string | null;
+  /** Segment set-up while counting: drawn faint, under the equipment. */
+  dimmed: boolean;
 }
 
 /** A marker and the geometry it is drawn with this frame (moved or resized while dragged). */
@@ -157,6 +160,7 @@ function groupBy(entries: Iterable<Drawn>, width: (e: MarkerEntry) => number) {
   return groups.values();
 }
 
+/** Fills `shapes` at `alpha` of the current opacity, which is then restored. */
 function fillAll(
   ctx: CanvasRenderingContext2D,
   shapes: readonly Drawn[],
@@ -166,10 +170,11 @@ function fillAll(
   if (shapes.length === 0) return;
   ctx.beginPath();
   for (const shape of shapes) tracePath(ctx, shape);
-  ctx.globalAlpha = alpha;
+  const base = ctx.globalAlpha;
+  ctx.globalAlpha = base * alpha;
   ctx.fillStyle = style;
   ctx.fill();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = base;
 }
 
 /**
@@ -219,7 +224,7 @@ export function drawMarkers(
   entries: readonly MarkerEntry[],
   options: DrawOptions,
 ): void {
-  const { matrix: m, devicePixelRatio: dpr, unitsPerPixel: upp } = options;
+  const { matrix: m, devicePixelRatio: dpr } = options;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (options.clear !== false) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   if (entries.length === 0) return;
@@ -228,6 +233,26 @@ export function drawMarkers(
   ctx.lineCap = 'butt';
 
   const drawn = entries.map((entry): Drawn => [entry, previewGeometry(entry, options.preview)]);
+  // While counting, the segments' set-up goes first and faint, so the
+  // equipment is drawn over it at full strength.
+  const faint = drawn.filter(([e]) => e.dimmed);
+  if (faint.length) paintMarkers(ctx, faint, options, SETUP_DIMMED_ALPHA);
+  paintMarkers(ctx, faint.length ? drawn.filter(([e]) => !e.dimmed) : drawn, options, 1);
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+
+  if (options.showLabels) drawLabels(ctx, drawn, options);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/** Paints markers in the current transform, every opacity scaled by `fade`. */
+function paintMarkers(
+  ctx: CanvasRenderingContext2D,
+  drawn: readonly Drawn[],
+  options: DrawOptions,
+  fade: number,
+): void {
+  const upp = options.unitsPerPixel;
   const circles = drawn.filter(([, g]) => g.type === 'circle');
   const rects = drawn.filter(([, g]) => g.type === 'rect');
   const runs = drawn.filter(([, g]) => g.type === 'polyline');
@@ -237,28 +262,28 @@ export function drawMarkers(
 
   // Halos behind the markers: count-table highlight, selection, hover and
   // warnings (amber outline).
-  ctx.globalAlpha = 0.35;
+  ctx.globalAlpha = 0.35 * fade;
   strokeAll(
     ctx,
     drawn.filter(([e]) => e.highlighted),
     MARKER_SELECTION,
     16 * upp,
   );
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.45 * fade;
   strokeAll(
     ctx,
     drawn.filter(([e]) => e.selected),
     MARKER_SELECTION,
     8 * upp,
   );
-  ctx.globalAlpha = 0.25;
+  ctx.globalAlpha = 0.25 * fade;
   strokeAll(
     ctx,
     drawn.filter(([e]) => e.id === options.hoveredId && !e.selected),
     MARKER_SELECTION,
     6 * upp,
   );
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = fade;
   strokeAll(
     ctx,
     drawn.filter(([e]) => e.warning),
@@ -267,9 +292,9 @@ export function drawMarkers(
   );
 
   // Highlighter strokes at the bottom: translucent paint over the linework.
-  ctx.globalAlpha = HIGHLIGHTER_ALPHA;
+  ctx.globalAlpha = HIGHLIGHTER_ALPHA * fade;
   for (const group of groupBy(strokes, () => 0)) strokeAll(ctx, group.shapes, group.colour, 0);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = fade;
 
   // Dashed highlights: areas and line runs (ANN-01).
   const areaDash = [9 * upp, 5 * upp];
@@ -279,9 +304,9 @@ export function drawMarkers(
   }
   ctx.lineCap = 'round';
   for (const group of groupBy(runs, () => 2.5)) {
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.18 * fade;
     strokeAll(ctx, group.shapes, group.colour, 10 * upp);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = fade;
     strokeAll(ctx, group.shapes, group.colour, 2.5 * upp, areaDash);
   }
   ctx.lineCap = 'butt';
@@ -320,9 +345,6 @@ export function drawMarkers(
     strokeAll(ctx, group.shapes, group.colour, group.width * upp);
   }
   ctx.setLineDash([]);
-
-  if (options.showLabels) drawLabels(ctx, drawn, options);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 /** A light halo around the marker under the pointer, drawn over everything else. */
@@ -390,8 +412,9 @@ function drawLabels(
   ctx.strokeStyle = '#ffffff';
   const margin = 150;
   const grid = new LabelGrid();
-  // Selected markers claim their label space first.
-  const ordered = [...drawn].sort(([a], [b]) => Number(b.selected) - Number(a.selected));
+  // Selected markers claim their label space first, faint set-up last.
+  const rank = (e: MarkerEntry) => (e.selected ? 0 : e.dimmed ? 2 : 1);
+  const ordered = [...drawn].sort(([a], [b]) => rank(a) - rank(b));
   for (const [entry, geometry] of ordered) {
     if (!entry.label) continue;
     const anchor = labelAnchor(geometry);
@@ -410,8 +433,10 @@ function drawLabels(
     const width = entry.label.length * LABEL_CHAR_WIDTH;
     if (!grid.place(x - 1, top, x + width + 1, top + LABEL_HEIGHT)) continue;
     ctx.textBaseline = anchor.above ? 'bottom' : 'middle';
+    ctx.globalAlpha = entry.dimmed ? SETUP_DIMMED_ALPHA : 1;
     ctx.strokeText(entry.label, x, y);
     ctx.fillStyle = entry.colour;
     ctx.fillText(entry.label, x, y);
   }
+  ctx.globalAlpha = 1;
 }

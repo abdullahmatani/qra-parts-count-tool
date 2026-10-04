@@ -251,7 +251,7 @@ A study runs in two stages, chosen in the header: **1 Segments**, then **2 Parts
 | Toolbar | Select, Highlighter, Dashed highlight, ESDV, End flange, Drawing link; Auto trace | Select, Circle, Stamp; Line run when pipe lengths are counted |
 | Right pane | Selected marker, segment set-up (label, colour, description, process data, bounding ESDVs and end flanges, linked drawings), notes | Segment status and counted/checked by, item editor, count table, notes |
 | Segment list | Segments and their status; **+ Segment** | Segments with their item count and status |
-| Markers | All editable | ESDVs, end flanges, highlights, zones (and line runs when pipe lengths are not counted) are locked |
+| Markers | All editable | ESDVs, end flanges, highlights, zones (and line runs when pipe lengths are not counted) are drawn faint and locked |
 
 Moving to the parts count lists what may be unfinished (set-up in no segment, segments with nothing marked, segments with fewer than two ESDVs or end flanges); the user can start anyway. Going back to Segments is one click. The stage is saved in the project (`stage`), so everyone who opens it sees the same stage; a read-only project can view either stage.
 
