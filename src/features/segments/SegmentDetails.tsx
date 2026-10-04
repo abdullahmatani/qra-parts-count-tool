@@ -37,10 +37,96 @@ function Heading({ children }: { children: React.ReactNode }) {
   return <h3 className="pt-1 text-xs font-medium text-muted-foreground">{children}</h3>;
 }
 
+/** Where the segment's count stands (SEG-09). */
+function StatusSelect({ segment, className }: { segment: Segment; className?: string }) {
+  const { t } = useTranslation();
+  const readOnly = useProjectStore((s) => s.readOnly);
+  return (
+    <Select
+      value={segment.status}
+      onValueChange={(status) =>
+        updateSegmentCommand(segment.id, { status: status as SegmentStatus })
+      }
+      disabled={readOnly}
+    >
+      <SelectTrigger className={className ?? 'w-32'} aria-label={t('segments.fields.status')}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUSES.map((status) => (
+          <SelectItem key={status} value={status}>
+            {t(`segments.status.${status}`)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+/** Who counted and who checked the segment. */
+function ReviewFields({ segment }: { segment: Segment }) {
+  const { t } = useTranslation();
+  const readOnly = useProjectStore((s) => s.readOnly);
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-1">
+        <Label htmlFor="segment-countedBy" className="text-xs">
+          {t('segments.fields.countedBy')}
+        </Label>
+        <CommitInput
+          id="segment-countedBy"
+          value={segment.countedBy}
+          onCommit={(countedBy) => updateSegmentCommand(segment.id, { countedBy })}
+          disabled={readOnly}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="segment-checkedBy" className="text-xs">
+          {t('segments.fields.checkedBy')}
+        </Label>
+        <CommitInput
+          id="segment-checkedBy"
+          value={segment.checkedBy}
+          onCommit={(checkedBy) => updateSegmentCommand(segment.id, { checkedBy })}
+          disabled={readOnly}
+        />
+      </div>
+    </div>
+  );
+}
+
 /**
- * The active segment (SEG-02..05, SEG-09): label, colour, description,
- * process data, status, bounding ESDVs and end flanges, and linked drawings.
- * Every field saves as you go and each change can be undone.
+ * The active segment while counting: only where its count stands and who
+ * counted and checked it. Its set-up was done in the Segments stage.
+ */
+export function SegmentCountPanel() {
+  const { t } = useTranslation();
+  const segment = useActiveSegment();
+  if (!segment) return null;
+  return (
+    <div key={segment.id} className="space-y-2 text-sm" data-testid="segment-count-panel">
+      <div className="flex items-center gap-2">
+        <span className="min-w-0 flex-1 text-xs text-muted-foreground">
+          {t('segments.fields.status')}
+        </span>
+        <StatusSelect segment={segment} className="w-36" />
+      </div>
+      {segment.description && (
+        <p className="line-clamp-2 text-xs text-muted-foreground" title={segment.description}>
+          {segment.description}
+        </p>
+      )}
+      <ReviewFields segment={segment} />
+    </div>
+  );
+}
+
+/**
+ * The active segment's set-up (SEG-02..05), while defining segments: label,
+ * colour, description, process data, bounding ESDVs and end flanges, and
+ * linked drawings. Its status and who counted and checked it are set while
+ * counting (`SegmentCountPanel`). Every field saves as you go and each change
+ * can be undone.
  */
 export function SegmentDetails() {
   const segment = useActiveSegment();
@@ -140,22 +226,6 @@ function SegmentForm({ segment }: { segment: Segment }) {
             disabled={readOnly}
           />
         </div>
-        <Select
-          value={segment.status}
-          onValueChange={(status) => update({ status: status as SegmentStatus })}
-          disabled={readOnly}
-        >
-          <SelectTrigger className="w-32" aria-label={t('segments.fields.status')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {t(`segments.status.${status}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <Textarea
@@ -335,32 +405,6 @@ function SegmentForm({ segment }: { segment: Segment }) {
           </SelectContent>
         </Select>
       )}
-
-      <Heading>{t('segments.details.review')}</Heading>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label htmlFor="segment-countedBy" className="text-xs">
-            {t('segments.fields.countedBy')}
-          </Label>
-          <CommitInput
-            id="segment-countedBy"
-            value={segment.countedBy}
-            onCommit={(countedBy) => update({ countedBy })}
-            disabled={readOnly}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-checkedBy" className="text-xs">
-            {t('segments.fields.checkedBy')}
-          </Label>
-          <CommitInput
-            id="segment-checkedBy"
-            value={segment.checkedBy}
-            onCommit={(checkedBy) => update({ checkedBy })}
-            disabled={readOnly}
-          />
-        </div>
-      </div>
 
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
         <Button

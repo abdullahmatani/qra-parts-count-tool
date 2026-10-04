@@ -26,12 +26,13 @@ import { AppMark } from './AppMark';
 import { OfflineIndicator } from './OfflineIndicator';
 import { SaveIndicator } from './SaveIndicator';
 import { exportProjectZip } from '@/features/project/project-zip-actions';
+import { StageSwitcher } from '@/features/stage/StageSwitcher';
 
 export interface HeaderProps {
   onCloseProject?: () => void;
 }
 
-/** Project name · save status · offline status · export · settings (FDS section 6). */
+/** Project name · stage · save status · offline status · export · settings (FDS section 6). */
 export function Header({ onCloseProject }: HeaderProps) {
   const { t } = useTranslation();
   const name = useProjectStore((s) => s.doc?.name ?? '');
@@ -53,6 +54,8 @@ export function Header({ onCloseProject }: HeaderProps) {
         )}
       </div>
       {readOnly && <Badge variant="outline">{t('header.readOnly')}</Badge>}
+      <Separator orientation="vertical" className="mx-1 h-5!" />
+      <StageSwitcher />
 
       <div className="ms-auto flex items-center gap-3">
         <SaveIndicator />

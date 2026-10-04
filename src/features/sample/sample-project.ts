@@ -58,6 +58,8 @@ export function buildSampleProject(
     now,
   );
   const doc = projectToDoc(project);
+  // The segments are done and counted: the sample opens at the parts count.
+  doc.stage = 'count';
 
   const drawingIds = SAMPLE_SHEETS.map((sheet, index) => {
     const drawing: Drawing = {

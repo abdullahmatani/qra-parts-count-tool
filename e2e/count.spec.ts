@@ -6,7 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test, type AppFixture } from './fixtures';
-import { createProject, importDrawings } from './helpers';
+import { createProject, importDrawings, setStage } from './helpers';
 
 async function start(app: AppFixture, name: string) {
   const dir = `count-${name}-${test.info().project.name}`;
@@ -22,6 +22,7 @@ async function start(app: AppFixture, name: string) {
   await page.getByTestId('left-pane').getByRole('button', { name: 'Segment' }).click();
   await page.getByRole('button', { name: 'Create segment' }).click();
   await expect(page.getByTestId('active-segment-chip')).toHaveText('New markers go to IS-01');
+  await setStage(page, 'count');
   return { dir, page };
 }
 

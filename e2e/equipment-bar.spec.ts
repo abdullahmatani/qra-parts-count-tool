@@ -17,7 +17,7 @@ const LIBRARY = {
   ],
 };
 
-async function open(app: AppFixture, name: string) {
+async function open(app: AppFixture, name: string, extra: Record<string, unknown> = {}) {
   const dir = `equipment-${name}-${test.info().project.name}`;
   await app.open();
   await seedProject(
@@ -27,7 +27,7 @@ async function open(app: AppFixture, name: string) {
       { file: 'PEFS-1001_A1.pdf', drawingNo: 'PEFS-1001', ...A1 },
       { file: 'PEFS-1001_A1.pdf', drawingNo: 'PEFS-1002', ...A1 },
     ],
-    { library: LIBRARY },
+    { library: LIBRARY, ...extra },
   );
   await openSeeded(app, dir);
   const page = app.page;
@@ -81,7 +81,15 @@ async function saved(app: AppFixture, dir: string): Promise<Saved> {
 test('the equipment bar sets the type and shape of new markers; Esc returns to Select', async ({
   app,
 }) => {
-  const { dir, page } = await open(app, 'bar');
+  // Counting, with pipe lengths: the dashed tool draws line runs.
+  const { dir, page } = await open(app, 'bar', {
+    stage: 'count',
+    settings: {
+      esdvBoundaryRule: 'upstream',
+      flangeConvention: 'perJoint',
+      pipeLengthCounting: true,
+    },
+  });
   const bar = page.getByTestId('equipment-bar');
   // Valves are offered per actuation; pipe is left to dashed line runs.
   await expect(bar.getByTestId('equipment-choice')).toHaveText([

@@ -26,7 +26,8 @@ import { MarkupViewer } from '@/features/markup/MarkupViewer';
 import { ShortcutsDialog } from '@/features/markup/ShortcutsDialog';
 import { NotesPanel } from '@/features/notes/NotesPanel';
 import { NewSegmentDialog } from '@/features/segments/NewSegmentDialog';
-import { SegmentDetails } from '@/features/segments/SegmentDetails';
+import { SegmentCountPanel, SegmentDetails } from '@/features/segments/SegmentDetails';
+import { StartCountDialog } from '@/features/stage/StartCountDialog';
 import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
 import { CountTablePanel } from '@/features/count/CountTablePanel';
 import { useMarkerWarnings } from '@/features/count/useCount';
@@ -55,6 +56,7 @@ export function App() {
           onAddSegment={() => openDialog('newSegment')}
           rightPane={{
             segmentDetails: <SegmentDetails />,
+            segmentSummary: <SegmentCountPanel />,
             countTable: <CountTablePanel />,
             itemEditor: <MarkerInspector />,
             notes: <NotesPanel />,
@@ -81,6 +83,7 @@ export function App() {
       {hasProject && <SpacePickerDialog />}
       <ShortcutsDialog />
       {hasProject && <NewSegmentDialog />}
+      {hasProject && <StartCountDialog />}
       {hasProject && <LibraryDialog />}
       {hasProject && <TemplateMapperDialog />}
       {hasProject && <ExportDialog />}

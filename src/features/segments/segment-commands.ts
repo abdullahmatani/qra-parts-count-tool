@@ -18,6 +18,8 @@ import {
   type SegmentPatch,
 } from '@/domain/actions/segments';
 import { geometryBounds, type Box } from '@/domain/markup/geometry';
+import { isEditableInStage } from '@/domain/stage';
+import { currentStage } from '@/features/stage/stage';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -147,9 +149,13 @@ export function showSegmentOnDrawing(segmentId: string, drawingId: string): void
 
 /** Opens a marker's drawing, zooms to it and selects it. */
 export function showMarker(markerId: string): void {
-  const marker = useProjectStore.getState().doc?.markers[markerId];
-  if (!marker) return;
+  const doc = useProjectStore.getState().doc;
+  const marker = doc?.markers[markerId];
+  if (!doc || !marker) return;
   const ui = useUiStore.getState();
   ui.focusDrawing(marker.drawingId, padded(geometryBounds(marker.geometry), 120));
-  ui.setSelection([markerId]);
+  // While counting, the segments' set-up is shown but stays locked.
+  if (isEditableInStage(marker, currentStage(), doc.settings.pipeLengthCounting)) {
+    ui.setSelection([markerId]);
+  }
 }

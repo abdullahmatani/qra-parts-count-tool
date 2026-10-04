@@ -238,7 +238,6 @@
     },
     "details": {
       "process": "Process data",
-      "review": "Count and check",
       "esdvs": "Bounding ESDVs",
       "esdvsHint": "Set on each ESDV: its upstream and downstream segments.",
       "esdvsFew_one": "Only {{count}} bounding ESDV: a segment usually has two or more.",
@@ -279,6 +278,53 @@
       "description": "Its markers, items, notes and linked drawings move to the segment you choose, and {{label}} is removed. An ESDV between the two is no longer a boundary.",
       "target": "Merge into",
       "confirm": "Merge"
+    },
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
+  },
+  "stage": {
+    "label": "Workflow step",
+    "segments": "Segments",
+    "count": "Parts count",
+    "segmentsHint": "Define the isolatable segments and their extent: highlight the pipework, place ESDVs and end flanges, and link the drawings.",
+    "countHint": "Count the parts in each segment. The segments are locked while counting; go back to Segments to change them.",
+    "history": {
+      "segments": "Back to segment set-up",
+      "count": "Start the parts count"
+    },
+    "toolIn": {
+      "segments": "{{tool}} is used to define segments.",
+      "count": "{{tool}} is used in the parts count."
+    },
+    "goTo": "Go to {{stage}}",
+    "lineRun": "Line run",
+    "start": {
+      "title": "Start the parts count?",
+      "description": "Segment set-up (process data, ESDVs, end flanges, highlighting and drawing links) is hidden and locked while counting. You can go back to Segments at any time.",
+      "summary_one": "{{count}} segment is defined.",
+      "summary_other": "{{count}} segments are defined.",
+      "ready": "Nothing looks unfinished.",
+      "issues": "These may not be finished:",
+      "kinds": {
+        "unassignedSetup_one": "{{count}} highlight, zone, ESDV or end flange is not in a segment",
+        "unassignedSetup_other": "{{count}} highlights, zones, ESDVs or end flanges are not in a segment",
+        "segmentsWithoutExtent_one": "{{count}} segment has nothing marked and no drawing",
+        "segmentsWithoutExtent_other": "{{count}} segments have nothing marked and no drawing",
+        "fewBoundaries_one": "{{count}} segment has fewer than two ESDVs or end flanges",
+        "fewBoundaries_other": "{{count}} segments have fewer than two ESDVs or end flanges"
+      },
+      "show": "Show",
+      "confirm": "Start counting",
+      "confirmAnyway": "Start counting anyway"
+    },
+    "bar": {
+      "label": "Segment tool options",
+      "select": "Click a marker to edit it, drag to move it, or drag on the drawing to select several.",
+      "dashed": "Drag a dashed zone round equipment, or click points for a line run and double-click to finish.",
+      "link": "Drag a box round an off-page connector, then choose the drawing it continues on."
+    },
+    "countBar": {
+      "lineRun": "Click points along the pipe and double-click to finish the line run."
     }
   },
   "canvas": {
@@ -293,7 +339,9 @@
     "item": "Item editor",
     "notes": "Notes",
     "selectSegment": "Select or create a segment to see its details.",
-    "noItem": "Place or select a marker to edit its item."
+    "noItem": "Place or select a marker to edit its item.",
+    "selection": "Selected marker",
+    "noSelection": "Select a marker to edit it."
   },
   "status": {
     "zoom": "Zoom {{zoom}}%",

@@ -113,6 +113,12 @@ Click a drawing in the list to open it in a tab.
 
 An isolatable segment is the inventory between ESD valves. It is the unit of the count.
 
+A study runs in two stages, shown in the header: **1 Segments**, then **2 Parts count**. A new
+project starts at **Segments**: the toolbar holds the tools that set out segments (Highlighter,
+Dashed highlight, ESDV, End flange, Drawing link) and the right pane the segment's set-up. When the
+segments are done, click **2 Parts count** (section 7). Pressing the key of a tool from the other
+stage says where it is, with a button to go there.
+
 1. Click **+ Segment** in the left pane and give it a label (for example `IS-01`), a colour, the
    fluid and the operating conditions. The new segment becomes the **active segment**: new markers
    go to it. The toolbar shows which segment is active. The segment panel on the right also holds
@@ -220,6 +226,26 @@ same Excel key (or name); nothing in the project is removed, and existing items 
 mappings keep working.
 
 ## 7. Counting
+
+When the segments are defined, click **2 Parts count** in the header. A check lists what may not be
+finished: highlighting, zones, ESDVs or end flanges that are in no segment, segments with nothing
+marked, and segments with fewer than two ESDVs or end flanges. **Show** takes you there; **Start
+counting** (or **Start counting anyway**) moves on.
+
+While counting, the workspace shows only what counting needs:
+
+- the toolbar holds **Select**, **Circle** and **Stamp** (and **Line run** when pipe lengths are
+  counted), with the equipment bar under it;
+- the right pane shows the segment's **status**, **Counted by** and **Checked by**, then the
+  **item editor**, the **count table** and the notes. Process data, ESDVs and linked drawings are
+  not shown;
+- the segment list shows how many items each segment has;
+- ESDVs, end flanges, highlighting and dashed zones stay on the drawing but are locked: clicks go
+  through them, so they cannot be moved or deleted by accident. Circles placed on a segment's
+  highlighting still go to that segment.
+
+To change a segment, click **1 Segments** in the header; nothing is lost. The stage is saved with
+the project.
 
 1. Choose the **Circle** tool (`C`) and click each leak source. The item editor opens with the size
    field ready: type the size (`2`, `1-1/2`, `DN50`) and press Enter.

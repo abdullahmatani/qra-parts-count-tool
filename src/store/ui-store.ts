@@ -9,10 +9,15 @@ import { DOUBLE_LINE_LENGTH_FRACTION } from '@/domain/markup/esdv-boundary';
 import type { Box } from '@/domain/markup/geometry';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { MarkerFilterState } from '@/domain/markup/presentation';
-import type { EndFlangeDestination, MarkerSymbol, Point } from '@/domain/schema/types';
+import type {
+  EndFlangeDestination,
+  MarkerSymbol,
+  Point,
+  ProjectStage,
+} from '@/domain/schema/types';
+import type { StageTool } from '@/domain/stage';
 
-export type Tool =
-  'select' | 'circle' | 'dashed' | 'highlighter' | 'link' | 'esdv' | 'endFlange' | 'stamp';
+export type Tool = StageTool;
 
 export interface Viewport {
   /** Drawing coordinate at the centre of the view. */
@@ -54,6 +59,7 @@ export type DialogName =
   | 'openZip'
   | 'linkSuggestions'
   | 'newSegment'
+  | 'startCount'
   | null;
 
 export interface UiState {
@@ -116,6 +122,8 @@ export interface UiState {
   navHistory: { drawingId: string; view: Viewport | null }[];
   /** SEG-05: an area of a drawing to bring into view once its viewer is ready. */
   pendingFocus: { drawingId: string; box: Box | null } | null;
+  /** The stage shown in a read-only project, which cannot record the stage itself. */
+  stageView: ProjectStage | null;
 
   openDrawing: (drawingId: string) => void;
   closeDrawing: (drawingId: string) => void;
@@ -154,6 +162,7 @@ export interface UiState {
   setSelectedLink: (linkId: string | null) => void;
   pushNav: (entry: { drawingId: string; view: Viewport | null }) => void;
   popNav: () => { drawingId: string; view: Viewport | null } | null;
+  setStageView: (stage: ProjectStage | null) => void;
   reset: () => void;
 }
 
@@ -200,6 +209,7 @@ const initial = {
   itemDefaults: { equipmentTypeId: null, actuation: null },
   lastItemId: null,
   pendingFocus: null,
+  stageView: null,
   selectedLinkId: null,
   navHistory: [],
 } satisfies Partial<UiState>;
@@ -303,5 +313,6 @@ export const useUiStore = create<UiState>()((set, get) => ({
     if (last) set({ navHistory: history.slice(0, -1) });
     return last;
   },
+  setStageView: (stageView) => set({ stageView }),
   reset: () => set({ ...initial }),
 }));

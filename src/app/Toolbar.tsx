@@ -12,16 +12,23 @@ import { useProjectStore } from '@/store/project-store';
 import { useUiStore, type Tool } from '@/store/ui-store';
 import { MarkerFilterMenu } from '@/features/markup/MarkerFilters';
 import { useSearchStore } from '@/features/search/search-store';
+import { useStage, useStageTools } from '@/features/stage/stage';
 import { TOOLS } from './tools';
 
 /**
- * Markup toolbar. The active segment's colour tints the toolbar so the user
- * always sees where new markers go (FDS section 6).
+ * Markup toolbar, with the tools of the stage: segment set-up while defining
+ * segments, equipment while counting. The active segment's colour tints the
+ * toolbar so the user always sees where new markers go (FDS section 6).
  */
 export function Toolbar() {
   const { t } = useTranslation();
   const tool = useUiStore((s) => s.tool);
   const setTool = useUiStore((s) => s.setTool);
+  const stage = useStage();
+  const stageTools = useStageTools();
+  const tools = TOOLS.filter((def) => stageTools.includes(def.tool));
+  // Names beside the icons when the stage's few tools leave room for them.
+  const labelClass = tools.length <= 4 ? 'hidden xl:inline' : 'hidden 2xl:inline';
   const showLabels = useUiStore((s) => s.showLabels);
   const showLinks = useUiStore((s) => s.showLinks);
   const toggleLabels = useUiStore((s) => s.toggleLabels);
@@ -57,19 +64,23 @@ export function Toolbar() {
         onValueChange={(value) => value && setTool(value as Tool)}
         disabled={readOnly}
       >
-        {TOOLS.map(({ tool: id, icon: Icon, labelKey, shortcut }) => (
-          <Tooltip key={id}>
-            <TooltipTrigger asChild>
-              <ToggleGroupItem value={id} aria-label={t(labelKey)} className="px-2.5">
-                <Icon />
-                <span className="hidden 2xl:inline">{t(labelKey)}</span>
-              </ToggleGroupItem>
-            </TooltipTrigger>
-            <TooltipContent>
-              {t(labelKey)} <Kbd>{shortcut}</Kbd>
-            </TooltipContent>
-          </Tooltip>
-        ))}
+        {tools.map(({ tool: id, icon: Icon, labelKey, shortcut }) => {
+          // While counting, the dashed tool only draws line runs.
+          const label = id === 'dashed' && stage === 'count' ? t('stage.lineRun') : t(labelKey);
+          return (
+            <Tooltip key={id}>
+              <TooltipTrigger asChild>
+                <ToggleGroupItem value={id} aria-label={label} className="px-2.5">
+                  <Icon />
+                  <span className={labelClass}>{label}</span>
+                </ToggleGroupItem>
+              </TooltipTrigger>
+              <TooltipContent>
+                {label} <Kbd>{shortcut}</Kbd>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </ToggleGroup>
 
       <Separator orientation="vertical" className="mx-1 h-5!" />

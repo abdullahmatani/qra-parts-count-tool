@@ -5,6 +5,20 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Two stages: Segments, then Parts count.** The header shows the study's stage, **1 Segments**
+  then **2 Parts count**, and the workspace shows only what the stage needs. Defining segments:
+  the Highlighter, Dashed highlight, ESDV, End flange and Drawing link tools, and the segment's
+  set-up in the right pane, with the selected ESDV, end flange or link above it. Counting: the
+  Select, Circle and Stamp tools (and Line run when pipe lengths are counted) with the equipment
+  bar; the right pane shows the segment's status and who counted and checked it, the item editor
+  and the count table, and no process data, ESDVs or linked drawings; the segment list shows each
+  segment's item count and no **+ Segment**. While counting, ESDVs, end flanges, highlights and
+  dashed zones are locked: clicks go through them. Starting the count lists what may be unfinished
+  in the segments (set-up in no segment, segments with nothing marked or fewer than two ESDVs or
+  end flanges), with **Show** buttons; going back to Segments is one click. The stage is saved in
+  the project file as `stage` (`segments` or `count`); a project from an older build opens at
+  Segments, and an older build ignores the field. The sample project opens at the parts count.
+
 - **Stamp moved to the top left** on annotated PDFs: the project, drawing, segment, count revision
   and export date are now in one box with the legend, above it, in the top-left corner, instead of
   a separate stamp in the top-right corner where it covered off-page connectors, notes and title

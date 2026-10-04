@@ -10,6 +10,7 @@ import { itemForMarker } from '@/domain/actions/items';
 import { updateItemCommand } from '@/features/count/item-commands';
 import { goBack, requestDeleteLink } from '@/features/links/link-commands';
 import { useSearchStore } from '@/features/search/search-store';
+import { currentStage, currentStageTools, setStageCommand } from '@/features/stage/stage';
 import { toggleAutoTrace } from '@/features/trace/auto-trace-actions';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
@@ -77,16 +78,39 @@ export function shortcutFor(
 
 const t = i18n.t.bind(i18n);
 
+/**
+ * A tool of the other stage was asked for: say where it is, with a button
+ * that goes there (counting starts through its confirmation).
+ */
+function toolOfOtherStage(name: string): void {
+  const target = currentStage() === 'segments' ? 'count' : 'segments';
+  toast(t(`stage.toolIn.${target}`, { tool: name }), {
+    action: {
+      label: t('stage.goTo', { stage: t(`stage.${target}`) }),
+      onClick: () =>
+        target === 'count'
+          ? useUiStore.getState().openDialog('startCount')
+          : setStageCommand('segments'),
+    },
+  });
+}
+
 /** Runs an action; returns false when it did not apply. */
 export function runShortcut(action: ShortcutAction): boolean {
   const project = useProjectStore.getState();
   const ui = useUiStore.getState();
   if (!project.doc) return false;
   switch (action.kind) {
-    case 'tool':
+    case 'tool': {
       if (project.readOnly && action.tool !== 'select') return false;
+      if (!currentStageTools().includes(action.tool)) {
+        const def = TOOLS.find((d) => d.tool === action.tool);
+        toolOfOtherStage(def ? t(def.labelKey) : action.tool);
+        return true;
+      }
       ui.setTool(action.tool);
       return true;
+    }
     case 'undo':
       return !project.readOnly && project.undo() !== null;
     case 'redo':
@@ -102,6 +126,10 @@ export function runShortcut(action: ShortcutAction): boolean {
       return true;
     case 'autoTrace':
       if (project.readOnly) return false;
+      if (currentStage() !== 'segments') {
+        toolOfOtherStage(t('autoTrace.button'));
+        return true;
+      }
       return toggleAutoTrace();
     case 'copy': {
       const count = copySelection();
@@ -118,7 +146,7 @@ export function runShortcut(action: ShortcutAction): boolean {
       return selectAllOnDrawing() > 0 || ui.activeDrawingId !== null;
     case 'equipmentType': {
       // Sets the type of the selected item and of the next circle placed.
-      if (project.readOnly) return false;
+      if (project.readOnly || currentStage() !== 'count') return false;
       ui.setItemDefaults({ equipmentTypeId: action.typeId });
       const ids = selectedMarkerIds();
       const item = ids.length === 1 ? itemForMarker(project.doc, ids[0]!) : undefined;

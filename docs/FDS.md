@@ -244,6 +244,17 @@ All project state lives in one versioned JSON file in the working directory; dra
 
 The main screen is a three-pane workspace: drawings on the left, the canvas in the centre, and the active segment's count and notes on the right.
 
+A study runs in two stages, chosen in the header: **1 Segments**, then **2 Parts count**. The workspace shows only what the stage needs:
+
+| | Segments | Parts count |
+| --- | --- | --- |
+| Toolbar | Select, Highlighter, Dashed highlight, ESDV, End flange, Drawing link; Auto trace | Select, Circle, Stamp; Line run when pipe lengths are counted |
+| Right pane | Selected marker, segment set-up (label, colour, description, process data, bounding ESDVs and end flanges, linked drawings), notes | Segment status and counted/checked by, item editor, count table, notes |
+| Segment list | Segments and their status; **+ Segment** | Segments with their item count and status |
+| Markers | All editable | ESDVs, end flanges, highlights, zones (and line runs when pipe lengths are not counted) are locked |
+
+Moving to the parts count lists what may be unfinished (set-up in no segment, segments with nothing marked, segments with fewer than two ESDVs or end flanges); the user can start anyway. Going back to Segments is one click. The stage is saved in the project (`stage`), so everyone who opens it sees the same stage; a read-only project can view either stage.
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ Project name · Save status (Saved 10:42) · Offline ● · Export · Settings │
@@ -271,7 +282,7 @@ The main screen is a three-pane workspace: drawings on the left, the canvas in t
 | Project setup | Metadata, template upload, settings (boundary rule, flange convention, pipe length counting, units) |
 | Drawing register | Table of drawings with metadata, segment links, marker counts, revision |
 | Canvas | View, mark up and navigate drawings |
-| Segment panel | Segment details, linked drawings, status |
+| Segment panel | Segments stage: segment set-up and linked drawings. Parts count stage: status, counted by, checked by |
 | Count table | Live totals for the active segment; click a cell to highlight items |
 | Item editor | Quick entry for type, size, actuation, tag, quantity; opens on marker placement |
 | Notes | Segment notes with timestamped entries |

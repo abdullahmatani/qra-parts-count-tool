@@ -58,6 +58,14 @@
       "type": "string",
       "maxLength": 20
     },
+    "stage": {
+      "default": "segments",
+      "type": "string",
+      "enum": [
+        "segments",
+        "count"
+      ]
+    },
     "createdAt": {
       "type": "string",
       "format": "date-time",

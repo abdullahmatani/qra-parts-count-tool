@@ -40,6 +40,8 @@ import type {
   MarkerSymbol,
   StrokeGeometry,
 } from '@/domain/schema/types';
+import { isEditableInStage } from '@/domain/stage';
+import { currentStage } from '@/features/stage/stage';
 import i18n from '@/i18n';
 import { newId } from '@/lib/ids';
 import { usePreferences } from '@/store/preferences';
@@ -481,8 +483,15 @@ export function selectAllOnDrawing(): number {
   const { activeDrawingId: drawingId, filters } = useUiStore.getState();
   if (!doc || !drawingId) return 0;
   const items = itemsByMarker(doc.items);
+  // While counting, the segments' set-up is locked and cannot be selected.
+  const stage = currentStage();
   const ids = Object.values(doc.markers)
-    .filter((m) => m.drawingId === drawingId && isMarkerVisible(m, items.get(m.id), filters))
+    .filter(
+      (m) =>
+        m.drawingId === drawingId &&
+        isMarkerVisible(m, items.get(m.id), filters) &&
+        isEditableInStage(m, stage, doc.settings.pipeLengthCounting),
+    )
     .map((m) => m.id);
   useUiStore.getState().setSelection(ids);
   return ids.length;
