@@ -6,6 +6,19 @@ const ui = () => useUiStore.getState();
 describe('ui store', () => {
   beforeEach(() => ui().reset());
 
+  it('keeps the app state (offline readiness, a waiting update) when a project closes', () => {
+    const update = () => {};
+    ui().setOfflineReady(true);
+    ui().setAppUpdate(update);
+    ui().openDrawing('a');
+    ui().reset();
+    expect(ui().offlineReady).toBe(true);
+    expect(ui().appUpdate).toBe(update);
+    expect(ui().openDrawingIds).toEqual([]);
+    ui().setOfflineReady(false);
+    ui().setAppUpdate(null);
+  });
+
   it('opens drawings as tabs and activates them', () => {
     ui().openDrawing('a');
     ui().openDrawing('b');

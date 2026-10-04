@@ -5,6 +5,13 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **No more toasts from the offline cache over the panes**: when the app finishes caching for
+  offline use, the **Offline ready** indicator in the header (and on the start screen) lights up
+  for a moment and is announced to screen readers, instead of a toast over the right pane that
+  stayed while the pointer was on it. A new version of the app shows as an **Update** button
+  beside the indicator, instead of a toast that never went away. Offline readiness is also no
+  longer forgotten when a project is opened or closed.
+
 - **Equipment bar fits the window**: the equipment types that do not fit in the bar go in a
   **… more** menu at its end (with their keyboard keys) instead of running off the edge, and the
   chosen type always stays in the bar, shortened if the window is narrow.

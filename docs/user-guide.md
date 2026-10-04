@@ -13,7 +13,8 @@ a folder on your computer and are never uploaded anywhere.
   1366 × 768). These browsers can read and write a local folder. In Firefox and Safari, which
   cannot, a project sent as a `.zip` opens read-only (section 11).
 - Open the app once while online. After that it works with no network: the header shows
-  **Offline ready** when everything is cached.
+  **Offline ready** when everything is cached. When a new version of the app is published, an
+  **Update** button appears beside it; click it to reload into the new version.
 - Make an empty folder for each study, for example on a project share. This is the **working
   directory**: the project file, the drawings, the exports and automatic backups all live in it, so
   you can zip it, archive it or hand it to a checker.

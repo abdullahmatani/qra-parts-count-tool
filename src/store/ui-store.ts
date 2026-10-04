@@ -86,6 +86,8 @@ export interface UiState {
   dialog: DialogName;
   /** Offline readiness reported by the service worker. */
   offlineReady: boolean;
+  /** Reloads into a new version of the app that is waiting, if there is one. */
+  appUpdate: (() => void) | null;
   /** Size of the last circle drawn, as a fraction of the drawing's longer side. */
   circleRadiusFraction: number;
   /** How the next equipment marker is drawn (ring, dot, square or free-form outline). */
@@ -141,6 +143,7 @@ export interface UiState {
   setFilters: (filters: Partial<MarkerFilters>) => void;
   openDialog: (dialog: DialogName) => void;
   setOfflineReady: (ready: boolean) => void;
+  setAppUpdate: (update: (() => void) | null) => void;
   setCircleRadiusFraction: (fraction: number) => void;
   setMarkerSymbol: (symbol: MarkerSymbol) => void;
   setHighlighterPen: (pen: HighlighterPen) => void;
@@ -217,6 +220,7 @@ const initial = {
 export const useUiStore = create<UiState>()((set, get) => ({
   ...initial,
   offlineReady: false,
+  appUpdate: null,
 
   openDrawing: (drawingId) =>
     set((state) => ({
@@ -276,6 +280,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
   openDialog: (dialog) => set({ dialog }),
   setOfflineReady: (offlineReady) => set({ offlineReady }),
+  setAppUpdate: (appUpdate) => set({ appUpdate }),
   setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
   setMarkerSymbol: (markerSymbol) => set({ markerSymbol }),
   setHighlighterPen: (highlighterPen) => set({ highlighterPen }),
@@ -314,5 +319,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
     return last;
   },
   setStageView: (stageView) => set({ stageView }),
-  reset: () => set({ ...initial }),
+  // The app's own state (offline readiness, a waiting update) outlives a project.
+  reset: () =>
+    set((state) => ({ ...initial, offlineReady: state.offlineReady, appUpdate: state.appUpdate })),
 }));

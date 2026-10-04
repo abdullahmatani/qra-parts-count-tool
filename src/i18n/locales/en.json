@@ -46,8 +46,8 @@
     "readyDetail": "All app files are cached. The app works with no network connection.",
     "caching": "Caching for offline use",
     "cachingDetail": "The app is still caching its files for offline use.",
-    "updateAvailable": "A new version of the app is available.",
-    "offlineReadyToast": "The app is now available offline."
+    "updateAvailable": "A new version of the app is available. Click to reload into it.",
+    "update": "Update"
   },
   "toolbar": {
     "label": "Markup tools",
