@@ -73,6 +73,8 @@ test.describe('segment notes', () => {
     await editor.fill('Flanges assumed ANSI 300');
     await editor.selectText();
     await panel.getByRole('button', { name: 'Bold' }).click();
+    // The editor takes the focus back, with the text selected, on the next frame.
+    await expect(editor).toBeFocused();
     await editor.press('End');
     await editor.pressSequentially('\nvents\ndrains');
     await editor.press('Control+Enter');
