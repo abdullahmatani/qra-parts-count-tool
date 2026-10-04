@@ -155,6 +155,7 @@ export function ExportDialog() {
   const [csv, setCsv] = useState(false);
   const [drawingPdfs, setDrawingPdfs] = useState(true);
   const [segmentPdfs, setSegmentPdfs] = useState(false);
+  const [allSegmentsPdf, setAllSegmentsPdf] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [result, setResult] = useState<ExportResult | null>(null);
@@ -210,6 +211,7 @@ export function ExportDialog() {
           csv,
           drawingPdfs,
           segmentPdfs,
+          allSegmentsPdf,
           accepted: issues.map((c) => ({ kind: c.kind, count: c.count, names: c.names })),
           onProgress: setProgress,
         }),
@@ -222,7 +224,7 @@ export function ExportDialog() {
     }
   };
 
-  const nothing = !excel && !csv && !drawingPdfs && !segmentPdfs;
+  const nothing = !excel && !csv && !drawingPdfs && !segmentPdfs && !allSegmentsPdf;
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -295,6 +297,14 @@ export function ExportDialog() {
             label={t('export.segmentPdfs')}
           >
             <p className="text-xs text-muted-foreground">{t('export.segmentPdfsHint')}</p>
+          </OutputOption>
+          <OutputOption
+            id="export-all-segments-pdf"
+            checked={allSegmentsPdf}
+            onChange={setAllSegmentsPdf}
+            label={t('export.allSegmentsPdf')}
+          >
+            <p className="text-xs text-muted-foreground">{t('export.allSegmentsPdfHint')}</p>
           </OutputOption>
         </section>
         {blocked && (

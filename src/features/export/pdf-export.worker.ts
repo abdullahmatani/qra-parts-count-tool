@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 /**
  * Annotated PDF export worker (FDS section 8.2): pdf-lib parses and writes
- * PDFs here, off the UI thread. Each request carries an id; a build that needs
- * source PDFs the worker does not hold answers with their keys instead.
+ * PDFs here, off the UI thread. Each request carries an id; a page that needs
+ * a source PDF the worker does not hold answers with its key instead.
  */
 import { PdfBuilder } from './pdf-build';
 import {
@@ -24,13 +24,19 @@ scope.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
     if (request.op === 'sources') {
       for (const { key, bytes } of request.sources) builder.addSource(key, bytes);
       reply({ id: request.id, ok: true, kind: 'done' });
-    } else if (request.op === 'build') {
-      const missing = builder.missing(request.job);
+    } else if (request.op === 'start') {
+      await builder.start(request.meta);
+      reply({ id: request.id, ok: true, kind: 'done' });
+    } else if (request.op === 'append') {
+      const missing = builder.missing([request.page]);
       if (missing.length) {
         reply({ id: request.id, ok: true, kind: 'missing', keys: missing });
         return;
       }
-      const bytes = await builder.build(request.job);
+      await builder.append(request.page);
+      reply({ id: request.id, ok: true, kind: 'done' });
+    } else if (request.op === 'finish') {
+      const bytes = await builder.finish(request.outline);
       reply({ id: request.id, ok: true, kind: 'pdf', bytes }, [bytes.buffer]);
     } else {
       builder.clear();

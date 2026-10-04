@@ -5,6 +5,17 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Stamp moved to the top left** on annotated PDFs: the project, drawing, segment, count revision
+  and export date are now in one box with the legend, above it, in the top-left corner, instead of
+  a separate stamp in the top-right corner where it covered off-page connectors, notes and title
+  blocks.
+- **All segments in one PDF**: a new Export option writes `<project>_all_segments.pdf`, every
+  segment's drawings in one file, segment by segment, each page showing only its segment's markers
+  (as in the per-segment PDFs). The file opens with a bookmark for each segment. `export_log.json`
+  counts it under `pdf.allSegments`. PDFs are now written a page at a time in the export worker, so
+  a long PDF never holds all of its drawings in memory, and the progress counts pages. This also
+  fixes a segment PDF whose drawings come from more than six PDF files failing to export.
+
 - **End flanges** (`F`): mark where an isolatable segment ends without an ESDV, such as a flanged
   tie-in to the closed drain or flare header. The bar under the toolbar chooses where the pipe
   goes (**Closed drain**, **Flare** or **Other end point**); drag a bar across the pipe (`Shift`

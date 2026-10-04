@@ -352,11 +352,16 @@ Choose the outputs:
   **Unmapped** sheets (counts with no cell are listed there, so nothing is lost). Formatting, formulas
   and other sheets are kept; formulas recalculate when the file is opened in Excel.
 - **CSV item list**: one row per counted item, for audit or pivot tables.
-- **Annotated drawings (PDF)**: one PDF per drawing with the markers, labels, a legend and a stamp
-  (project, drawing and revision, count revision, date). PDF drawings keep their original vector
-  content; DWG/DXF drawings are drawn at their layout's paper size. Set the **file name pattern**
-  here, for example `{project}_{drawingNo}_{rev}`.
+- **Annotated drawings (PDF)**: one PDF per drawing with the markers and labels, and a box in the
+  top-left corner holding the stamp (project, drawing and revision, count revision, export date)
+  above the legend. PDF drawings keep their original vector content; DWG/DXF drawings are drawn at
+  their layout's paper size. Set the **file name pattern** here, for example
+  `{project}_{drawingNo}_{rev}`.
 - **Combined PDF per segment**: all drawings of a segment in one file, showing only that segment.
+- **All segments in one PDF**: every segment's drawings in a single file,
+  `<project>_all_segments.pdf`, segment by segment in the order of the segment list. Each page
+  shows only its segment's markers, so a drawing shared by two segments appears once for each.
+  The file opens with a bookmark for each segment.
 
 Each export goes to a new folder, `exports/<date>_<time>/`, with an `export_log.json` listing what
 was exported, from which revision of the project, and which warnings were accepted.

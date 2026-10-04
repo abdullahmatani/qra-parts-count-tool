@@ -21,6 +21,7 @@ const labels: PdfLabels = {
   warning: 'Needs attention',
   drawing: (d) => `${drawingName(d)} rev ${d.revision}`,
   segment: (label) => `Segment ${label}`,
+  allSegments: 'All segments',
   countRevision: (rev) => `Count revision ${rev}`,
   exported: (date) => `Exported ${date}`,
 };
@@ -239,6 +240,66 @@ describe('planPdfExport (EXP-03, EXP-05)', () => {
     expect(is01.stamp).toContain('Segment IS-01');
     const is02 = plans[1]!.pages[0]!.overlay;
     expect(is02.markers.map((m) => m.geometry.type)).toEqual(['rect', 'circle']);
+  });
+
+  it('plans one PDF with every segment, bookmarked segment by segment', () => {
+    const doc = setup();
+    const plans = planPdfExport({
+      doc,
+      entries: countEntries(doc),
+      drawings: false,
+      segments: true,
+      allSegments: true,
+      now,
+      labels,
+    });
+    expect(plans.map((p) => [p.kind, p.fileName])).toEqual([
+      ['segment', 'IS-01_drawings.pdf'],
+      ['segment', 'IS-02_drawings.pdf'],
+      ['allSegments', 'Plant A_all_segments.pdf'],
+    ]);
+    const [is01, is02, all] = plans;
+    expect(all!.title).toBe('Plant A – All segments');
+    // The segments' own pages, in segment order, each opening at a bookmark.
+    expect(all!.pages).toEqual([...is01!.pages, ...is02!.pages]);
+    expect(all!.pages.map((p) => p.drawingId)).toEqual(['drw_1', 'drw_1', 'drw_3']);
+    expect(all!.outline).toEqual([
+      { title: 'IS-01 – Gas', pageIndex: 0 },
+      { title: 'IS-02', pageIndex: 1 },
+    ]);
+    expect(all!.pages[2]!.overlay.stamp).toContain('Segment IS-02');
+    expect(is01!.outline).toEqual([]);
+  });
+
+  it('plans the all-segments PDF on its own, and only when a segment has pages', () => {
+    const doc = setup();
+    const only = planPdfExport({
+      doc,
+      entries: countEntries(doc),
+      drawings: false,
+      segments: false,
+      allSegments: true,
+      now,
+      labels,
+    });
+    expect(only.map((p) => [p.kind, p.pages.length])).toEqual([['allSegments', 3]]);
+
+    for (const marker of Object.values(doc.markers)) {
+      marker.segmentId = null;
+      marker.esdv = null;
+    }
+    doc.segments.seg_b!.drawingIds = [];
+    expect(
+      planPdfExport({
+        doc,
+        entries: countEntries(doc),
+        drawings: false,
+        segments: true,
+        allSegments: true,
+        now,
+        labels,
+      }),
+    ).toEqual([]);
   });
 
   it('fills every pattern token and keeps names unique across outputs', () => {

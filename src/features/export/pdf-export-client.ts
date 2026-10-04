@@ -1,17 +1,22 @@
 /**
- * Main-thread side of the PDF export worker. `build` supplies source PDFs on
- * demand: the worker says which it lacks, the client reads them and retries.
+ * Main-thread side of the PDF export worker. A PDF is written a page at a
+ * time; `append` supplies source PDFs on demand: the worker says which it
+ * lacks, the client reads them and retries.
  */
 import {
   PdfSourceError,
-  type BuildJob,
+  type BuildPage,
+  type OutlineEntry,
+  type PdfMeta,
   type PdfWorkerRequest,
   type PdfWorkerResponse,
 } from './pdf-export-protocol';
 
 type Body =
   | { op: 'sources'; sources: { key: string; bytes: ArrayBuffer }[] }
-  | { op: 'build'; job: BuildJob }
+  | { op: 'start'; meta: PdfMeta }
+  | { op: 'append'; page: BuildPage }
+  | { op: 'finish'; outline: OutlineEntry[] }
   | { op: 'clear' };
 
 type Success = Extract<PdfWorkerResponse, { ok: true }>;
@@ -57,14 +62,16 @@ export class PdfExportClient {
     });
   }
 
-  /** Builds one PDF; `readSource` loads a source PDF's bytes by key when the worker needs them. */
-  async build(
-    job: BuildJob,
-    readSource: (key: string) => Promise<ArrayBuffer>,
-  ): Promise<Uint8Array> {
+  /** Begins a new PDF; pages are then appended one by one and the PDF finished. */
+  async start(meta: PdfMeta): Promise<void> {
+    await this.call({ op: 'start', meta });
+  }
+
+  /** Adds a page; `readSource` loads a source PDF's bytes by key when the worker needs them. */
+  async append(page: BuildPage, readSource: (key: string) => Promise<ArrayBuffer>): Promise<void> {
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const result = await this.call({ op: 'build', job });
-      if (result.kind === 'pdf') return result.bytes;
+      const result = await this.call({ op: 'append', page });
+      if (result.kind === 'done') return;
       if (result.kind !== 'missing') break;
       const sources = await Promise.all(
         result.keys.map(async (key) => ({ key, bytes: await readSource(key) })),
@@ -72,6 +79,13 @@ export class PdfExportClient {
       await this.call({ op: 'sources', sources });
     }
     throw new Error('The PDF export worker did not accept the source drawings.');
+  }
+
+  /** Writes the bookmarks and returns the PDF. */
+  async finish(outline: OutlineEntry[] = []): Promise<Uint8Array> {
+    const result = await this.call({ op: 'finish', outline });
+    if (result.kind !== 'pdf') throw new Error('The PDF export worker returned no PDF.');
+    return result.bytes;
   }
 
   private fail(error: Error): void {

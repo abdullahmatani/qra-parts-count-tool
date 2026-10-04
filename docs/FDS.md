@@ -197,7 +197,7 @@ Requirements carry an ID for traceability to the roadmap and test cases; priorit
 | --- | --- | --- |
 | EXP-01 | Pre-export check lists: unassigned markers, items missing size or type, segments with no items, segments with no linked drawing, unresolved duplicates. User can export anyway. | Must |
 | EXP-02 | Excel export fills the user's template per the mapping in section 7 and saves a new file; the template is never overwritten. | Must |
-| EXP-03 | Annotated PDF export: one PDF per drawing, plus an optional combined PDF per segment, with markers, labels, a legend and a stamp (project, date, revision of count). | Must |
+| EXP-03 | Annotated PDF export: one PDF per drawing, plus optional combined PDFs (one per segment, or all segments in one file with a bookmark per segment), with markers, labels, and a stamp (project, date, revision of count) above the legend in the top-left corner. | Must |
 | EXP-04 | DWG drawings export as annotated PDFs at the chosen layout's paper size. | Must |
 | EXP-05 | Export filenames follow a configurable pattern, e.g. `{project}_{segment}_{drawingNo}_{rev}.pdf`. | Should |
 | EXP-06 | CSV export of the flat item list (one row per count item) for audit. | Should |
@@ -323,6 +323,7 @@ The user supplies the Excel layout; the tool never imposes one. A mapping, built
 | `<project>_PartsCount.xlsx` | Populated client template, plus `Notes`, `Item List` and `Unmapped` sheets |
 | `<drawingNo>_<rev>_annotated.pdf` | Each drawing with segment markers, labels, legend and stamp; no drawing links |
 | `<segment>_drawings.pdf` | Optional: all drawings for one segment in one PDF |
+| `<project>_all_segments.pdf` | Optional: every segment's drawings in one PDF, segment by segment, with a bookmark per segment |
 | `<project>_items.csv` | Optional flat item list |
 | `export_log.json` | What was exported, from which project revision, with warnings accepted |
 

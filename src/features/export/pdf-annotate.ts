@@ -266,8 +266,8 @@ export function sheetScale(size: Size2D): number {
 }
 
 /**
- * Draws markers, labels, a legend (top left) and a stamp (top right) on a
- * page. `toUser` maps drawing coordinates to the page's PDF user space.
+ * Draws markers, labels, and a stamp and legend (top left) on a page.
+ * `toUser` maps drawing coordinates to the page's PDF user space.
  */
 export function drawOverlay(
   page: PDFPage,
@@ -391,112 +391,110 @@ export function drawOverlay(
     textOps(ops, fonts, fonts.bold, m.label, x, y, labelSize, m.colour);
   }
 
-  // Legend (top left) and stamp (top right).
+  infoBox(ops, page, fonts, overlay, k);
+  ops.push(popGraphicsState());
+  addContent(page, ops);
+}
+
+/**
+ * The stamp (project, drawing, count revision, date) with the legend under it,
+ * in one box at the top left of the sheet: a drawing's title block and notes
+ * are usually along its right-hand side, so the box keeps clear of them.
+ */
+function infoBox(ops: Ops, page: PDFPage, fonts: Fonts, overlay: Overlay, k: number): void {
+  const { stamp, legend, legendTitle } = overlay;
+  if (!stamp.length && !legend.length) return;
   const pad = 6 * k;
   const line = 10 * k;
   const size = 7 * k;
   const margin = 12 * k;
-  if (overlay.legend.length) {
-    const width =
-      Math.max(
-        fonts.bold.widthOfTextAtSize(encodable(fonts.bold, overlay.legendTitle, fonts.cache), size),
-        ...overlay.legend.map((e) =>
-          fonts.regular.widthOfTextAtSize(encodable(fonts.regular, e.label, fonts.cache), size),
-        ),
-      ) +
-      2 * pad +
-      18 * k;
-    const height = (overlay.legend.length + 1) * line + 2 * pad;
-    panel(ops, page, margin, margin, width, height, k);
+  const stampFont = (i: number) => (i === 0 ? fonts.bold : fonts.regular);
+  const textWidth = (font: PDFFont, text: string) =>
+    font.widthOfTextAtSize(encodable(font, text, fonts.cache), size);
+  const stampHeight = stamp.length ? (stamp.length - 1) * line + size + 2 * pad : 0;
+  const legendHeight = legend.length ? (legend.length + 1) * line + 2 * pad : 0;
+  const width = Math.max(
+    ...stamp.map((s, i) => textWidth(stampFont(i), s) + 2 * pad),
+    // Room for the swatches left of the legend's labels.
+    ...(legend.length
+      ? [legendTitle, ...legend.map((e) => e.label)].map(
+          (text, i) => textWidth(i === 0 ? fonts.bold : fonts.regular, text) + 2 * pad + 18 * k,
+        )
+      : []),
+  );
+  panel(ops, page, margin, margin, width, stampHeight + legendHeight, k);
+  if (stampHeight && legendHeight) {
+    // A rule between the stamp and the legend, in the box's outline colour.
+    ops.push(
+      moveTo(margin, margin + stampHeight),
+      lineTo(margin + width, margin + stampHeight),
+      stroke(),
+    );
+  }
+  stamp.forEach((text, i) => {
     textOps(
       ops,
       fonts,
-      fonts.bold,
-      overlay.legendTitle,
+      stampFont(i),
+      text,
       margin + pad,
-      margin + pad + size,
+      margin + pad + size + i * line,
       size,
       '#111827',
     );
-    overlay.legend.forEach((entry, i) => {
-      const cy = margin + pad + (i + 1) * line + size * 0.6;
-      const sx = margin + pad + 5 * k;
-      const [r, g, b] = colour(entry.colour);
-      const width =
-        entry.kind === 'esdvLine' || entry.kind === 'endFlange'
-          ? 1.4
-          : entry.kind === 'esdv'
-            ? 2
-            : entry.kind === 'warning'
-              ? 2.5
-              : 1.3;
-      ops.push(
-        setStrokingRgbColor(r, g, b),
-        setLineWidth(width * k),
-        setDashPattern(
-          entry.dash.map((d) => d * k * 0.6),
-          0,
-        ),
-      );
-      if (entry.kind === 'esdvLine') {
-        for (const x of [sx - 1.3 * k, sx + 1.3 * k]) {
-          ops.push(moveTo(x, cy - 3.5 * k), lineTo(x, cy + 3.5 * k));
-        }
-      } else if (entry.kind === 'endFlange') {
-        // The bar, at the end of a short pipe.
-        ops.push(
-          setFillingRgbColor(r, g, b),
-          rectangle(sx - 1.2 * k, cy - 3.5 * k, 2.4 * k, 7 * k),
-          fill(),
-          moveTo(sx - 4.5 * k, cy),
-          lineTo(sx - 1.2 * k, cy),
-        );
-      } else {
-        circlePath(ops, sx, cy, 3.5 * k);
-      }
-      ops.push(stroke());
-      ops.push(setDashPattern([], 0));
-      textOps(
-        ops,
-        fonts,
-        fonts.regular,
-        entry.label,
-        margin + pad + 14 * k,
-        cy + size * 0.35,
-        size,
-        '#111827',
-      );
-    });
-  }
-  if (overlay.stamp.length) {
+  });
+  if (!legend.length) return;
+  const top = margin + stampHeight;
+  textOps(ops, fonts, fonts.bold, legendTitle, margin + pad, top + pad + size, size, '#111827');
+  legend.forEach((entry, i) => {
+    const cy = top + pad + (i + 1) * line + size * 0.6;
+    const sx = margin + pad + 5 * k;
+    const [r, g, b] = colour(entry.colour);
     const width =
-      Math.max(
-        ...overlay.stamp.map((s, i) =>
-          (i === 0 ? fonts.bold : fonts.regular).widthOfTextAtSize(
-            encodable(i === 0 ? fonts.bold : fonts.regular, s, fonts.cache),
-            size,
-          ),
-        ),
-      ) +
-      2 * pad;
-    const height = overlay.stamp.length * line + 2 * pad - (line - size);
-    const x = drawingSize.width - margin - width;
-    panel(ops, page, x, margin, width, height, k);
-    overlay.stamp.forEach((text, i) => {
-      textOps(
-        ops,
-        fonts,
-        i === 0 ? fonts.bold : fonts.regular,
-        text,
-        x + pad,
-        margin + pad + size + i * line,
-        size,
-        '#111827',
+      entry.kind === 'esdvLine' || entry.kind === 'endFlange'
+        ? 1.4
+        : entry.kind === 'esdv'
+          ? 2
+          : entry.kind === 'warning'
+            ? 2.5
+            : 1.3;
+    ops.push(
+      setStrokingRgbColor(r, g, b),
+      setLineWidth(width * k),
+      setDashPattern(
+        entry.dash.map((d) => d * k * 0.6),
+        0,
+      ),
+    );
+    if (entry.kind === 'esdvLine') {
+      for (const x of [sx - 1.3 * k, sx + 1.3 * k]) {
+        ops.push(moveTo(x, cy - 3.5 * k), lineTo(x, cy + 3.5 * k));
+      }
+    } else if (entry.kind === 'endFlange') {
+      // The bar, at the end of a short pipe.
+      ops.push(
+        setFillingRgbColor(r, g, b),
+        rectangle(sx - 1.2 * k, cy - 3.5 * k, 2.4 * k, 7 * k),
+        fill(),
+        moveTo(sx - 4.5 * k, cy),
+        lineTo(sx - 1.2 * k, cy),
       );
-    });
-  }
-  ops.push(popGraphicsState());
-  addContent(page, ops);
+    } else {
+      circlePath(ops, sx, cy, 3.5 * k);
+    }
+    ops.push(stroke());
+    ops.push(setDashPattern([], 0));
+    textOps(
+      ops,
+      fonts,
+      fonts.regular,
+      entry.label,
+      margin + pad + 14 * k,
+      cy + size * 0.35,
+      size,
+      '#111827',
+    );
+  });
 }
 
 function panel(ops: Ops, page: PDFPage, x: number, y: number, w: number, h: number, k: number) {

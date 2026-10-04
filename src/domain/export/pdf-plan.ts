@@ -8,7 +8,14 @@ import { markerWarningMap, type CountDoc, type CountEntry } from '../count/count
 import { itemsByMarker, markerLabel, markerPaint, markerSegmentIds } from '../markup/presentation';
 import type { ProjectDoc } from '../model';
 import { ESDV_COLOUR, MARKER_WARNING, UNASSIGNED_COLOUR, segmentAppearance } from '../palette';
-import type { Drawing, Marker, MarkerGeometry, MarkerSymbol, Point } from '../schema/types';
+import type {
+  Drawing,
+  Marker,
+  MarkerGeometry,
+  MarkerSymbol,
+  Point,
+  Segment,
+} from '../schema/types';
 import { formatExportName, uniqueName } from './file-names';
 
 export interface OverlayMarker {
@@ -46,13 +53,21 @@ export interface PlannedPage {
   overlay: Overlay;
 }
 
+/** A bookmark to a page of the PDF (0-based). */
+export interface OutlineEntry {
+  title: string;
+  pageIndex: number;
+}
+
 export interface PlannedPdf {
   fileName: string;
-  /** One drawing, or all drawings of one segment. */
-  kind: 'drawing' | 'segment';
+  /** One drawing, all drawings of one segment, or every segment's drawings in one file. */
+  kind: 'drawing' | 'segment' | 'allSegments';
   segmentId: string | null;
   title: string;
   pages: PlannedPage[];
+  /** Bookmarks: one per segment in the all-segments PDF, none otherwise. */
+  outline: OutlineEntry[];
 }
 
 export interface PdfLabels {
@@ -64,6 +79,8 @@ export interface PdfLabels {
   /** "PEFS-1001 rev B, sheet 2". */
   drawing: (drawing: Drawing) => string;
   segment: (label: string) => string;
+  /** Title of the PDF with every segment in it. */
+  allSegments: string;
   countRevision: (revision: string) => string;
   exported: (date: string) => string;
 }
@@ -79,6 +96,8 @@ export interface PdfPlanInput {
   drawings: boolean;
   /** One combined PDF per segment (`<segment>_drawings.pdf`). */
   segments: boolean;
+  /** One PDF with every segment's pages, segment by segment (`<project>_all_segments.pdf`). */
+  allSegments?: boolean;
   now: Date;
   labels: PdfLabels;
   /** File names already used in the export folder (lower case); updated. */
@@ -96,6 +115,12 @@ export function drawingName(drawing: Drawing): string {
   if (drawing.drawingNo.trim()) return drawing.drawingNo.trim();
   const file = drawing.originalFileName || drawing.fileName;
   return file.replace(/\.[^.]+$/, '');
+}
+
+/** "IS-01 – Gas": the label with the fluid, or the description when there is no fluid. */
+function segmentTitle(segment: Segment): string {
+  const detail = [segment.fluid, segment.description].find((s) => s.trim()) ?? '';
+  return detail ? `${segment.label} – ${detail}` : segment.label;
 }
 
 /** Highlights and runs, drawn under the circles, ESDV double lines and end flanges. */
@@ -155,9 +180,8 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
     )) {
       const segment = doc.segments[id]!;
       const appearance = segmentAppearance(segment.colour);
-      const detail = [segment.fluid, segment.description].find((s) => s.trim()) ?? '';
       legend.push({
-        label: detail ? `${segment.label} – ${detail}` : segment.label,
+        label: segmentTitle(segment),
         colour: appearance.hex,
         dash: appearance.dash,
         kind: 'circle',
@@ -227,32 +251,57 @@ export function planPdfExport(input: PdfPlanInput): PlannedPdf[] {
         segmentId: null,
         title: [drawingName(drawing), drawing.title].filter(Boolean).join(' – '),
         pages: [{ drawingId: drawing.id, overlay: overlay(drawing, markers, null) }],
+        outline: [],
       });
     }
   }
 
+  // Each segment's drawings, with only that segment's markers on them.
+  const segmentPages = (segment: Segment): PlannedPage[] =>
+    drawings.flatMap((drawing) => {
+      const markers = (byDrawing.get(drawing.id) ?? []).filter((m) =>
+        markerSegmentIds(m).includes(segment.id),
+      );
+      if (!markers.length && !segment.drawingIds.includes(drawing.id)) return [];
+      return [{ drawingId: drawing.id, overlay: overlay(drawing, markers, segment.label) }];
+    });
+  const segments = input.segments || input.allSegments ? doc.segmentOrder : [];
+  const bySegment = segments
+    .map((id) => doc.segments[id])
+    .filter((s) => s !== undefined)
+    .map((segment) => ({ segment, pages: segmentPages(segment) }))
+    .filter(({ pages }) => pages.length > 0);
+
   if (input.segments) {
-    for (const segmentId of doc.segmentOrder) {
-      const segment = doc.segments[segmentId];
-      if (!segment) continue;
-      const pages: PlannedPage[] = [];
-      for (const drawing of drawings) {
-        const markers = (byDrawing.get(drawing.id) ?? []).filter((m) =>
-          markerSegmentIds(m).includes(segmentId),
-        );
-        if (!markers.length && !segment.drawingIds.includes(drawing.id)) continue;
-        pages.push({ drawingId: drawing.id, overlay: overlay(drawing, markers, segment.label) });
-      }
-      if (!pages.length) continue;
+    for (const { segment, pages } of bySegment) {
       const name = formatExportName('{segment}_drawings', { segment: segment.label });
       plans.push({
         fileName: uniqueName(name, '.pdf', taken),
         kind: 'segment',
-        segmentId,
+        segmentId: segment.id,
         title: segment.label,
         pages,
+        outline: [],
       });
     }
+  }
+
+  if (input.allSegments && bySegment.length) {
+    const outline: OutlineEntry[] = [];
+    const pages: PlannedPage[] = [];
+    for (const { segment, pages: own } of bySegment) {
+      outline.push({ title: segmentTitle(segment), pageIndex: pages.length });
+      pages.push(...own);
+    }
+    const name = formatExportName('{project}_all_segments', { project: doc.name });
+    plans.push({
+      fileName: uniqueName(name, '.pdf', taken),
+      kind: 'allSegments',
+      segmentId: null,
+      title: [doc.name.trim(), labels.allSegments].filter(Boolean).join(' – '),
+      pages,
+      outline,
+    });
   }
   return plans;
 }
