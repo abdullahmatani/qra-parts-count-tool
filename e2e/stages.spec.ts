@@ -134,6 +134,18 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('segment-list')).toContainText('1 item');
 
+  // The status bar has the equipment's warnings: the new item has no type yet.
+  // A click goes to the marker.
+  const warnings = page.getByTestId('status-warnings');
+  await expect(warnings).toHaveText('1 marker with warnings');
+  await expect(warnings).toHaveAttribute('title', /1 missing its type or size/);
+  await page.getByRole('application').focus();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-shape="circle"]')).toHaveAttribute('data-selected', 'false');
+  await warnings.click();
+  await expect(page.locator('[data-shape="circle"]')).toHaveAttribute('data-selected', 'true');
+
   // The stage is saved with the project, and going back is one click.
   await expect
     .poll(async () => JSON.parse(await app.readText(dir, 'project.qrapc.json')).stage, {
@@ -143,5 +155,7 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   await stages.getByRole('radio', { name: /Segments/ }).click();
   await expect(stages).toHaveAttribute('data-stage', 'segments');
   await expect(toolbar.getByRole('radio', { name: 'Highlighter' })).toBeVisible();
+  // Defining segments, the item's warning does not count: the set-up is all in segments.
+  await expect(warnings).toHaveText('No warnings');
   await app.removeDirectory(dir);
 });

@@ -350,6 +350,17 @@
     "cursor": "x {{x}}, y {{y}}",
     "warnings_one": "{{count}} marker with warnings",
     "warnings_other": "{{count}} markers with warnings",
+    "setupWarnings_one": "{{count}} set-up marker not in a segment",
+    "setupWarnings_other": "{{count}} set-up markers not in a segment",
+    "kinds": {
+      "unassigned_one": "{{count}} not in a segment",
+      "unassigned_other": "{{count}} not in a segment",
+      "incomplete_one": "{{count}} missing its type or size",
+      "incomplete_other": "{{count}} missing their type or size",
+      "duplicate_one": "{{count}} with a duplicate tag",
+      "duplicate_other": "{{count}} with a duplicate tag"
+    },
+    "showNext": "Click to go to the next one.",
     "noWarnings": "No warnings",
     "filters": "Filters",
     "clearFilters": "Clear filters"

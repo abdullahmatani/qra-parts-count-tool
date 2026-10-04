@@ -3,7 +3,15 @@
  * read-only project cannot record its stage, so it is only viewed there.
  */
 import { useEffect, useMemo } from 'react';
-import { isEditableInStage, stageStartTool, stageTools, type StageTool } from '@/domain/stage';
+import {
+  isEditableInStage,
+  stageStartTool,
+  stageTools,
+  stageWarnings,
+  type StageTool,
+  type StageWarnings,
+} from '@/domain/stage';
+import { useMarkerWarnings } from '@/features/count/useCount';
 import type { ProjectStage } from '@/domain/schema/types';
 import i18n from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
@@ -38,6 +46,22 @@ export function useStageTools(): StageTool[] {
   const stage = useStage();
   const pipe = useProjectStore((s) => s.doc?.settings.pipeLengthCounting ?? false);
   return useMemo(() => stageTools(stage, pipe), [stage, pipe]);
+}
+
+const NO_WARNINGS: StageWarnings = {
+  markerIds: [],
+  counts: { unassigned: 0, incomplete: 0, duplicate: 0 },
+};
+
+/** The marker warnings that matter in the stage shown. */
+export function useStageWarnings(): StageWarnings {
+  const warnings = useMarkerWarnings();
+  const stage = useStage();
+  const doc = useProjectStore((s) => s.doc);
+  return useMemo(
+    () => (doc ? stageWarnings(doc, warnings, stage) : NO_WARNINGS),
+    [doc, warnings, stage],
+  );
 }
 
 /**

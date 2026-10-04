@@ -280,7 +280,10 @@ the project.
    best on clean PDF and CAD drawings and on one symbol type at a time.
 
 Markers with a problem (not in a segment, missing type or size, duplicate tag) get an amber outline,
-and the status bar counts them; hover a marker to see what is missing. **Marker filters** in the
+and the status bar counts them; hover a marker to see what is missing. Only the problems of the
+stage are shown: while defining segments, highlights, zones, ESDVs and end flanges that are in no
+segment; while counting, the equipment's. Hover the count for a breakdown, and click it to go to
+each marker in turn. **Marker filters** in the
 toolbar hide segments or equipment types, or show only unassigned markers.
 
 The **count table** on the right shows the active segment's totals by equipment type, actuation and

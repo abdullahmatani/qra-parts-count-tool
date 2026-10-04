@@ -6,7 +6,7 @@ import {
   markerPaint,
 } from '@/domain/markup/presentation';
 import type { Marker } from '@/domain/schema/types';
-import { isSegmentSetupMarker } from '@/domain/stage';
+import { isSegmentSetupMarker, isWarningRelevant } from '@/domain/stage';
 import { useStage } from '@/features/stage/stage';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -28,7 +28,8 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const filters = useUiStore((s) => s.filters);
   const showLabels = useUiStore((s) => s.showLabels);
   const warnings = useMarkerWarnings();
-  const counting = useStage() === 'count';
+  const stage = useStage();
+  const counting = stage === 'count';
   const pipeLengthCounting = useProjectStore((s) => s.doc?.settings.pipeLengthCounting ?? false);
 
   return useMemo(() => {
@@ -50,7 +51,10 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         label: showLabels ? markerLabel(marker, item) : '',
         selected: selected.has(marker.id),
         highlighted: highlighted.has(marker.id),
-        warning: warnings.has(marker.id),
+        // Only the warnings that matter in the stage are outlined.
+        warning: (warnings.get(marker.id) ?? []).some((kind) =>
+          isWarningRelevant(marker, kind, stage, pipeLengthCounting),
+        ),
         esdv: marker.esdv !== null,
         endFlange: marker.endFlange !== null,
         symbol: marker.style.symbol,
@@ -72,6 +76,7 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
     showLabels,
     drawingId,
     warnings,
+    stage,
     counting,
     pipeLengthCounting,
   ]);

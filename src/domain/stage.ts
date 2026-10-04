@@ -4,6 +4,7 @@
  * Once the segments are done the parts are counted, and the interface shows
  * only what counting needs; the segments' set-up stays as it is, locked.
  */
+import type { MarkerWarning } from './count/count';
 import type { ProjectDoc } from './model';
 import type { Marker, ProjectStage } from './schema/types';
 
@@ -141,4 +142,54 @@ export function segmentReadiness(
     });
   }
   return issues;
+}
+
+/**
+ * Whether a marker's warning matters in a stage. Defining segments: set-up
+ * that is in no segment. Counting: the equipment's (and pipe lengths')
+ * warnings: no segment, an incomplete item, a duplicate tag.
+ */
+export function isWarningRelevant(
+  marker: Pick<Marker, 'esdv' | 'endFlange' | 'geometry'>,
+  warning: MarkerWarning,
+  stage: ProjectStage,
+  pipeLengthCounting: boolean,
+): boolean {
+  const setup = isSegmentSetupMarker(marker, pipeLengthCounting);
+  return stage === 'segments' ? setup && warning === 'unassigned' : !setup;
+}
+
+export interface StageWarnings {
+  /** The markers with a warning that matters in the stage, in drawing order. */
+  markerIds: string[];
+  /** How many markers have each kind of warning. */
+  counts: Record<MarkerWarning, number>;
+}
+
+/** The marker warnings that matter in a stage (see `isWarningRelevant`). */
+export function stageWarnings(
+  doc: Pick<ProjectDoc, 'markers' | 'drawingOrder' | 'settings'>,
+  warnings: ReadonlyMap<string, readonly MarkerWarning[]>,
+  stage: ProjectStage,
+): StageWarnings {
+  const pipe = doc.settings.pipeLengthCounting;
+  const rank = new Map(doc.drawingOrder.map((id, i) => [id, i]));
+  const counts: Record<MarkerWarning, number> = { unassigned: 0, incomplete: 0, duplicate: 0 };
+  const found: Marker[] = [];
+  for (const [id, kinds] of warnings) {
+    const marker = doc.markers[id];
+    if (!marker) continue;
+    const relevant = kinds.filter((kind) => isWarningRelevant(marker, kind, stage, pipe));
+    if (!relevant.length) continue;
+    found.push(marker);
+    for (const kind of relevant) counts[kind] += 1;
+  }
+  const order = Object.keys(doc.markers);
+  const position = new Map(order.map((id, i) => [id, i]));
+  found.sort(
+    (a, b) =>
+      (rank.get(a.drawingId) ?? Infinity) - (rank.get(b.drawingId) ?? Infinity) ||
+      position.get(a.id)! - position.get(b.id)!,
+  );
+  return { markerIds: found.map((m) => m.id), counts };
 }

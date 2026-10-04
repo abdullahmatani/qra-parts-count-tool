@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { projectToDoc } from './model';
 import { ProjectSchema } from './schema/project-file';
 import { docToProject } from './model';
+import type { MarkerWarning } from './count/count';
 import {
   isEditableInStage,
   isSegmentSetupMarker,
   segmentReadiness,
   stageStartTool,
   stageTools,
+  stageWarnings,
 } from './stage';
 import {
   makeCircleMarker,
@@ -184,5 +186,50 @@ describe('segmentReadiness', () => {
         names: [],
       },
     ]);
+  });
+});
+
+describe('stageWarnings', () => {
+  it('counts set-up warnings while defining segments and equipment warnings while counting', () => {
+    const d1 = makeDrawing({ id: 'drw_1' });
+    const d2 = makeDrawing({ id: 'drw_2' });
+    const stroke = makeCircleMarker('drw_2', {
+      id: 'hl',
+      shape: 'highlighter',
+      geometry: {
+        type: 'stroke',
+        points: [
+          [0, 0],
+          [10, 0],
+        ],
+        width: 4,
+      },
+    });
+    const esdv = makeCircleMarker('drw_1', { id: 'esdv', esdv: esdvData(null, null) });
+    const loose = makeCircleMarker('drw_2', { id: 'loose' });
+    const valve = makeCircleMarker('drw_1', { id: 'valve', segmentId: 'seg_a' });
+    const doc = projectToDoc(
+      makeProject({
+        settings: makeSettings(),
+        drawings: [d1, d2],
+        markers: [stroke, loose, valve, esdv],
+      }),
+    );
+    const warnings = new Map<string, MarkerWarning[]>([
+      ['hl', ['unassigned']],
+      ['esdv', ['unassigned']],
+      ['loose', ['unassigned', 'incomplete']],
+      ['valve', ['incomplete', 'duplicate']],
+    ]);
+
+    // Drawing order first (drw_1, then drw_2), then the markers' own order.
+    expect(stageWarnings(doc, warnings, 'segments')).toEqual({
+      markerIds: ['esdv', 'hl'],
+      counts: { unassigned: 2, incomplete: 0, duplicate: 0 },
+    });
+    expect(stageWarnings(doc, warnings, 'count')).toEqual({
+      markerIds: ['valve', 'loose'],
+      counts: { unassigned: 1, incomplete: 2, duplicate: 1 },
+    });
   });
 });

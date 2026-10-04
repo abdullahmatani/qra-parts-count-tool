@@ -5,6 +5,12 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Warnings for the stage**: the status bar and the amber outlines show only the problems of the
+  stage. Defining segments: highlights, zones, ESDVs and end flanges that are in no segment
+  ("2 set-up markers not in a segment"). Counting: equipment not in a segment, items missing their
+  type or size, and duplicate tags. Hovering the count shows the breakdown by kind, and a click goes
+  to each marker with a warning in turn (it was not clickable before).
+
 - **No more toasts from the offline cache over the panes**: when the app finishes caching for
   offline use, the **Offline ready** indicator in the header (and on the start screen) lights up
   for a moment and is announced to screen readers, instead of a toast over the right pane that

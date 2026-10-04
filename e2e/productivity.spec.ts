@@ -76,7 +76,8 @@ test('splits, reorders and merges segments (SEG-07)', async ({ app }) => {
   await dialog.getByRole('button', { name: 'Merge' }).click();
   await expect.poll(() => segmentNames(page)).toEqual(['IS-01', 'IS-02']);
   await expect(page.getByTestId('active-segment-chip')).toHaveText('New markers go to IS-02');
-  await expect(page.getByTestId('status-warnings')).toHaveText('1 marker with warnings');
+  // Defining segments, only set-up warnings count: the sample's open item is for the count.
+  await expect(page.getByTestId('status-warnings')).toHaveText('No warnings');
   await app.removeDirectory(dir);
 });
 

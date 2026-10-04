@@ -295,7 +295,7 @@ Moving to the parts count lists what may be unfinished (set-up in no segment, se
 - Placing a circle opens the item editor with the last-used type and focus on size, so one keystroke plus Enter logs an item.
 - Size entry accepts `2`, `2"`, `DN50` and fractions like `3/4`.
 - The active segment's colour tints the toolbar, so the user always sees where new markers go.
-- Warnings appear inline on the marker (amber outline) and in the status bar count.
+- Warnings appear inline on the marker (amber outline) and in the status bar count, for the stage: set-up in no segment while defining segments; unassigned equipment, incomplete items and duplicate tags while counting. Clicking the count goes to each marker with a warning in turn.
 - Drawing links show as blue hatched rectangles with a link icon; a single click follows the link when the Select tool is active.
 
 ## 7. Excel template mapping and outputs
