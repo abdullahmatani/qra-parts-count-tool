@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { segmentAppearance } from '@/domain/palette';
@@ -6,15 +7,29 @@ import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import { useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
+import { useStage } from '@/features/stage/stage';
 
 export interface SegmentListProps {
   onAdd?: () => void;
 }
 
-/** Left-pane segment list; clicking a segment makes it active (SEG-06). */
+/**
+ * Left-pane segment list; clicking a segment makes it active (SEG-06). While
+ * counting, segments are not added and each shows how many items it has.
+ */
 export function SegmentList({ onAdd }: SegmentListProps) {
   const { t } = useTranslation();
+  const stage = useStage();
   const segments = useOrderedSegments();
+  const items = useProjectStore((s) => s.doc?.items);
+  const itemCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (stage !== 'count') return counts;
+    for (const item of Object.values(items ?? {})) {
+      if (item.segmentId) counts.set(item.segmentId, (counts.get(item.segmentId) ?? 0) + 1);
+    }
+    return counts;
+  }, [items, stage]);
   const activeSegmentId = useUiStore((s) => s.activeSegmentId);
   const setActiveSegment = useUiStore((s) => s.setActiveSegment);
   const readOnly = useProjectStore((s) => s.readOnly);
@@ -28,7 +43,7 @@ export function SegmentList({ onAdd }: SegmentListProps) {
         >
           {t('segments.title')}
         </h2>
-        {onAdd && (
+        {onAdd && stage === 'segments' && (
           <Button
             size="sm"
             variant="ghost"
@@ -65,7 +80,12 @@ export function SegmentList({ onAdd }: SegmentListProps) {
                   style={{ background: appearance.cssVar }}
                 />
                 <span className="min-w-0 flex-1 truncate">{segment.label}</span>
-                <span className="text-xs text-muted-foreground">
+                {stage === 'count' && (
+                  <span className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+                    {t('segments.items', { count: itemCounts.get(segment.id) ?? 0 })} ·
+                  </span>
+                )}
+                <span className="text-xs whitespace-nowrap text-muted-foreground">
                   {t(`segments.status.${segment.status}`)}
                 </span>
               </button>

@@ -73,6 +73,7 @@ export function docToProject(doc: ProjectDoc): Project {
     studyRef: doc.studyRef,
     description: doc.description,
     countRevision: doc.countRevision,
+    stage: doc.stage,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
     revision: doc.revision,

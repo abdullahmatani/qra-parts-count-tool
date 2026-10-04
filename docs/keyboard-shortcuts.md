@@ -5,6 +5,10 @@ same list is in the app under **Project › Keyboard shortcuts**. On a Mac, use 
 
 ## Markup tools
 
+The toolbar shows the tools of the study's stage. While defining segments: `V`, `H`, `D`, `L`, `E`,
+`F` and `T`. While counting: `V`, `C` and `S`, and `D` for line runs when pipe lengths are counted.
+Pressing the key of a tool from the other stage says where it is.
+
 | Key | Tool                                                                                                                                                               |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `V` | Select: click, `Shift`+click or drag a box; drag to move                                                                                                           |

@@ -26,10 +26,10 @@ import { MarkupViewer } from '@/features/markup/MarkupViewer';
 import { ShortcutsDialog } from '@/features/markup/ShortcutsDialog';
 import { NotesPanel } from '@/features/notes/NotesPanel';
 import { NewSegmentDialog } from '@/features/segments/NewSegmentDialog';
-import { SegmentDetails } from '@/features/segments/SegmentDetails';
+import { SegmentCountPanel, SegmentDetails } from '@/features/segments/SegmentDetails';
+import { StartCountDialog } from '@/features/stage/StartCountDialog';
 import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
 import { CountTablePanel } from '@/features/count/CountTablePanel';
-import { useMarkerWarnings } from '@/features/count/useCount';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
@@ -39,7 +39,6 @@ export function App() {
   const theme = useApplyPreferences();
   useServiceWorker();
   const hasProject = useProjectStore((s) => s.doc !== null);
-  const warningCount = useMarkerWarnings().size;
   useWorkspaceShortcuts(hasProject);
   const openDialog = useUiStore((s) => s.openDialog);
   const supported = isFileSystemAccessSupported();
@@ -55,11 +54,12 @@ export function App() {
           onAddSegment={() => openDialog('newSegment')}
           rightPane={{
             segmentDetails: <SegmentDetails />,
+            segmentSummary: <SegmentCountPanel />,
             countTable: <CountTablePanel />,
             itemEditor: <MarkerInspector />,
             notes: <NotesPanel />,
           }}
-          statusBar={{ warningCount, filterChips: <MarkerFilterChips /> }}
+          statusBar={{ filterChips: <MarkerFilterChips /> }}
         />
       ) : (
         <StartScreen
@@ -81,6 +81,7 @@ export function App() {
       {hasProject && <SpacePickerDialog />}
       <ShortcutsDialog />
       {hasProject && <NewSegmentDialog />}
+      {hasProject && <StartCountDialog />}
       {hasProject && <LibraryDialog />}
       {hasProject && <TemplateMapperDialog />}
       {hasProject && <ExportDialog />}

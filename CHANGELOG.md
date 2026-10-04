@@ -5,6 +5,56 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Warnings for the stage**: the status bar and the amber outlines show only the problems of the
+  stage. Defining segments: highlights, zones, ESDVs and end flanges that are in no segment
+  ("2 set-up markers not in a segment"). Counting: equipment not in a segment, items missing their
+  type or size, and duplicate tags. Hovering the count shows the breakdown by kind, and a click goes
+  to each marker with a warning in turn (it was not clickable before).
+
+- **No more toasts from the offline cache over the panes**: when the app finishes caching for
+  offline use, the **Offline ready** indicator in the header (and on the start screen) lights up
+  for a moment and is announced to screen readers, instead of a toast over the right pane that
+  stayed while the pointer was on it. A new version of the app shows as an **Update** button
+  beside the indicator, instead of a toast that never went away. Offline readiness is also no
+  longer forgotten when a project is opened or closed.
+
+- **Equipment bar fits the window**: the equipment types that do not fit in the bar go in a
+  **… more** menu at its end (with their keyboard keys) instead of running off the edge, and the
+  chosen type always stays in the bar, shortened if the window is narrow.
+
+- **Segment set-up drawn faint while counting**: in the Parts count stage, highlights, dashed
+  zones, ESDVs and end flanges (and their labels) are drawn at 40 % of their usual strength,
+  under the equipment, so the circles being counted stand out. Exported PDFs are unchanged.
+- **Process data folds away**: in the segment panel, **Process data** is a section that opens and
+  closes. It starts open for a segment with nothing entered and folded to one line (fluid, phase,
+  pressure, temperature, equipment) once anything is, so the ESDVs, linked drawings and notes
+  sit higher in the pane.
+
+- **Two stages: Segments, then Parts count.** The header shows the study's stage, **1 Segments**
+  then **2 Parts count**, and the workspace shows only what the stage needs. Defining segments:
+  the Highlighter, Dashed highlight, ESDV, End flange and Drawing link tools, and the segment's
+  set-up in the right pane, with the selected ESDV, end flange or link above it. Counting: the
+  Select, Circle and Stamp tools (and Line run when pipe lengths are counted) with the equipment
+  bar; the right pane shows the segment's status and who counted and checked it, the item editor
+  and the count table, and no process data, ESDVs or linked drawings; the segment list shows each
+  segment's item count and no **+ Segment**. While counting, ESDVs, end flanges, highlights and
+  dashed zones are locked: clicks go through them. Starting the count lists what may be unfinished
+  in the segments (set-up in no segment, segments with nothing marked or fewer than two ESDVs or
+  end flanges), with **Show** buttons; going back to Segments is one click. The stage is saved in
+  the project file as `stage` (`segments` or `count`); a project from an older build opens at
+  Segments, and an older build ignores the field. The sample project opens at the parts count.
+
+- **Stamp moved to the top left** on annotated PDFs: the project, drawing, segment, count revision
+  and export date are now in one box with the legend, above it, in the top-left corner, instead of
+  a separate stamp in the top-right corner where it covered off-page connectors, notes and title
+  blocks.
+- **All segments in one PDF**: a new Export option writes `<project>_all_segments.pdf`, every
+  segment's drawings in one file, segment by segment, each page showing only its segment's markers
+  (as in the per-segment PDFs). The file opens with a bookmark for each segment. `export_log.json`
+  counts it under `pdf.allSegments`. PDFs are now written a page at a time in the export worker, so
+  a long PDF never holds all of its drawings in memory, and the progress counts pages. This also
+  fixes a segment PDF whose drawings come from more than six PDF files failing to export.
+
 - **End flanges** (`F`): mark where an isolatable segment ends without an ESDV, such as a flanged
   tie-in to the closed drain or flare header. The bar under the toolbar chooses where the pipe
   goes (**Closed drain**, **Flare** or **Other end point**); drag a bar across the pipe (`Shift`

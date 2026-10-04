@@ -3,7 +3,7 @@
  * the drawings' text (LNK-06), and DWG/DXF layer toggles (DRW-09).
  */
 import { expect, test } from './fixtures';
-import { createProject, importDrawings, openMenu } from './helpers';
+import { createProject, importDrawings, openMenu, setStage } from './helpers';
 
 test('suggests links from off-page connector text (LNK-06)', async ({ app }) => {
   const dir = `suggest-${test.info().project.name}`;
@@ -20,7 +20,8 @@ test('suggests links from off-page connector text (LNK-06)', async ({ app }) => 
   await expect(dialog).toContainText('No new links found');
   await page.keyboard.press('Escape');
 
-  // Remove the link on PEFS-S-001, then ask again.
+  // Remove the link on PEFS-S-001 (segment set-up), then ask again.
+  await setStage(page, 'segments');
   await page.getByTestId('drawing-list').getByText('PEFS-S-001').click();
   await expect(page.getByTestId('viewer-preview-layer')).toBeVisible();
   const link = page.getByTestId('drawing-link');

@@ -12,6 +12,7 @@ export type Drawing = z.output<typeof v1.Drawing>;
 export type DrawingFileType = z.output<typeof v1.DrawingFileType>;
 export type Segment = z.output<typeof v1.Segment>;
 export type SegmentStatus = z.output<typeof v1.SegmentStatus>;
+export type ProjectStage = z.output<typeof v1.ProjectStage>;
 export type Marker = z.output<typeof v1.Marker>;
 export type MarkerShape = z.output<typeof v1.MarkerShape>;
 export type MarkerGeometry = z.output<typeof v1.MarkerGeometry>;

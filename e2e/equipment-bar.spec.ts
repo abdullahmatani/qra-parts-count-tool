@@ -17,7 +17,7 @@ const LIBRARY = {
   ],
 };
 
-async function open(app: AppFixture, name: string) {
+async function open(app: AppFixture, name: string, extra: Record<string, unknown> = {}) {
   const dir = `equipment-${name}-${test.info().project.name}`;
   await app.open();
   await seedProject(
@@ -27,7 +27,7 @@ async function open(app: AppFixture, name: string) {
       { file: 'PEFS-1001_A1.pdf', drawingNo: 'PEFS-1001', ...A1 },
       { file: 'PEFS-1001_A1.pdf', drawingNo: 'PEFS-1002', ...A1 },
     ],
-    { library: LIBRARY },
+    { library: LIBRARY, ...extra },
   );
   await openSeeded(app, dir);
   const page = app.page;
@@ -81,7 +81,15 @@ async function saved(app: AppFixture, dir: string): Promise<Saved> {
 test('the equipment bar sets the type and shape of new markers; Esc returns to Select', async ({
   app,
 }) => {
-  const { dir, page } = await open(app, 'bar');
+  // Counting, with pipe lengths: the dashed tool draws line runs.
+  const { dir, page } = await open(app, 'bar', {
+    stage: 'count',
+    settings: {
+      esdvBoundaryRule: 'upstream',
+      flangeConvention: 'perJoint',
+      pipeLengthCounting: true,
+    },
+  });
   const bar = page.getByTestId('equipment-bar');
   // Valves are offered per actuation; pipe is left to dashed line runs.
   await expect(bar.getByTestId('equipment-choice')).toHaveText([
@@ -166,6 +174,45 @@ test('the equipment bar sets the type and shape of new markers; Esc returns to S
   await inspector.getByTestId('marker-symbol-circle').click();
   await expect(page.locator('[data-symbol="square"]')).toHaveCount(0);
   await expect(page.locator('[data-symbol="circle"]')).toHaveCount(2);
+  await app.removeDirectory(dir);
+});
+
+test('types that do not fit go in a More menu; the chosen type stays in the bar', async ({
+  app,
+}) => {
+  const names = Array.from({ length: 12 }, (_, i) => `Long equipment type number ${i + 1}`);
+  const { dir, page } = await open(app, 'more', {
+    stage: 'count',
+    library: {
+      equipmentTypes: names.map((name, i) => ({ id: `eqt_${i}`, name, category: 'other' })),
+    },
+  });
+  const bar = page.getByTestId('equipment-bar');
+  const more = bar.getByTestId('equipment-more');
+  const shown = bar.getByTestId('equipment-choice');
+  await expect(more).toBeVisible();
+  const visible = await shown.count();
+  expect(visible).toBeGreaterThan(0);
+  expect(visible).toBeLessThan(names.length);
+  await expect(more).toHaveText(`${names.length - visible} more`);
+
+  // The last type, from the menu: it is chosen, arms the Circle tool and stays in the bar.
+  await more.click();
+  await expect(page.getByTestId('equipment-more-choice')).toHaveCount(names.length - visible);
+  await page.getByRole('menuitemradio', { name: names.at(-1) }).click();
+  const last = bar.getByRole('radio', { name: names.at(-1) });
+  await expect(last).toHaveAttribute('aria-checked', 'true');
+  await expect(tool(page, 'Circle')).toHaveAttribute('aria-checked', 'true');
+
+  // In a narrow window the More button is still whole, inside the bar.
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await expect(last).toBeVisible();
+  await expect
+    .poll(async () => {
+      const [b, m] = [(await bar.boundingBox())!, (await more.boundingBox())!];
+      return m.x + m.width <= b.x + b.width;
+    })
+    .toBe(true);
   await app.removeDirectory(dir);
 });
 

@@ -5,6 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { setStage } from './helpers';
 import { openSeeded, seedProject } from './seed';
 
 const A1 = { width: 2384, height: 1684 };
@@ -53,7 +54,8 @@ test('assigns equipment to the segment highlighted under it', async ({ app }) =>
   await page.keyboard.up('Shift');
   await expect(page.locator('[data-testid="marker"][data-shape="stroke"]')).toHaveCount(1);
 
-  // With IS-01 active, a circle on IS-02's paint goes to IS-02; one beside it to IS-01.
+  // Counting, with IS-01 active, a circle on IS-02's paint goes to IS-02; one beside it to IS-01.
+  await setStage(page, 'count');
   await segments.getByRole('button', { name: /IS-01/ }).click();
   await page.getByRole('application').focus();
   await page.keyboard.press('c');

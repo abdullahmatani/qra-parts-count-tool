@@ -29,6 +29,7 @@ import { LinkEditor } from '@/features/links/LinkEditor';
 import { EndFlangeEditor } from '@/features/segments/EndFlangeEditor';
 import { EsdvEditor } from '@/features/segments/EsdvEditor';
 import { splitSegmentCommand } from '@/features/segments/segment-commands';
+import { useStage } from '@/features/stage/stage';
 import {
   assignMarkerIds,
   deleteMarkerIds,
@@ -100,6 +101,7 @@ export function MarkerInspector() {
     activeDrawingId ? s.doc?.drawings[activeDrawingId]?.size : undefined,
   );
   const readOnly = useProjectStore((s) => s.readOnly);
+  const stage = useStage();
   const segments = useOrderedSegments();
   const warningMap = useMarkerWarnings();
   const items = useProjectStore((s) => s.doc?.items);
@@ -131,7 +133,11 @@ export function MarkerInspector() {
   const first = markers[0];
   if (!first) {
     if (selectedLinkId) return <LinkEditor linkId={selectedLinkId} />;
-    return <p className="text-sm text-muted-foreground">{t('panels.noItem')}</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t(stage === 'segments' ? 'panels.noSelection' : 'panels.noItem')}
+      </p>
+    );
   }
   const ids = markers.map((m) => m.id);
   const assignable = markers.filter((m) => !m.esdv);
@@ -156,8 +162,9 @@ export function MarkerInspector() {
     markers.length > 1
       ? markers.map((m) => itemsByMarker.get(m.id)).filter((i) => i !== undefined)
       : [];
+  // Splitting off a new segment is segment set-up, not counting.
   const splitFrom =
-    segmentValue && segmentValue !== NO_SEGMENT
+    stage === 'segments' && segmentValue && segmentValue !== NO_SEGMENT
       ? segments.find((segment) => segment.id === segmentValue)
       : undefined;
 

@@ -120,6 +120,7 @@ export const MarkerList = memo(function MarkerList({
             data-selected={entry.selected ? 'true' : 'false'}
             data-highlighted={entry.highlighted ? 'true' : 'false'}
             data-warning={entry.warning ? 'true' : 'false'}
+            data-dimmed={entry.dimmed ? 'true' : 'false'}
           >
             {entry.label || t(`markup.shapes.${kind}`)}
           </li>

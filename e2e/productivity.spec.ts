@@ -6,7 +6,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import type { Page } from '@playwright/test';
 import { expect, test, type AppFixture } from './fixtures';
-import { openMenu } from './helpers';
+import { openMenu, setStage } from './helpers';
 
 async function openSample(app: AppFixture) {
   const dir = `productivity-${test.info().project.name}-${test.info().title.slice(0, 12)}`;
@@ -56,6 +56,8 @@ test('bulk edits the size of several items in one step (CNT-10)', async ({ app }
 
 test('splits, reorders and merges segments (SEG-07)', async ({ app }) => {
   const { dir, page } = await openSample(app);
+  // Splitting, reordering and merging are segment set-up.
+  await setStage(page, 'segments');
   await openSheet(page, 'PEFS-S-002');
   await page.keyboard.press('Control+a');
   await page.getByRole('button', { name: 'Split into a new segment' }).click();
@@ -74,7 +76,8 @@ test('splits, reorders and merges segments (SEG-07)', async ({ app }) => {
   await dialog.getByRole('button', { name: 'Merge' }).click();
   await expect.poll(() => segmentNames(page)).toEqual(['IS-01', 'IS-02']);
   await expect(page.getByTestId('active-segment-chip')).toHaveText('New markers go to IS-02');
-  await expect(page.getByTestId('status-warnings')).toHaveText('1 marker with warnings');
+  // Defining segments, only set-up warnings count: the sample's open item is for the count.
+  await expect(page.getByTestId('status-warnings')).toHaveText('No warnings');
   await app.removeDirectory(dir);
 });
 

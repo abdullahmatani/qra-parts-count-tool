@@ -2,8 +2,9 @@
  * Pre-export check and annotated PDF export (roadmap #40–43): the check lists
  * what may be wrong and shows it on the drawing; the export writes one PDF per
  * drawing (PDF pages kept as vectors with their rotation, DXF layouts drawn at
- * paper size), a combined PDF per segment, pattern-based names and a log of
- * the warnings the user exported past (EXP-01, EXP-03..05, NFR-07, LNK-04).
+ * paper size), a combined PDF per segment, one PDF with every segment,
+ * pattern-based names and a log of the warnings the user exported past
+ * (EXP-01, EXP-03..05, NFR-07, LNK-04).
  */
 import { PDFDocument } from 'pdf-lib';
 import type * as PdfjsModule from 'pdfjs-dist';
@@ -23,6 +24,17 @@ async function pageText(bytes: Uint8Array, pageNumber = 1): Promise<string[]> {
     const pdf = await task.promise;
     const content = await (await pdf.getPage(pageNumber)).getTextContent();
     return content.items.map((item) => ('str' in item ? item.str : ''));
+  } finally {
+    await task.destroy();
+  }
+}
+
+async function outlineTitles(bytes: Uint8Array): Promise<string[]> {
+  const pdfjs = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as unknown as Pdfjs;
+  const task = pdfjs.getDocument({ data: bytes.slice(), verbosity: 0 });
+  try {
+    const outline = await (await task.promise).getOutline();
+    return (outline ?? []).map((entry) => entry.title);
   } finally {
     await task.destroy();
   }
@@ -138,10 +150,11 @@ test('checks the project and exports annotated PDFs (EXP-01, EXP-03..05)', async
     'true',
   );
 
-  // Outputs: PDFs only, a custom name pattern (EXP-05) and the segment PDFs.
+  // Outputs: PDFs only, a custom name pattern (EXP-05), the segment PDFs and all segments in one.
   await page.getByRole('button', { name: 'Export', exact: true }).click();
   await dialog.getByLabel('Excel workbook').uncheck();
   await dialog.getByLabel('Combined PDF per segment').check();
+  await dialog.getByLabel('All segments in one PDF').check();
   const pattern = dialog.getByLabel('PDF file names');
   await pattern.fill('{project}_{drawingNo}_{rev}');
   await pattern.press('Enter');
@@ -159,6 +172,7 @@ test('checks the project and exports annotated PDFs (EXP-01, EXP-03..05)', async
     'Plant A_PEFS-1001_B.pdf',
     'Plant A_PEFS-3001_A.pdf',
     'Plant A_PEFS-4001_A.pdf',
+    'Plant A_all_segments.pdf',
     'export_log.json',
   ]);
   const read = async (name: string) => app.readBytes(dir, `${folder}/${name}`);
@@ -208,10 +222,18 @@ test('checks the project and exports annotated PDFs (EXP-01, EXP-03..05)', async
     expect.arrayContaining(['HV-7', 'Segment IS-01']),
   );
 
+  // All segments in one PDF: IS-01's pages (IS-02 has none), bookmarked by segment.
+  const allBytes = await read('Plant A_all_segments.pdf');
+  const all = await PDFDocument.load(allBytes);
+  expect(all.getPageCount()).toBe(2);
+  expect(all.getTitle()).toBe('Plant A – All segments');
+  expect(await pageText(allBytes, 2)).toEqual(expect.arrayContaining(['PSV-3', 'Segment IS-01']));
+  expect(await outlineTitles(allBytes)).toEqual(['IS-01 – Gas']);
+
   // The log names the outputs and the warnings exported past.
   const log = JSON.parse(await app.readText(dir, `${folder}/export_log.json`)) as {
     outputs: string[];
-    pdf: { drawings: number; segments: number; filenamePattern: string };
+    pdf: { drawings: number; segments: number; allSegments: number; filenamePattern: string };
     acceptedWarnings: { kind: string; count: number }[];
     failures: unknown[];
     project: { countRevision: string };
@@ -219,6 +241,7 @@ test('checks the project and exports annotated PDFs (EXP-01, EXP-03..05)', async
   expect(log.pdf).toMatchObject({
     drawings: 3,
     segments: 1,
+    allSegments: 1,
     filenamePattern: '{project}_{drawingNo}_{rev}',
   });
   expect(log.acceptedWarnings.map((w) => w.kind)).toEqual([

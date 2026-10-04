@@ -8,7 +8,7 @@
 import ExcelJS from 'exceljs';
 import type { Page } from '@playwright/test';
 import { expect, test, type AppFixture } from './fixtures';
-import { createProject, importDrawings, openMenu } from './helpers';
+import { createProject, importDrawings, openMenu, setStage } from './helpers';
 
 async function start(app: AppFixture) {
   const dir = `excel-${test.info().project.name}`;
@@ -43,8 +43,12 @@ async function logValve(page: Page, fx: number, size: string) {
 test('maps the client template and exports a filled copy (EXP-02)', async ({ app }) => {
   const { dir, page } = await start(app);
 
-  // Two segments with manual valves; a note on IS-01.
+  // Two segments, then counted: manual valves and a note on IS-01.
   await newSegment(page, 'Gas');
+  await newSegment(page, 'Oil');
+  await setStage(page, 'count');
+  const segments = page.getByTestId('segment-list');
+  await segments.getByRole('button', { name: /IS-01/ }).click();
   await page.getByRole('application').focus();
   await page.keyboard.press('c');
   const box = (await page.getByRole('application').boundingBox())!;
@@ -59,7 +63,7 @@ test('maps the client template and exports a filled copy (EXP-02)', async ({ app
   const notes = page.getByTestId('notes-panel');
   await notes.getByLabel('Add note').fill('**Scope**: inlet to separator');
   await notes.getByRole('button', { name: 'Add note' }).click();
-  await newSegment(page, 'Oil');
+  await segments.getByRole('button', { name: /IS-02/ }).click();
   await page.getByRole('application').focus();
   await page.keyboard.press('c');
   await logValve(page, 0.6, '8');

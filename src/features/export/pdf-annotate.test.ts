@@ -285,12 +285,21 @@ describe('addAnnotatedPdfPage', () => {
       expect(lx).toBeCloseTo(bx, 3);
       expect(ly).toBeCloseTo(by, 3);
 
-      // The stamp sits in the top-right corner of the sheet as displayed.
-      const stamp = items.find((item) => item.str === 'Plant A QRA')!;
-      const [sx, sy] = viewport.convertToViewportPoint(stamp.transform[4]!, stamp.transform[5]!);
-      expect(sx).toBeGreaterThan(size.width / 2);
-      expect(sx).toBeLessThan(size.width);
-      expect(sy).toBeLessThan(size.height / 4);
+      // The stamp sits in the top-left corner of the sheet as displayed, above the legend.
+      const at = (text: string) => {
+        const item = items.find((i) => i.str === text)!;
+        return viewport.convertToViewportPoint(item.transform[4]!, item.transform[5]!);
+      };
+      const [sx, sy] = at('Plant A QRA');
+      const [, dateY] = at('2026-09-23');
+      const [legendX, legendY] = at('Segments');
+      expect(sx).toBeGreaterThan(0);
+      expect(sx).toBeLessThan(size.width / 4);
+      expect(sy).toBeGreaterThan(0);
+      expect(sx).toBeCloseTo(legendX, 3);
+      expect(sy).toBeLessThan(dateY);
+      expect(dateY).toBeLessThan(legendY);
+      expect(legendY).toBeLessThan(size.height / 4);
     }
   });
 

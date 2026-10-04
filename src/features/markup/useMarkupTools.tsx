@@ -60,6 +60,8 @@ import { penWidth } from '@/domain/markup/highlighter';
 import { LineTracer, inkMap, lineAt, type InkMap } from '@/domain/markup/line-trace';
 import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
+import { isEditableInStage } from '@/domain/stage';
+import { useStage } from '@/features/stage/stage';
 import type {
   DoubleLineGeometry,
   Marker,
@@ -239,6 +241,10 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   );
   const autoTrace = useUiStore((s) => s.tool === 'highlighter' && s.autoTrace);
   const tracing = useUiStore((s) => s.tracing);
+  const stage = useStage();
+  const pipeLengthCounting = useProjectStore((s) => s.doc?.settings.pipeLengthCounting ?? false);
+  // While counting, the dashed tool only draws line runs (CNT-12): zones set out segments.
+  const zones = stage === 'segments';
   const traceHints = useUiStore((s) =>
     s.traceHints?.drawingId === drawingId ? s.traceHints.paths : null,
   );
@@ -279,12 +285,16 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   );
 
   // Markers the tools can see and pick: on this drawing and not filtered out.
+  // While counting, the segments' set-up (ESDVs, highlights, zones) is locked.
   const visible = useMemo(() => {
     const index = itemsByMarker(items ?? {});
     return Object.values(markers ?? {}).filter(
-      (m) => m.drawingId === drawingId && isMarkerVisible(m, index.get(m.id), filters),
+      (m) =>
+        m.drawingId === drawingId &&
+        isMarkerVisible(m, index.get(m.id), filters) &&
+        isEditableInStage(m, stage, pipeLengthCounting),
     );
-  }, [markers, items, filters, drawingId]);
+  }, [markers, items, filters, drawingId, stage, pipeLengthCounting]);
   const visibleById = useMemo(() => new Map(visible.map((m) => [m.id, m])), [visible]);
   const selectedHere = useMemo(
     () => selection.filter((id) => visibleById.has(id)),
@@ -759,7 +769,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           return;
         }
         case 'rect':
-          if (g.dragging) {
+          if (g.dragging && zones) {
             const geometry = rectGeometry(g.start, point);
             if (geometry.type === 'rect' && geometry.width > 0 && geometry.height > 0) {
               placeMarker(drawingId, geometry);
@@ -910,7 +920,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     const bar = tool === 'endFlange';
     const gap = bar ? endFlangeThickness(drawingSize) : doubleLineGap(drawingSize);
     draft = gesture.dragging ? { ...doubleLine(gesture.start, gesture.current, gap), bar } : null;
-  } else if ((gesture.kind === 'rect' || gesture.kind === 'link') && gesture.dragging) {
+  } else if (((gesture.kind === 'rect' && zones) || gesture.kind === 'link') && gesture.dragging) {
     draft = rectGeometry(gesture.start, gesture.current);
   } else if (polyline) {
     const points = polyline.hover ? [...polyline.points, polyline.hover] : polyline.points;

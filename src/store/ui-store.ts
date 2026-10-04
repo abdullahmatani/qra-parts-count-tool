@@ -9,10 +9,15 @@ import { DOUBLE_LINE_LENGTH_FRACTION } from '@/domain/markup/esdv-boundary';
 import type { Box } from '@/domain/markup/geometry';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { MarkerFilterState } from '@/domain/markup/presentation';
-import type { EndFlangeDestination, MarkerSymbol, Point } from '@/domain/schema/types';
+import type {
+  EndFlangeDestination,
+  MarkerSymbol,
+  Point,
+  ProjectStage,
+} from '@/domain/schema/types';
+import type { StageTool } from '@/domain/stage';
 
-export type Tool =
-  'select' | 'circle' | 'dashed' | 'highlighter' | 'link' | 'esdv' | 'endFlange' | 'stamp';
+export type Tool = StageTool;
 
 export interface Viewport {
   /** Drawing coordinate at the centre of the view. */
@@ -54,6 +59,7 @@ export type DialogName =
   | 'openZip'
   | 'linkSuggestions'
   | 'newSegment'
+  | 'startCount'
   | null;
 
 export interface UiState {
@@ -80,6 +86,8 @@ export interface UiState {
   dialog: DialogName;
   /** Offline readiness reported by the service worker. */
   offlineReady: boolean;
+  /** Reloads into a new version of the app that is waiting, if there is one. */
+  appUpdate: (() => void) | null;
   /** Size of the last circle drawn, as a fraction of the drawing's longer side. */
   circleRadiusFraction: number;
   /** How the next equipment marker is drawn (ring, dot, square or free-form outline). */
@@ -116,6 +124,8 @@ export interface UiState {
   navHistory: { drawingId: string; view: Viewport | null }[];
   /** SEG-05: an area of a drawing to bring into view once its viewer is ready. */
   pendingFocus: { drawingId: string; box: Box | null } | null;
+  /** The stage shown in a read-only project, which cannot record the stage itself. */
+  stageView: ProjectStage | null;
 
   openDrawing: (drawingId: string) => void;
   closeDrawing: (drawingId: string) => void;
@@ -133,6 +143,7 @@ export interface UiState {
   setFilters: (filters: Partial<MarkerFilters>) => void;
   openDialog: (dialog: DialogName) => void;
   setOfflineReady: (ready: boolean) => void;
+  setAppUpdate: (update: (() => void) | null) => void;
   setCircleRadiusFraction: (fraction: number) => void;
   setMarkerSymbol: (symbol: MarkerSymbol) => void;
   setHighlighterPen: (pen: HighlighterPen) => void;
@@ -154,6 +165,7 @@ export interface UiState {
   setSelectedLink: (linkId: string | null) => void;
   pushNav: (entry: { drawingId: string; view: Viewport | null }) => void;
   popNav: () => { drawingId: string; view: Viewport | null } | null;
+  setStageView: (stage: ProjectStage | null) => void;
   reset: () => void;
 }
 
@@ -200,6 +212,7 @@ const initial = {
   itemDefaults: { equipmentTypeId: null, actuation: null },
   lastItemId: null,
   pendingFocus: null,
+  stageView: null,
   selectedLinkId: null,
   navHistory: [],
 } satisfies Partial<UiState>;
@@ -207,6 +220,7 @@ const initial = {
 export const useUiStore = create<UiState>()((set, get) => ({
   ...initial,
   offlineReady: false,
+  appUpdate: null,
 
   openDrawing: (drawingId) =>
     set((state) => ({
@@ -266,6 +280,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
   openDialog: (dialog) => set({ dialog }),
   setOfflineReady: (offlineReady) => set({ offlineReady }),
+  setAppUpdate: (appUpdate) => set({ appUpdate }),
   setCircleRadiusFraction: (circleRadiusFraction) => set({ circleRadiusFraction }),
   setMarkerSymbol: (markerSymbol) => set({ markerSymbol }),
   setHighlighterPen: (highlighterPen) => set({ highlighterPen }),
@@ -303,5 +318,8 @@ export const useUiStore = create<UiState>()((set, get) => ({
     if (last) set({ navHistory: history.slice(0, -1) });
     return last;
   },
-  reset: () => set({ ...initial }),
+  setStageView: (stageView) => set({ stageView }),
+  // The app's own state (offline readiness, a waiting update) outlives a project.
+  reset: () =>
+    set((state) => ({ ...initial, offlineReady: state.offlineReady, appUpdate: state.appUpdate })),
 }));

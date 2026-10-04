@@ -102,11 +102,11 @@ test('highlights a segment with free-hand and straight strokes', async ({ app })
   // Highlights mark out the segment; they are not counted.
   expect(project.items).toEqual([]);
 
-  // Esc returns to Select and the equipment bar; a stroke is then selected,
-  // repainted with the fine pen and deleted.
+  // Esc returns to Select (and its hint, while defining segments); a stroke
+  // is then selected, repainted with the fine pen and deleted.
   await page.getByRole('application').focus();
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('equipment-bar')).toBeVisible();
+  await expect(page.getByTestId('tool-hint-bar')).toBeVisible();
   const onStroke = await at(page, 0.4, 0.6);
   await page.mouse.click(onStroke.x, onStroke.y);
   const inspector = page.getByTestId('marker-inspector');

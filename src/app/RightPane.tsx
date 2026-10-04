@@ -8,11 +8,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { segmentAppearance } from '@/domain/palette';
+import { useStage } from '@/features/stage/stage';
 import { useActiveSegment, useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
 
 export interface RightPaneProps {
+  /** The segment's set-up, while defining segments. */
   segmentDetails?: ReactNode;
+  /** The segment while counting: its status and who counted and checked it. */
+  segmentSummary?: ReactNode;
   countTable?: ReactNode;
   itemEditor?: ReactNode;
   notes?: ReactNode;
@@ -43,9 +47,20 @@ function PanelSection({
   );
 }
 
-/** Right pane: active segment selector, segment details, count table, item editor and notes. */
-export function RightPane({ segmentDetails, countTable, itemEditor, notes }: RightPaneProps) {
+/**
+ * Right pane: the active segment selector, then what the stage needs. Defining
+ * segments: the selected marker, the segment's set-up and notes. Counting: the
+ * segment's status, the item, the count table and notes; no set-up.
+ */
+export function RightPane({
+  segmentDetails,
+  segmentSummary,
+  countTable,
+  itemEditor,
+  notes,
+}: RightPaneProps) {
   const { t } = useTranslation();
+  const stage = useStage();
   const segments = useOrderedSegments();
   const active = useActiveSegment();
   const setActiveSegment = useUiStore((s) => s.setActiveSegment);
@@ -76,16 +91,36 @@ export function RightPane({ segmentDetails, countTable, itemEditor, notes }: Rig
           </SelectContent>
         </Select>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <PanelSection title={t('panels.segment')}>
-          {active ? (segmentDetails ?? placeholder) : placeholder}
-        </PanelSection>
-        <PanelSection title={t('panels.count')}>
-          {countTable ?? (active ? null : placeholder)}
-        </PanelSection>
-        <PanelSection title={t('panels.item')}>
-          {itemEditor ?? <p className="text-sm text-muted-foreground">{t('panels.noItem')}</p>}
-        </PanelSection>
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+        data-testid="right-pane-sections"
+        data-stage={stage}
+      >
+        {stage === 'segments' ? (
+          <>
+            {/* The selected ESDV, end flange or link first: it is what is being edited. */}
+            <PanelSection title={t('panels.selection')}>
+              {itemEditor ?? (
+                <p className="text-sm text-muted-foreground">{t('panels.noSelection')}</p>
+              )}
+            </PanelSection>
+            <PanelSection title={t('panels.segment')}>
+              {active ? (segmentDetails ?? placeholder) : placeholder}
+            </PanelSection>
+          </>
+        ) : (
+          <>
+            {active && segmentSummary && (
+              <PanelSection title={t('panels.segment')}>{segmentSummary}</PanelSection>
+            )}
+            <PanelSection title={t('panels.item')}>
+              {itemEditor ?? <p className="text-sm text-muted-foreground">{t('panels.noItem')}</p>}
+            </PanelSection>
+            <PanelSection title={t('panels.count')}>
+              {countTable ?? (active ? null : placeholder)}
+            </PanelSection>
+          </>
+        )}
         <PanelSection title={t('panels.notes')} grow>
           {active ? (notes ?? placeholder) : placeholder}
         </PanelSection>

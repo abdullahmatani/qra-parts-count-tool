@@ -1,4 +1,4 @@
-import { Columns2, X } from 'lucide-react';
+import { Columns2, Link2, MousePointer2, SquareDashed, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { drawingDisplayName } from '@/domain/drawings';
@@ -7,15 +7,45 @@ import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { SuggestionBar } from '@/features/assist/SuggestionBar';
 import { FindBar } from '@/features/search/FindBar';
+import { useStage } from '@/features/stage/stage';
 import { EndFlangeBar } from './EndFlangeBar';
 import { EquipmentBar } from './EquipmentBar';
 import { EsdvBar } from './EsdvBar';
 import { HighlighterBar } from './HighlighterBar';
+import { ToolHintBar } from './ToolHintBar';
 import { Toolbar } from './Toolbar';
 
 export interface CanvasAreaProps {
   /** Renders the viewer for the active drawing. */
   renderDrawing?: (drawingId: string) => ReactNode;
+}
+
+/** The bar under the toolbar: the options of what the tool places, by stage. */
+function OptionsBar() {
+  const { t } = useTranslation();
+  const tool = useUiStore((s) => s.tool);
+  const stage = useStage();
+  if (stage === 'count') {
+    return tool === 'dashed' ? (
+      <ToolHintBar icon={SquareDashed} hint={t('stage.countBar.lineRun')} />
+    ) : (
+      <EquipmentBar />
+    );
+  }
+  switch (tool) {
+    case 'highlighter':
+      return <HighlighterBar />;
+    case 'esdv':
+      return <EsdvBar />;
+    case 'endFlange':
+      return <EndFlangeBar />;
+    case 'dashed':
+      return <ToolHintBar icon={SquareDashed} hint={t('stage.bar.dashed')} />;
+    case 'link':
+      return <ToolHintBar icon={Link2} hint={t('stage.bar.link')} />;
+    default:
+      return <ToolHintBar icon={MousePointer2} hint={t('stage.bar.select')} />;
+  }
 }
 
 /** Centre pane: toolbar, drawing tabs and the drawing canvas. */
@@ -26,7 +56,6 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
   const openDrawing = useUiStore((s) => s.openDrawing);
   const closeDrawing = useUiStore((s) => s.closeDrawing);
   const split = useUiStore((s) => s.split);
-  const tool = useUiStore((s) => s.tool);
   const toggleSplit = useUiStore((s) => s.toggleSplit);
   const focusPane = useUiStore((s) => s.focusPane);
   const drawings = useProjectStore((s) => s.doc?.drawings);
@@ -36,16 +65,7 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
   return (
     <div className="flex h-full min-w-0 flex-col">
       <Toolbar />
-      {/* The bar under the toolbar holds the options of what is being placed. */}
-      {tool === 'highlighter' ? (
-        <HighlighterBar />
-      ) : tool === 'esdv' ? (
-        <EsdvBar />
-      ) : tool === 'endFlange' ? (
-        <EndFlangeBar />
-      ) : (
-        <EquipmentBar />
-      )}
+      <OptionsBar />
       {tabs.length > 0 && (
         <div
           role="tablist"

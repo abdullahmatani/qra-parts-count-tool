@@ -5,7 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { clickDrawing, createProject, importDrawings, toScreen } from './helpers';
+import { clickDrawing, createProject, importDrawings, setStage, toScreen } from './helpers';
 
 async function suggestionCentres(page: Page): Promise<{ x: number; y: number }[]> {
   return page
@@ -118,6 +118,7 @@ test('suggests every other gate valve on a DXF sheet (roadmap #59, #60)', async 
   const [cx, cy] = at(120, 110);
   const centre = await toScreen(page, cx, cy);
   const edge = await toScreen(page, cx + 17, cy);
+  await setStage(page, 'count');
   await page.getByRole('application').focus();
   await page.keyboard.press('c');
   await page.mouse.move(centre.x, centre.y);

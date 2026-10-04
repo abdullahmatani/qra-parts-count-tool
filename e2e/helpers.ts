@@ -16,6 +16,35 @@ export async function createProject(
   await expect(page.getByTestId('workspace')).toBeVisible();
 }
 
+/**
+ * Moves the study to a stage with the header's switcher; starting the count
+ * goes through its check of the segments.
+ */
+export async function setStage(page: Page, stage: 'segments' | 'count') {
+  const switcher = page.getByTestId('stage-switcher');
+  if ((await switcher.getAttribute('data-stage')) === stage) return;
+  await switcher
+    .getByRole('radio', { name: stage === 'count' ? /Parts count/ : /Segments/ })
+    .click();
+  if (stage === 'count') {
+    const dialog = page.getByRole('dialog', { name: 'Start the parts count?' });
+    await dialog.getByRole('button', { name: /^Start counting/ }).click();
+    await expect(dialog).toBeHidden();
+  }
+  await expect(switcher).toHaveAttribute('data-stage', stage);
+}
+
+/**
+ * Closes the toasts on screen. A toast pauses while the pointer is over it,
+ * so one over a control the test clicks would never go away by itself.
+ */
+export async function dismissToasts(page: Page) {
+  const close = page.getByRole('button', { name: 'Close toast' });
+  while ((await close.count()) > 0) {
+    await close.first().click();
+  }
+}
+
 export async function closeProject(page: Page) {
   await page.getByRole('button', { name: 'Project', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Close project' }).click();

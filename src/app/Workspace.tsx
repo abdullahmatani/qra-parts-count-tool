@@ -4,6 +4,7 @@ import { useDefaultLayout } from 'react-resizable-panels';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { DrawingList } from '@/features/drawings/DrawingList';
 import { SegmentList } from '@/features/segments/SegmentList';
+import { useStageGuard } from '@/features/stage/stage';
 import { CanvasArea, type CanvasAreaProps } from './CanvasArea';
 import { Header } from './Header';
 import { RightPane, type RightPaneProps } from './RightPane';
@@ -37,6 +38,7 @@ export function Workspace({
   children,
 }: WorkspaceProps) {
   const { t } = useTranslation();
+  useStageGuard();
   const layout = useDefaultLayout({ id: 'qrapc.workspace', storage: localStorage });
   const [dragging, setDragging] = useState(false);
   const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes('Files');

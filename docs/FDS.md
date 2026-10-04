@@ -197,7 +197,7 @@ Requirements carry an ID for traceability to the roadmap and test cases; priorit
 | --- | --- | --- |
 | EXP-01 | Pre-export check lists: unassigned markers, items missing size or type, segments with no items, segments with no linked drawing, unresolved duplicates. User can export anyway. | Must |
 | EXP-02 | Excel export fills the user's template per the mapping in section 7 and saves a new file; the template is never overwritten. | Must |
-| EXP-03 | Annotated PDF export: one PDF per drawing, plus an optional combined PDF per segment, with markers, labels, a legend and a stamp (project, date, revision of count). | Must |
+| EXP-03 | Annotated PDF export: one PDF per drawing, plus optional combined PDFs (one per segment, or all segments in one file with a bookmark per segment), with markers, labels, and a stamp (project, date, revision of count) above the legend in the top-left corner. | Must |
 | EXP-04 | DWG drawings export as annotated PDFs at the chosen layout's paper size. | Must |
 | EXP-05 | Export filenames follow a configurable pattern, e.g. `{project}_{segment}_{drawingNo}_{rev}.pdf`. | Should |
 | EXP-06 | CSV export of the flat item list (one row per count item) for audit. | Should |
@@ -244,6 +244,17 @@ All project state lives in one versioned JSON file in the working directory; dra
 
 The main screen is a three-pane workspace: drawings on the left, the canvas in the centre, and the active segment's count and notes on the right.
 
+A study runs in two stages, chosen in the header: **1 Segments**, then **2 Parts count**. The workspace shows only what the stage needs:
+
+| | Segments | Parts count |
+| --- | --- | --- |
+| Toolbar | Select, Highlighter, Dashed highlight, ESDV, End flange, Drawing link; Auto trace | Select, Circle, Stamp; Line run when pipe lengths are counted |
+| Right pane | Selected marker, segment set-up (label, colour, description, process data, bounding ESDVs and end flanges, linked drawings), notes | Segment status and counted/checked by, item editor, count table, notes |
+| Segment list | Segments and their status; **+ Segment** | Segments with their item count and status |
+| Markers | All editable | ESDVs, end flanges, highlights, zones (and line runs when pipe lengths are not counted) are drawn faint and locked |
+
+Moving to the parts count lists what may be unfinished (set-up in no segment, segments with nothing marked, segments with fewer than two ESDVs or end flanges); the user can start anyway. Going back to Segments is one click. The stage is saved in the project (`stage`), so everyone who opens it sees the same stage; a read-only project can view either stage.
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ Project name · Save status (Saved 10:42) · Offline ● · Export · Settings │
@@ -271,7 +282,7 @@ The main screen is a three-pane workspace: drawings on the left, the canvas in t
 | Project setup | Metadata, template upload, settings (boundary rule, flange convention, pipe length counting, units) |
 | Drawing register | Table of drawings with metadata, segment links, marker counts, revision |
 | Canvas | View, mark up and navigate drawings |
-| Segment panel | Segment details, linked drawings, status |
+| Segment panel | Segments stage: segment set-up and linked drawings. Parts count stage: status, counted by, checked by |
 | Count table | Live totals for the active segment; click a cell to highlight items |
 | Item editor | Quick entry for type, size, actuation, tag, quantity; opens on marker placement |
 | Notes | Segment notes with timestamped entries |
@@ -284,7 +295,7 @@ The main screen is a three-pane workspace: drawings on the left, the canvas in t
 - Placing a circle opens the item editor with the last-used type and focus on size, so one keystroke plus Enter logs an item.
 - Size entry accepts `2`, `2"`, `DN50` and fractions like `3/4`.
 - The active segment's colour tints the toolbar, so the user always sees where new markers go.
-- Warnings appear inline on the marker (amber outline) and in the status bar count.
+- Warnings appear inline on the marker (amber outline) and in the status bar count, for the stage: set-up in no segment while defining segments; unassigned equipment, incomplete items and duplicate tags while counting. Clicking the count goes to each marker with a warning in turn.
 - Drawing links show as blue hatched rectangles with a link icon; a single click follows the link when the Select tool is active.
 
 ## 7. Excel template mapping and outputs
@@ -323,6 +334,7 @@ The user supplies the Excel layout; the tool never imposes one. A mapping, built
 | `<project>_PartsCount.xlsx` | Populated client template, plus `Notes`, `Item List` and `Unmapped` sheets |
 | `<drawingNo>_<rev>_annotated.pdf` | Each drawing with segment markers, labels, legend and stamp; no drawing links |
 | `<segment>_drawings.pdf` | Optional: all drawings for one segment in one PDF |
+| `<project>_all_segments.pdf` | Optional: every segment's drawings in one PDF, segment by segment, with a bookmark per segment |
 | `<project>_items.csv` | Optional flat item list |
 | `export_log.json` | What was exported, from which project revision, with warnings accepted |
 

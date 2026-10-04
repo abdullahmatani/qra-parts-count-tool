@@ -1,7 +1,17 @@
-import { AlertTriangle, ArrowDown, ArrowUp, FileText, Merge, Trash2, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ChevronRight,
+  FileText,
+  Merge,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -14,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { isSegmentLabelTaken } from '@/domain/actions/segments';
 import { drawingDisplayName } from '@/domain/drawings';
 import { markerSegmentIds } from '@/domain/markup/presentation';
+import { cn } from '@/lib/utils';
 import { EndFlangeIcon } from '@/features/markup/EndFlangeIcon';
 import type { Segment, SegmentStatus } from '@/domain/schema/types';
 import { useProjectStore } from '@/store/project-store';
@@ -22,6 +33,7 @@ import { DeleteSegmentDialog } from './DeleteSegmentDialog';
 import { MergeSegmentDialog } from './MergeSegmentDialog';
 import { ColourPicker, CommitInput } from './fields';
 import { parseOptionalNumber } from './parse';
+import { hasProcessData, processSummary } from './process-data';
 import {
   linkDrawingCommand,
   moveSegmentCommand,
@@ -37,10 +49,96 @@ function Heading({ children }: { children: React.ReactNode }) {
   return <h3 className="pt-1 text-xs font-medium text-muted-foreground">{children}</h3>;
 }
 
+/** Where the segment's count stands (SEG-09). */
+function StatusSelect({ segment, className }: { segment: Segment; className?: string }) {
+  const { t } = useTranslation();
+  const readOnly = useProjectStore((s) => s.readOnly);
+  return (
+    <Select
+      value={segment.status}
+      onValueChange={(status) =>
+        updateSegmentCommand(segment.id, { status: status as SegmentStatus })
+      }
+      disabled={readOnly}
+    >
+      <SelectTrigger className={className ?? 'w-32'} aria-label={t('segments.fields.status')}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUSES.map((status) => (
+          <SelectItem key={status} value={status}>
+            {t(`segments.status.${status}`)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+/** Who counted and who checked the segment. */
+function ReviewFields({ segment }: { segment: Segment }) {
+  const { t } = useTranslation();
+  const readOnly = useProjectStore((s) => s.readOnly);
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-1">
+        <Label htmlFor="segment-countedBy" className="text-xs">
+          {t('segments.fields.countedBy')}
+        </Label>
+        <CommitInput
+          id="segment-countedBy"
+          value={segment.countedBy}
+          onCommit={(countedBy) => updateSegmentCommand(segment.id, { countedBy })}
+          disabled={readOnly}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="segment-checkedBy" className="text-xs">
+          {t('segments.fields.checkedBy')}
+        </Label>
+        <CommitInput
+          id="segment-checkedBy"
+          value={segment.checkedBy}
+          onCommit={(checkedBy) => updateSegmentCommand(segment.id, { checkedBy })}
+          disabled={readOnly}
+        />
+      </div>
+    </div>
+  );
+}
+
 /**
- * The active segment (SEG-02..05, SEG-09): label, colour, description,
- * process data, status, bounding ESDVs and end flanges, and linked drawings.
- * Every field saves as you go and each change can be undone.
+ * The active segment while counting: only where its count stands and who
+ * counted and checked it. Its set-up was done in the Segments stage.
+ */
+export function SegmentCountPanel() {
+  const { t } = useTranslation();
+  const segment = useActiveSegment();
+  if (!segment) return null;
+  return (
+    <div key={segment.id} className="space-y-2 text-sm" data-testid="segment-count-panel">
+      <div className="flex items-center gap-2">
+        <span className="min-w-0 flex-1 text-xs text-muted-foreground">
+          {t('segments.fields.status')}
+        </span>
+        <StatusSelect segment={segment} className="w-36" />
+      </div>
+      {segment.description && (
+        <p className="line-clamp-2 text-xs text-muted-foreground" title={segment.description}>
+          {segment.description}
+        </p>
+      )}
+      <ReviewFields segment={segment} />
+    </div>
+  );
+}
+
+/**
+ * The active segment's set-up (SEG-02..05), while defining segments: label,
+ * colour, description, process data, bounding ESDVs and end flanges, and
+ * linked drawings. Its status and who counted and checked it are set while
+ * counting (`SegmentCountPanel`). Every field saves as you go and each change
+ * can be undone.
  */
 export function SegmentDetails() {
   const segment = useActiveSegment();
@@ -57,6 +155,12 @@ function SegmentForm({ segment }: { segment: Segment }) {
   const drawings = useOrderedDrawings();
   const [deleting, setDeleting] = useState(false);
   const [merging, setMerging] = useState(false);
+  // Process data is entered once: open for a new segment, folded to one line after.
+  const [processOpen, setProcessOpen] = useState(() => !hasProcessData(segment));
+  const summary = processSummary(segment, {
+    pressure: units?.pressure ?? '',
+    temperature: units?.temperature ?? '',
+  });
   const order = useProjectStore((s) => s.doc?.segmentOrder);
   const position = order?.indexOf(segment.id) ?? -1;
   const segmentCount = order?.length ?? 0;
@@ -140,22 +244,6 @@ function SegmentForm({ segment }: { segment: Segment }) {
             disabled={readOnly}
           />
         </div>
-        <Select
-          value={segment.status}
-          onValueChange={(status) => update({ status: status as SegmentStatus })}
-          disabled={readOnly}
-        >
-          <SelectTrigger className="w-32" aria-label={t('segments.fields.status')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {t(`segments.status.${status}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <Textarea
@@ -168,66 +256,91 @@ function SegmentForm({ segment }: { segment: Segment }) {
         className="min-h-14 resize-y"
       />
 
-      <Heading>{t('segments.details.process')}</Heading>
-      {/* The A2.1 sheet takes "Liquid" or "Gas"; other text is kept but flagged on export. */}
-      <datalist id="segment-phases">
-        <option value="Gas" />
-        <option value="Liquid" />
-      </datalist>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2 space-y-1">
-          <Label htmlFor="segment-equipment" className="text-xs">
-            {t('segments.fields.equipment')}
-          </Label>
-          {textField('equipment')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-fluid" className="text-xs">
-            {t('segments.fields.fluid')}
-          </Label>
-          {textField('fluid')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-phase" className="text-xs">
-            {t('segments.fields.phase')}
-          </Label>
-          {textField('phase')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-pressure" className="text-xs">
-            {t('segments.fields.pressure', { unit: units?.pressure ?? '' })}
-          </Label>
-          {numberField('pressure')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-temperature" className="text-xs">
-            {t('segments.fields.temperature', { unit: units?.temperature ?? '' })}
-          </Label>
-          {numberField('temperature')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-streamNumber" className="text-xs">
-            {t('segments.fields.streamNumber')}
-          </Label>
-          {textField('streamNumber')}
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-h2sMoleFraction" className="text-xs">
-            {t('segments.fields.h2s')}
-          </Label>
-          {numberField('h2sMoleFraction', (v) =>
-            v < 0 || v > 1 ? 'segments.errors.fraction' : null,
-          )}
-        </div>
-        <div className="col-span-2 space-y-1">
-          <Label htmlFor="segment-molecularWeightOrDensity" className="text-xs">
-            {t('segments.fields.molecularWeightOrDensity')}
-          </Label>
-          {numberField('molecularWeightOrDensity', (v) =>
-            v <= 0 ? 'segments.errors.positive' : null,
-          )}
-        </div>
-      </div>
+      <Collapsible open={processOpen} onOpenChange={setProcessOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            data-testid="process-toggle"
+            className="flex w-full min-w-0 items-center gap-1 rounded pt-1 text-start text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight
+              aria-hidden="true"
+              className={cn('size-3.5 shrink-0 transition-transform', processOpen && 'rotate-90')}
+            />
+            <span className="shrink-0">{t('segments.details.process')}</span>
+            {!processOpen && (
+              <span
+                className="min-w-0 truncate ps-1 font-normal"
+                title={summary}
+                data-testid="process-summary"
+              >
+                {summary || t('segments.details.processNone')}
+              </span>
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          {/* The A2.1 sheet takes "Liquid" or "Gas"; other text is kept but flagged on export. */}
+          <datalist id="segment-phases">
+            <option value="Gas" />
+            <option value="Liquid" />
+          </datalist>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="col-span-2 space-y-1">
+              <Label htmlFor="segment-equipment" className="text-xs">
+                {t('segments.fields.equipment')}
+              </Label>
+              {textField('equipment')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-fluid" className="text-xs">
+                {t('segments.fields.fluid')}
+              </Label>
+              {textField('fluid')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-phase" className="text-xs">
+                {t('segments.fields.phase')}
+              </Label>
+              {textField('phase')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-pressure" className="text-xs">
+                {t('segments.fields.pressure', { unit: units?.pressure ?? '' })}
+              </Label>
+              {numberField('pressure')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-temperature" className="text-xs">
+                {t('segments.fields.temperature', { unit: units?.temperature ?? '' })}
+              </Label>
+              {numberField('temperature')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-streamNumber" className="text-xs">
+                {t('segments.fields.streamNumber')}
+              </Label>
+              {textField('streamNumber')}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="segment-h2sMoleFraction" className="text-xs">
+                {t('segments.fields.h2s')}
+              </Label>
+              {numberField('h2sMoleFraction', (v) =>
+                v < 0 || v > 1 ? 'segments.errors.fraction' : null,
+              )}
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label htmlFor="segment-molecularWeightOrDensity" className="text-xs">
+                {t('segments.fields.molecularWeightOrDensity')}
+              </Label>
+              {numberField('molecularWeightOrDensity', (v) =>
+                v <= 0 ? 'segments.errors.positive' : null,
+              )}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Heading>{t('segments.details.esdvs')}</Heading>
       {boundaries === 0 ? (
@@ -335,32 +448,6 @@ function SegmentForm({ segment }: { segment: Segment }) {
           </SelectContent>
         </Select>
       )}
-
-      <Heading>{t('segments.details.review')}</Heading>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label htmlFor="segment-countedBy" className="text-xs">
-            {t('segments.fields.countedBy')}
-          </Label>
-          <CommitInput
-            id="segment-countedBy"
-            value={segment.countedBy}
-            onCommit={(countedBy) => update({ countedBy })}
-            disabled={readOnly}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="segment-checkedBy" className="text-xs">
-            {t('segments.fields.checkedBy')}
-          </Label>
-          <CommitInput
-            id="segment-checkedBy"
-            value={segment.checkedBy}
-            onCommit={(checkedBy) => update({ checkedBy })}
-            disabled={readOnly}
-          />
-        </div>
-      </div>
 
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
         <Button

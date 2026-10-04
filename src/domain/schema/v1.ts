@@ -57,6 +57,12 @@ export const Actuation = z.enum(['manual', 'automated']);
 /** SEG-09: segment progress status. */
 export const SegmentStatus = z.enum(['notStarted', 'inProgress', 'counted', 'checked']);
 
+/**
+ * Where the study stands: segments and their extent are defined first, then
+ * the parts are counted. The interface shows the tools and panels of the stage.
+ */
+export const ProjectStage = z.enum(['segments', 'count']);
+
 export const DrawingFileType = z.enum(['pdf', 'dwg', 'dxf']);
 
 /**
@@ -678,6 +684,8 @@ export const ProjectV1 = z.object({
   description: Text,
   /** Revision of the count shown in the PDF stamp, e.g. "A" or "1". */
   countRevision: z.string().max(20).default('A'),
+  /** Defining segments, or counting parts once the segments are done. */
+  stage: ProjectStage.default('segments'),
   createdAt: Timestamp,
   updatedAt: Timestamp,
   /** Incremented on every save; export logs record it. */

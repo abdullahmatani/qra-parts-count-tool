@@ -26,7 +26,7 @@ import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
 import { TemplateError } from './excel-writer';
 import { templateSheetNames, writeWorkbook } from './xlsx-writer';
-import { PdfSourceError, type BuildPage, type PageSource } from './pdf-export-protocol';
+import { PdfSourceError, type PageSource } from './pdf-export-protocol';
 import { PdfExportClient } from './pdf-export-client';
 
 const t = i18n.t.bind(i18n);
@@ -86,6 +86,7 @@ export function pdfLabels(): PdfLabels {
         : name;
     },
     segment: (label) => tFile('export.pdf.segment', { label }),
+    allSegments: tFile('export.pdf.allSegments'),
     countRevision: (revision) => tFile('export.pdf.countRevision', { revision }),
     exported: (date) => tFile('export.pdf.exported', { date }),
   };
@@ -151,7 +152,10 @@ export interface ExportOptions {
   drawingPdfs?: boolean;
   /** One combined PDF per segment (EXP-03). */
   segmentPdfs?: boolean;
+  /** Every segment's pages in one PDF, with a bookmark per segment. */
+  allSegmentsPdf?: boolean;
   accepted?: AcceptedWarning[];
+  /** PDF pages written so far, of all the PDFs. */
   onProgress?: (progress: { done: number; total: number }) => void;
 }
 
@@ -242,10 +246,6 @@ class PageSources {
     }
   }
 
-  drawingFor(key: string): Drawing | undefined {
-    return this.files.get(key);
-  }
-
   private fileError(drawing: Drawing, error: unknown, other?: () => string): Error {
     if (isNotFound(error)) {
       const message = t('export.pdf.errors.missingFile', {
@@ -258,12 +258,10 @@ class PageSources {
   }
 }
 
-function pdfFailureMessage(error: unknown, pages: BuildPage[], sources: PageSources): string {
+/** `drawing` is the one whose page was being added when the PDF failed. */
+function pdfFailureMessage(error: unknown, drawing: Drawing | undefined): string {
   if (error instanceof PdfSourceError) {
-    // The worker names no drawing; the plan's PDF pages tell which one it was.
-    const drawing = pages
-      .map((p) => (p.source.kind === 'pdf' ? sources.drawingFor(p.source.key) : undefined))
-      .find((d) => d !== undefined);
+    // The worker names no drawing; the page it was given tells which one it was.
     const name = drawing ? drawingName(drawing) : '';
     return t(`export.pdf.errors.${error.problem}`, { drawing: name, page: drawing?.page ?? 1 });
   }
@@ -276,51 +274,60 @@ async function exportPdfs(
   folder: string,
   options: ExportOptions,
   context: { now: Date; taken: Set<string>; files: string[]; failures: ExportFailure[] },
-): Promise<{ drawings: number; segments: number }> {
+): Promise<{ drawings: number; segments: number; allSegments: number }> {
   const plans = planPdfExport({
     doc,
     entries: countEntries(doc),
     drawings: options.drawingPdfs === true,
     segments: options.segmentPdfs === true,
+    allSegments: options.allSegmentsPdf === true,
     now: context.now,
     labels: pdfLabels(),
     taken: context.taken,
   });
   const sources = new PageSources(dir, doc);
   const client = new PdfExportClient();
-  let drawings = 0;
-  let segments = 0;
+  const written = { drawings: 0, segments: 0, allSegments: 0 };
+  const total = plans.reduce((n, plan) => n + plan.pages.length, 0);
+  let done = 0;
   try {
-    for (const [i, plan] of plans.entries()) {
-      const pages: BuildPage[] = [];
+    for (const plan of plans) {
+      const before = done;
+      let drawing: Drawing | undefined;
       try {
+        // A page at a time, so only the drawing being drawn is held in memory.
+        await client.start({ title: plan.title, createdAt: context.now.toISOString() });
         for (const page of plan.pages) {
-          pages.push({ source: await sources.page(page.drawingId), overlay: page.overlay });
+          drawing = doc.drawings[page.drawingId];
+          const source = await sources.page(page.drawingId);
+          await client.append({ source, overlay: page.overlay }, (key) => sources.bytes(key));
+          done += 1;
+          options.onProgress?.({ done, total });
         }
-        const bytes = await client.build(
-          { title: plan.title, createdAt: context.now.toISOString(), pages },
-          (key) => sources.bytes(key),
-        );
+        const bytes = await client.finish(plan.outline);
         await writeFile(
           dir,
           `${folder}/${plan.fileName}`,
           new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' }),
         );
         context.files.push(plan.fileName);
-        if (plan.kind === 'drawing') drawings += 1;
-        else segments += 1;
+        if (plan.kind === 'drawing') written.drawings += 1;
+        else if (plan.kind === 'segment') written.segments += 1;
+        else written.allSegments += 1;
       } catch (error) {
         context.failures.push({
           file: plan.fileName,
-          message: pdfFailureMessage(error, pages, sources),
+          message: pdfFailureMessage(error, drawing),
         });
       }
-      options.onProgress?.({ done: i + 1, total: plans.length });
+      // Pages of a PDF that failed count as done, so the progress still ends at the total.
+      done = before + plan.pages.length;
+      options.onProgress?.({ done, total });
     }
   } finally {
     client.dispose();
   }
-  return { drawings, segments };
+  return written;
 }
 
 export async function runExport(options: ExportOptions, now = new Date()): Promise<ExportResult> {
@@ -370,8 +377,8 @@ export async function runExport(options: ExportOptions, now = new Date()): Promi
     files.push(name);
   }
 
-  let pdf: { drawings: number; segments: number } | null = null;
-  if (options.drawingPdfs || options.segmentPdfs) {
+  let pdf: { drawings: number; segments: number; allSegments: number } | null = null;
+  if (options.drawingPdfs || options.segmentPdfs || options.allSegmentsPdf) {
     const taken = new Set([...files, 'export_log.json'].map((f) => f.toLowerCase()));
     pdf = await exportPdfs(dir, doc, folder, options, { now, taken, files, failures });
   }

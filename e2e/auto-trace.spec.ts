@@ -238,8 +238,14 @@ test('auto trace highlights a segment out to its ESDVs, end flange and off-page 
   });
   expect(strokePoints(await saved(app, dir), 'seg_1')).toHaveLength(before);
 
-  // The toast opens the drawing the pipe carries on on.
-  await page.getByRole('button', { name: 'Open TRACE-2' }).first().click();
+  // The toast opens the drawing the pipe carries on on. Both traces said so;
+  // the newer toast is in front, over the older one. The pointer over the
+  // stack spreads it out and moves the buttons, so the button is pressed with
+  // the keyboard.
+  await page
+    .locator('[data-sonner-toast][data-front="true"]')
+    .getByRole('button', { name: 'Open TRACE-2' })
+    .press('Enter');
   await expect(page.getByRole('tab', { name: 'TRACE-2', selected: true })).toBeVisible();
   await app.removeDirectory(dir);
 });

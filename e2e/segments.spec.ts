@@ -25,6 +25,14 @@ async function clickCanvas(page: Page, fx: number, fy: number) {
   await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
 }
 
+async function dragCanvas(page: Page, from: [number, number], to: [number, number]) {
+  const box = (await page.getByRole('application').boundingBox())!;
+  await page.mouse.move(box.x + box.width * from[0], box.y + box.height * from[1]);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * to[0], box.y + box.height * to[1], { steps: 5 });
+  await page.mouse.up();
+}
+
 async function newSegment(page: Page, fields: { fluid?: string } = {}) {
   await page.getByTestId('left-pane').getByRole('button', { name: 'Segment' }).click();
   const dialog = page.getByRole('dialog', { name: 'New segment' });
@@ -49,7 +57,11 @@ test.describe('isolatable segments', () => {
     // SEG-02: the label is suggested; the new segment becomes active (SEG-06).
     expect(await newSegment(page, { fluid: 'Gas' })).toBe('IS-01');
     await expect(page.getByTestId('active-segment-chip')).toHaveText('New markers go to IS-01');
-    await expect(page.getByTestId('segment-details').getByLabel('Fluid')).toHaveValue('Gas');
+    // Process data entered: folded to one line, opened on a click.
+    const details = page.getByTestId('segment-details');
+    await expect(details.getByTestId('process-summary')).toHaveText('Gas');
+    await details.getByTestId('process-toggle').click();
+    await expect(details.getByLabel('Fluid')).toHaveValue('Gas');
     expect(await newSegment(page)).toBe('IS-02');
     await expect(page.getByTestId('segment-list').getByRole('button')).toHaveCount(2);
 
@@ -114,13 +126,13 @@ test.describe('isolatable segments', () => {
     await newSegment(page);
     await newSegment(page);
 
-    // A marker links its drawing to the active segment (IS-02).
+    // A marker links its drawing to the active segment (IS-02): two dashed zones.
     await page.getByTestId('drawing-list').getByText('PEFS-1001').click();
     await expect(page.getByTestId('viewer-preview-layer')).toBeVisible();
     await page.getByRole('application').focus();
-    await page.keyboard.press('c');
-    await clickCanvas(page, 0.3, 0.3);
-    await clickCanvas(page, 0.32, 0.32);
+    await page.keyboard.press('d');
+    await dragCanvas(page, [0.28, 0.28], [0.3, 0.3]);
+    await dragCanvas(page, [0.31, 0.31], [0.33, 0.33]);
     const drawings = page.getByTestId('segment-drawings');
     await expect(drawings).toContainText('PEFS-1001');
     await expect(drawings).toContainText('2 markers');

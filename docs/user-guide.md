@@ -13,7 +13,8 @@ a folder on your computer and are never uploaded anywhere.
   1366 × 768). These browsers can read and write a local folder. In Firefox and Safari, which
   cannot, a project sent as a `.zip` opens read-only (section 11).
 - Open the app once while online. After that it works with no network: the header shows
-  **Offline ready** when everything is cached.
+  **Offline ready** when everything is cached. When a new version of the app is published, an
+  **Update** button appears beside it; click it to reload into the new version.
 - Make an empty folder for each study, for example on a project share. This is the **working
   directory**: the project file, the drawings, the exports and automatic backups all live in it, so
   you can zip it, archive it or hand it to a checker.
@@ -113,12 +114,19 @@ Click a drawing in the list to open it in a tab.
 
 An isolatable segment is the inventory between ESD valves. It is the unit of the count.
 
+A study runs in two stages, shown in the header: **1 Segments**, then **2 Parts count**. A new
+project starts at **Segments**: the toolbar holds the tools that set out segments (Highlighter,
+Dashed highlight, ESDV, End flange, Drawing link) and the right pane the segment's set-up. When the
+segments are done, click **2 Parts count** (section 7). Pressing the key of a tool from the other
+stage says where it is, with a button to go there.
+
 1. Click **+ Segment** in the left pane and give it a label (for example `IS-01`), a colour, the
    fluid and the operating conditions. The new segment becomes the **active segment**: new markers
    go to it. The toolbar shows which segment is active. The segment panel on the right also holds
    what the A2.1 parts count sheet asks for: the object or equipment, the H&MB stream number, the
    phase (**Liquid** or **Gas**), the H2S mole fraction, and the molecular weight (gas) or density
-   in kg/m³ (liquid).
+   in kg/m³ (liquid). Once anything is entered, **Process data** folds to one line (fluid, phase,
+   pressure, temperature, equipment); click it to open the fields again.
 2. Select the **ESDV** tool (`E`) and click each ESD valve on the drawing. In the inspector on the
    right, enter its tag and size, and choose the segment **upstream** and **downstream** of it. The
    boundary rule decides which of the two counts the valve itself; an ESDV can override the project
@@ -221,6 +229,26 @@ mappings keep working.
 
 ## 7. Counting
 
+When the segments are defined, click **2 Parts count** in the header. A check lists what may not be
+finished: highlighting, zones, ESDVs or end flanges that are in no segment, segments with nothing
+marked, and segments with fewer than two ESDVs or end flanges. **Show** takes you there; **Start
+counting** (or **Start counting anyway**) moves on.
+
+While counting, the workspace shows only what counting needs:
+
+- the toolbar holds **Select**, **Circle** and **Stamp** (and **Line run** when pipe lengths are
+  counted), with the equipment bar under it;
+- the right pane shows the segment's **status**, **Counted by** and **Checked by**, then the
+  **item editor**, the **count table** and the notes. Process data, ESDVs and linked drawings are
+  not shown;
+- the segment list shows how many items each segment has;
+- ESDVs, end flanges, highlighting and dashed zones stay on the drawing, drawn faint so the
+  equipment stands out, and are locked: clicks go through them, so they cannot be moved or deleted
+  by accident. Circles placed on a segment's highlighting still go to that segment.
+
+To change a segment, click **1 Segments** in the header; nothing is lost. The stage is saved with
+the project.
+
 1. Choose the **Circle** tool (`C`) and click each leak source. The item editor opens with the size
    field ready: type the size (`2`, `1-1/2`, `DN50`) and press Enter.
 2. Set the **equipment type** from the list or with its key (`1` valve, `2` flange, …). The type,
@@ -228,6 +256,8 @@ mappings keep working.
    one click each. The **equipment bar** under the toolbar chooses them before you click: pick
    **Valve (automated)**, **Flange** or any other type (valves come once per actuation) and the
    Circle tool is ready to count that equipment. **Any type** places markers without a type.
+   Types that do not fit in the bar are under **… more** at its end; the chosen type always stays
+   in the bar.
    The same bar sets the **shape** new markers are drawn with: a **dot** (smaller, filled), a
    **circle**, a **square**, or a **free-form** outline you drag around an odd-shaped symbol. The
    shape is only how the marker looks; it counts the same. Change a placed marker's shape under
@@ -250,7 +280,10 @@ mappings keep working.
    best on clean PDF and CAD drawings and on one symbol type at a time.
 
 Markers with a problem (not in a segment, missing type or size, duplicate tag) get an amber outline,
-and the status bar counts them; hover a marker to see what is missing. **Marker filters** in the
+and the status bar counts them; hover a marker to see what is missing. Only the problems of the
+stage are shown: while defining segments, highlights, zones, ESDVs and end flanges that are in no
+segment; while counting, the equipment's. Hover the count for a breakdown, and click it to go to
+each marker in turn. **Marker filters** in the
 toolbar hide segments or equipment types, or show only unassigned markers.
 
 The **count table** on the right shows the active segment's totals by equipment type, actuation and
@@ -352,11 +385,16 @@ Choose the outputs:
   **Unmapped** sheets (counts with no cell are listed there, so nothing is lost). Formatting, formulas
   and other sheets are kept; formulas recalculate when the file is opened in Excel.
 - **CSV item list**: one row per counted item, for audit or pivot tables.
-- **Annotated drawings (PDF)**: one PDF per drawing with the markers, labels, a legend and a stamp
-  (project, drawing and revision, count revision, date). PDF drawings keep their original vector
-  content; DWG/DXF drawings are drawn at their layout's paper size. Set the **file name pattern**
-  here, for example `{project}_{drawingNo}_{rev}`.
+- **Annotated drawings (PDF)**: one PDF per drawing with the markers and labels, and a box in the
+  top-left corner holding the stamp (project, drawing and revision, count revision, export date)
+  above the legend. PDF drawings keep their original vector content; DWG/DXF drawings are drawn at
+  their layout's paper size. Set the **file name pattern** here, for example
+  `{project}_{drawingNo}_{rev}`.
 - **Combined PDF per segment**: all drawings of a segment in one file, showing only that segment.
+- **All segments in one PDF**: every segment's drawings in a single file,
+  `<project>_all_segments.pdf`, segment by segment in the order of the segment list. Each page
+  shows only its segment's markers, so a drawing shared by two segments appears once for each.
+  The file opens with a bookmark for each segment.
 
 Each export goes to a new folder, `exports/<date>_<time>/`, with an `export_log.json` listing what
 was exported, from which revision of the project, and which warnings were accepted.

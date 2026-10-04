@@ -46,8 +46,8 @@
     "readyDetail": "All app files are cached. The app works with no network connection.",
     "caching": "Caching for offline use",
     "cachingDetail": "The app is still caching its files for offline use.",
-    "updateAvailable": "A new version of the app is available.",
-    "offlineReadyToast": "The app is now available offline."
+    "updateAvailable": "A new version of the app is available. Click to reload into it.",
+    "update": "Update"
   },
   "toolbar": {
     "label": "Markup tools",
@@ -85,6 +85,7 @@
     "tagPlaceholder": "#1, #2…",
     "tagHint": "Label shown on new markers, e.g. HV-1 or A. A trailing number counts up after each marker; leave empty to show #1, #2….",
     "choiceHint": "Count new markers as {{name}}",
+    "more": "{{count}} more",
     "empty": "No equipment types yet: add them in Project › Equipment library.",
     "hints": {
       "dot": "Click a symbol to mark it with a dot.",
@@ -238,7 +239,7 @@
     },
     "details": {
       "process": "Process data",
-      "review": "Count and check",
+      "processNone": "Nothing entered yet",
       "esdvs": "Bounding ESDVs",
       "esdvsHint": "Set on each ESDV: its upstream and downstream segments.",
       "esdvsFew_one": "Only {{count}} bounding ESDV: a segment usually has two or more.",
@@ -279,6 +280,53 @@
       "description": "Its markers, items, notes and linked drawings move to the segment you choose, and {{label}} is removed. An ESDV between the two is no longer a boundary.",
       "target": "Merge into",
       "confirm": "Merge"
+    },
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
+  },
+  "stage": {
+    "label": "Workflow step",
+    "segments": "Segments",
+    "count": "Parts count",
+    "segmentsHint": "Define the isolatable segments and their extent: highlight the pipework, place ESDVs and end flanges, and link the drawings.",
+    "countHint": "Count the parts in each segment. The segments are locked while counting; go back to Segments to change them.",
+    "history": {
+      "segments": "Back to segment set-up",
+      "count": "Start the parts count"
+    },
+    "toolIn": {
+      "segments": "{{tool}} is used to define segments.",
+      "count": "{{tool}} is used in the parts count."
+    },
+    "goTo": "Go to {{stage}}",
+    "lineRun": "Line run",
+    "start": {
+      "title": "Start the parts count?",
+      "description": "Segment set-up (process data, ESDVs, end flanges, highlighting and drawing links) is hidden and locked while counting. You can go back to Segments at any time.",
+      "summary_one": "{{count}} segment is defined.",
+      "summary_other": "{{count}} segments are defined.",
+      "ready": "Nothing looks unfinished.",
+      "issues": "These may not be finished:",
+      "kinds": {
+        "unassignedSetup_one": "{{count}} highlight, zone, ESDV or end flange is not in a segment",
+        "unassignedSetup_other": "{{count}} highlights, zones, ESDVs or end flanges are not in a segment",
+        "segmentsWithoutExtent_one": "{{count}} segment has nothing marked and no drawing",
+        "segmentsWithoutExtent_other": "{{count}} segments have nothing marked and no drawing",
+        "fewBoundaries_one": "{{count}} segment has fewer than two ESDVs or end flanges",
+        "fewBoundaries_other": "{{count}} segments have fewer than two ESDVs or end flanges"
+      },
+      "show": "Show",
+      "confirm": "Start counting",
+      "confirmAnyway": "Start counting anyway"
+    },
+    "bar": {
+      "label": "Segment tool options",
+      "select": "Click a marker to edit it, drag to move it, or drag on the drawing to select several.",
+      "dashed": "Drag a dashed zone round equipment, or click points for a line run and double-click to finish.",
+      "link": "Drag a box round an off-page connector, then choose the drawing it continues on."
+    },
+    "countBar": {
+      "lineRun": "Click points along the pipe and double-click to finish the line run."
     }
   },
   "canvas": {
@@ -293,13 +341,26 @@
     "item": "Item editor",
     "notes": "Notes",
     "selectSegment": "Select or create a segment to see its details.",
-    "noItem": "Place or select a marker to edit its item."
+    "noItem": "Place or select a marker to edit its item.",
+    "selection": "Selected marker",
+    "noSelection": "Select a marker to edit it."
   },
   "status": {
     "zoom": "Zoom {{zoom}}%",
     "cursor": "x {{x}}, y {{y}}",
     "warnings_one": "{{count}} marker with warnings",
     "warnings_other": "{{count}} markers with warnings",
+    "setupWarnings_one": "{{count}} set-up marker not in a segment",
+    "setupWarnings_other": "{{count}} set-up markers not in a segment",
+    "kinds": {
+      "unassigned_one": "{{count}} not in a segment",
+      "unassigned_other": "{{count}} not in a segment",
+      "incomplete_one": "{{count}} missing its type or size",
+      "incomplete_other": "{{count}} missing their type or size",
+      "duplicate_one": "{{count}} with a duplicate tag",
+      "duplicate_other": "{{count}} with a duplicate tag"
+    },
+    "showNext": "Click to go to the next one.",
     "noWarnings": "No warnings",
     "filters": "Filters",
     "clearFilters": "Clear filters"
@@ -921,9 +982,11 @@
     "csv": "CSV item list",
     "csvHint": "One row per counted item, for audit (EXP-06).",
     "drawingPdfs": "Annotated drawings (PDF)",
-    "drawingPdfsHint": "One PDF per drawing with markers, labels, a legend and a stamp. Original linework is kept as vectors; drawing links are left out.",
+    "drawingPdfsHint": "One PDF per drawing with markers, labels, and the stamp and legend at the top left. Original linework is kept as vectors; drawing links are left out.",
     "segmentPdfs": "Combined PDF per segment",
     "segmentPdfsHint": "All drawings of a segment in one file, showing only that segment’s markers.",
+    "allSegmentsPdf": "All segments in one PDF",
+    "allSegmentsPdfHint": "Every segment’s drawings in a single file, segment by segment, with a bookmark for each segment. Each page shows only its segment’s markers.",
     "filenamePattern": "PDF file names",
     "filenamePatternHint": "Tokens: {project} {segment} {drawingNo} {rev} {sheet} {title} {page}",
     "filenameExample": "e.g. {{name}}",
@@ -932,7 +995,7 @@
     "outputs": "Outputs",
     "run": "Export",
     "running": "Exporting…",
-    "progress": "Writing PDFs: {{done}} of {{total}}",
+    "progress": "Writing PDF pages: {{done}} of {{total}}",
     "done": "Exported to {{folder}}",
     "files": "Files written",
     "unmapped_one": "{{count}} count has no cell in the template; it is on the Unmapped sheet.",
@@ -1000,6 +1063,7 @@
       "rev": "rev {{rev}}",
       "sheet": "sheet {{sheet}}",
       "segment": "Segment {{label}}",
+      "allSegments": "All segments",
       "countRevision": "Count revision {{revision}}",
       "exported": "Exported {{date}}",
       "errors": {

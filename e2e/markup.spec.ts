@@ -5,10 +5,12 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test, type AppFixture } from './fixtures';
+import { setStage } from './helpers';
 import { openSeeded, seedProject } from './seed';
 
 const A1 = { width: 2384, height: 1684 };
 
+/** Opens the seeded drawing; the project is counting unless `extra` says otherwise. */
 async function openDrawing(app: AppFixture, name: string, extra: Record<string, unknown> = {}) {
   const dir = `markup-${name}-${test.info().project.name}`;
   await app.open();
@@ -16,7 +18,7 @@ async function openDrawing(app: AppFixture, name: string, extra: Record<string, 
     app,
     dir,
     [{ file: 'PEFS-1001_A1.pdf', drawingNo: 'PEFS-1001', revision: 'C', ...A1 }],
-    extra,
+    { stage: 'count', ...extra },
   );
   await openSeeded(app, dir);
   const page = app.page;
@@ -106,8 +108,8 @@ test.describe('markup engine', () => {
     // No active segment and no equipment type yet: both markers carry warnings.
     await expect(page.getByTestId('status-warnings')).toHaveText('2 markers with warnings');
 
-    // Dashed highlight: drag a rectangle, then click a line run.
-    // Placing a circle puts the focus in its size field.
+    // Dashed highlight, while defining segments: drag a rectangle, then click a line run.
+    await setStage(page, 'segments');
     await page.getByRole('application').focus();
     await page.keyboard.press('d');
     await drag(page, [0.1, 0.1], [0.2, 0.2]);
