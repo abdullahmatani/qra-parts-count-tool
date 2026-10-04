@@ -5,6 +5,10 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Equipment bar fits the window**: the equipment types that do not fit in the bar go in a
+  **… more** menu at its end (with their keyboard keys) instead of running off the edge, and the
+  chosen type always stays in the bar, shortened if the window is narrow.
+
 - **Segment set-up drawn faint while counting**: in the Parts count stage, highlights, dashed
   zones, ESDVs and end flanges (and their labels) are drawn at 40 % of their usual strength,
   under the equipment, so the circles being counted stand out. Exported PDFs are unchanged.

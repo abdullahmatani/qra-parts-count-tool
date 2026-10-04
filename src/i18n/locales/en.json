@@ -85,6 +85,7 @@
     "tagPlaceholder": "#1, #2…",
     "tagHint": "Label shown on new markers, e.g. HV-1 or A. A trailing number counts up after each marker; leave empty to show #1, #2….",
     "choiceHint": "Count new markers as {{name}}",
+    "more": "{{count}} more",
     "empty": "No equipment types yet: add them in Project › Equipment library.",
     "hints": {
       "dot": "Click a symbol to mark it with a dot.",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { starterLibrary } from './count/starter-library';
-import { ANY_EQUIPMENT, currentChoice, equipmentChoices } from './equipment-choices';
+import { ANY_EQUIPMENT, currentChoice, equipmentChoices, fitChoices } from './equipment-choices';
 
 describe('equipment bar choices', () => {
   const types = starterLibrary().equipmentTypes;
@@ -22,5 +22,28 @@ describe('equipment bar choices', () => {
     expect(currentChoice(choices, flange.id, 'automated')).toBe(flange.id);
     // A valve without an actuation yet matches neither valve choice.
     expect(currentChoice(choices, valve.id, null)).toBe('');
+  });
+});
+
+describe('fitChoices', () => {
+  const widths = [100, 120, 80, 150, 90];
+  const fit = (available: number, chosen = -1) =>
+    fitChoices(widths, available, { gap: 2, more: 60, chosen });
+
+  it('shows every choice when they all fit', () => {
+    expect(fit(550)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('keeps the first ones that fit beside the More button, in order', () => {
+    // More (60 + 2), then 100 + 2, 120 + 2 and 80 + 2 = 368; the next (150) does not fit.
+    expect(fit(368)).toEqual([0, 1, 2]);
+    expect(fit(367)).toEqual([0, 1]);
+    expect(fit(50)).toEqual([]);
+  });
+
+  it('always shows the chosen one, in its place', () => {
+    // The 150 wide choice takes its room first: More, 150, then 100 and 120.
+    expect(fit(440, 3)).toEqual([0, 1, 3]);
+    expect(fit(50, 4)).toEqual([4]);
   });
 });

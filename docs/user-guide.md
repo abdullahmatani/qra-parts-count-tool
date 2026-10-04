@@ -255,6 +255,8 @@ the project.
    one click each. The **equipment bar** under the toolbar chooses them before you click: pick
    **Valve (automated)**, **Flange** or any other type (valves come once per actuation) and the
    Circle tool is ready to count that equipment. **Any type** places markers without a type.
+   Types that do not fit in the bar are under **… more** at its end; the chosen type always stays
+   in the bar.
    The same bar sets the **shape** new markers are drawn with: a **dot** (smaller, filled), a
    **circle**, a **square**, or a **free-form** outline you drag around an odd-shaped symbol. The
    shape is only how the marker looks; it counts the same. Change a placed marker's shape under
