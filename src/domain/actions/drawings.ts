@@ -32,7 +32,8 @@ export function updateDrawing(
 /**
  * Removes a drawing from the project together with its markers, count items
  * and links; links on other drawings that pointed at it become broken targets
- * (LNK-05). The file stays in drawings/, so the removal can be undone.
+ * (LNK-05). Its file in drawings/ is handled outside the document (see
+ * features/drawings/drawing-files), so the removal can be undone.
  */
 export function removeDrawing(doc: ProjectDoc, drawingId: string): void {
   if (!doc.drawings[drawingId]) return;

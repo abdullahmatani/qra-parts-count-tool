@@ -5,8 +5,9 @@ import '@/lib/zod-config';
 import '@/i18n';
 import { App } from './App';
 import { ErrorBoundary } from './app/ErrorBoundary';
+import { installDrawingFiles } from './features/drawings/drawing-files';
 import { stopWorker as stopTraceWorker } from './features/trace/auto-trace-protocol';
-import { installAutosave } from './services/autosave';
+import { autosave, installAutosave } from './services/autosave';
 import { registerSessionHook } from './services/session';
 
 const root = document.getElementById('root');
@@ -17,6 +18,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('demo')) {
   loadDemoProject();
 }
 
+// Before autosave, so a file removal still waiting at the end of a session
+// can save the project first.
+installDrawingFiles(registerSessionHook, { beforeRemove: () => autosave.flush() });
 installAutosave(registerSessionHook);
 // The sheet the auto trace worker holds belongs to the project.
 registerSessionHook({ onEnd: stopTraceWorker });

@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { projectToDoc } from '@/domain/model';
 import { beginSession, endSession } from '@/services/session';
 import { useProjectStore } from '@/store/project-store';
@@ -8,7 +8,12 @@ import { makeProject } from '@/test/fixtures';
 import { buildDisplayList, listSpaces } from '@/features/cad/display-list';
 import { emptyCadDocument, type CadDocument } from '@/features/cad/model';
 import type { CadHandle } from '@/features/cad/cad-client';
-import { defaultSpaces, importDrawingFiles, type ImportDeps } from './import-drawings';
+import {
+  defaultSpaces,
+  importDrawingFiles,
+  type CadCandidate,
+  type ImportDeps,
+} from './import-drawings';
 
 const A3 = { width: 1191, height: 842 };
 const noCad: ImportDeps['cad'] = {
@@ -186,6 +191,7 @@ describe('CAD import (DRW-02, DRW-10)', () => {
           fileName: 'PEFS-9001.dxf',
           fileType: 'dxf',
           defaultSpaces: ['Model'],
+          importedSpaces: [],
         });
         chosen.push(candidates[0]!.defaultSpaces);
         return [['Model']];
@@ -214,6 +220,65 @@ describe('CAD import (DRW-02, DRW-10)', () => {
       chooseSpaces: async () => null,
     });
     expect(report.skipped).toEqual([{ fileName: 'x.dxf', reason: 'noSpaces' }]);
+    expect(dir.tree()).not.toContain('drawings/x.dxf');
+    expect(closed).toEqual([7]);
+  });
+
+  it('offers only the layouts that are not drawings yet when a file is imported again', async () => {
+    const options = { ...deps(1), cad: cad() };
+    await importDrawingFiles([file('PEFS-9001.dxf', 'dxf content')], undefined, {
+      ...options,
+      chooseSpaces: async () => [['Model']],
+    });
+    const offered: CadCandidate[] = [];
+    const report = await importDrawingFiles([file('PEFS-9001.dxf', 'dxf content')], undefined, {
+      ...options,
+      chooseSpaces: async (candidates) => {
+        offered.push(...candidates);
+        return [['Model', 'Sheet A']];
+      },
+    });
+    expect(offered[0]).toMatchObject({ importedSpaces: ['Model'], defaultSpaces: [] });
+    expect(report.imported).toEqual([{ fileName: 'PEFS-9001.dxf', pages: 1 }]);
+    const doc = useProjectStore.getState().doc!;
+    expect(doc.drawingOrder.map((id) => doc.drawings[id]!.layout)).toEqual(['Model', 'Sheet A']);
+  });
+
+  it('reports a CAD file as in the project when no new layout is chosen from it', async () => {
+    const options = { ...deps(1), cad: cad() };
+    await importDrawingFiles([file('a.dxf', 'a')], undefined, {
+      ...options,
+      chooseSpaces: async () => [['Model']],
+    });
+    const report = await importDrawingFiles([file('a.dxf', 'a')], undefined, options);
+    expect(report.skipped).toEqual([{ fileName: 'a.dxf', reason: 'duplicate' }]);
+  });
+
+  it('skips a CAD file whose every layout is a drawing already, without asking', async () => {
+    const options = { ...deps(1), cad: cad() };
+    await importDrawingFiles([file('a.dxf', 'a')], undefined, {
+      ...options,
+      chooseSpaces: async () => [['Model', 'Sheet A']],
+    });
+    const chooseSpaces = vi.fn(async () => null);
+    const report = await importDrawingFiles([file('a.dxf', 'a')], undefined, {
+      ...options,
+      chooseSpaces,
+    });
+    expect(report.skipped).toEqual([{ fileName: 'a.dxf', reason: 'duplicate' }]);
+    expect(chooseSpaces).not.toHaveBeenCalled();
+    expect(closed).toEqual([7, 7]);
+  });
+
+  it('does not copy a CAD file whose layout cannot be built', async () => {
+    const report = await importDrawingFiles([file('x.dxf', 'x')], undefined, {
+      ...deps(1),
+      cad: { ...cad(), build: () => Promise.reject(new Error('The CAD reader stopped')) },
+      chooseSpaces: async () => [['Model']],
+    });
+    expect(report.skipped).toEqual([
+      { fileName: 'x.dxf', reason: 'failed', detail: 'The CAD reader stopped' },
+    ]);
     expect(dir.tree()).not.toContain('drawings/x.dxf');
     expect(closed).toEqual([7]);
   });

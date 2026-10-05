@@ -65,6 +65,9 @@ Click **Import drawings** (or drop files on the drawing list):
 - **DWG / DXF**: choose which layouts to import (model space and each paper-space layout). DWG files
   are read by a WebAssembly reader inside the browser.
 
+A page or layout that is already a drawing is not imported twice. Importing a file again brings back
+only the pages and layouts that are not in the project, for example one you deleted.
+
 The app reads the drawing number, title, sheet and revision from the title block where it can. Check
 and correct them in **Project › Drawing register**: they appear in the count, the stamps and the
 export file names.
@@ -77,7 +80,8 @@ the drawing):
   shown, and in the stamps and export file names. The file in `drawings/` keeps its name.
 - **Delete…** asks first, and says what goes with the drawing: its markers and their count items,
   and the drawing links on it (links to it from other drawings lose their target). The drawing is
-  taken off its segments. The file stays in `drawings/`, and `Ctrl+Z` brings the drawing back.
+  taken off its segments, and its file is removed from `drawings/` unless another page or layout
+  of the same file is still a drawing. `Ctrl+Z` brings the drawing (and its file) back.
   The drawing register has the same **Delete** button on each row.
 
 **New revisions.** When a drawing is reissued, use **Replace with a new revision** on its row in the
