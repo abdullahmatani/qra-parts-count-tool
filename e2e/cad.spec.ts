@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { expect, test } from './fixtures';
 import { createProject, importDrawings } from './helpers';
 
@@ -93,6 +93,45 @@ test.describe('CAD drawings (DRW-02, DRW-10)', () => {
     await expect
       .poll(async () => JSON.parse(await app.readText(dir, 'project.qrapc.json')).drawings[0])
       .toMatchObject({ fileType: 'dwg', layout: 'Model', drawingNo: 'PEFS-4001', revision: 'B' });
+    await app.removeDirectory(dir);
+  });
+
+  test('imports several native DWG files at once', async ({ app }) => {
+    test.skip(
+      !hasDwgFixture,
+      `e2e/fixtures/${DWG_FIXTURE} missing (see scripts/generate-cad-fixtures.mjs)`,
+    );
+    const dir = `cad-dwg-bulk-${test.info().project.name}`;
+    await app.open();
+    await app.removeDirectory(dir);
+    await app.pickDirectory(dir);
+    await createProject(app.page, { name: 'DWG bulk study' });
+    const page = app.page;
+
+    // Three different files: trailing bytes change the content, not the drawing.
+    const dwg = readFileSync(new URL(`./fixtures/${DWG_FIXTURE}`, import.meta.url));
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Import drawings' }).first().click();
+    await (
+      await chooser
+    ).setFiles(
+      ['PEFS-4001.dwg', 'PEFS-4002.dwg', 'PEFS-4003.dwg'].map((name, i) => ({
+        name,
+        mimeType: 'application/octet-stream',
+        buffer: Buffer.concat([dwg, Buffer.alloc(i)]),
+      })),
+    );
+    const picker = page.getByRole('dialog', { name: 'Choose drawings to import' });
+    await picker.getByRole('button', { name: 'Import 3 drawings' }).click();
+    await expect(page.getByText('Imported 3 drawings from 3 file(s).')).toBeVisible({
+      timeout: 60_000,
+    });
+    await expect(page.getByTestId('drawing-list').locator('li[data-drawing-id]')).toHaveCount(3);
+    expect(await app.list(dir, 'drawings')).toEqual([
+      'PEFS-4001.dwg',
+      'PEFS-4002.dwg',
+      'PEFS-4003.dwg',
+    ]);
     await app.removeDirectory(dir);
   });
 });

@@ -3,7 +3,9 @@
  * (or a right-click) on a drawing renames it in place or deletes it after a
  * confirmation; F2 renames the focused drawing. Both can be undone.
  */
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { createProject, importDrawings } from './helpers';
 import { openSeeded, seedProject } from './seed';
 
 const A1 = { width: 2384, height: 1684 };
@@ -89,5 +91,51 @@ test('renames and deletes drawings from the drawing list', async ({ app }) => {
   // Undo brings the drawing back with its marker.
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(rows).toHaveCount(2);
+  await app.removeDirectory(dir);
+});
+
+async function deleteDrawing(page: Page, name: string) {
+  const list = page.getByTestId('drawing-list');
+  await list.getByText(name, { exact: true }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Delete…' }).click();
+  const confirm = page.getByRole('alertdialog', { name: `Delete ${name}?` });
+  await confirm.getByRole('button', { name: 'Delete drawing' }).click();
+  await expect(confirm).toBeHidden();
+}
+
+test('a deleted drawing leaves the drawings folder and can be imported again', async ({ app }) => {
+  const dir = `drawing-reimport-${test.info().project.name}`;
+  await app.open();
+  await app.removeDirectory(dir);
+  await app.pickDirectory(dir);
+  await createProject(app.page, { name: 'Re-import study' });
+  const page = app.page;
+  const rows = page.getByTestId('drawing-list').locator('li[data-drawing-id]');
+  const files = ['PEFS-1001_A1.pdf', 'PEFS-2000_multipage.pdf'];
+  await importDrawings(page, files);
+  await expect(page.getByText('Imported 4 drawings from 2 file(s).')).toBeVisible();
+
+  // The only drawing on a file takes the file with it; Undo puts both back.
+  await deleteDrawing(page, 'PEFS-1001 / 1');
+  await expect.poll(() => app.list(dir, 'drawings')).toEqual(['PEFS-2000_multipage.pdf']);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(rows).toHaveCount(4);
+  await expect.poll(() => app.list(dir, 'drawings')).toEqual(files);
+  await deleteDrawing(page, 'PEFS-1001 / 1');
+  // A page of a file whose other pages are still drawings leaves the file in place.
+  await deleteDrawing(page, 'PEFS-2002 / 2');
+  await expect(rows).toHaveCount(2);
+  await expect.poll(() => app.list(dir, 'drawings')).toEqual(['PEFS-2000_multipage.pdf']);
+
+  // Importing both files again brings back just the deleted drawings.
+  await importDrawings(page, files);
+  await expect(page.getByText('Imported 2 drawings from 2 file(s).')).toBeVisible();
+  await expect(rows).toHaveCount(4);
+  await expect(page.getByTestId('drawing-list').getByText('PEFS-2002 / 2')).toBeVisible();
+  expect(await app.list(dir, 'drawings')).toEqual(files);
+
+  // A file that is wholly in the project is still reported as such.
+  await importDrawings(page, ['PEFS-1001_A1.pdf']);
+  await expect(page.getByText('PEFS-1001_A1.pdf: already in the project.')).toBeVisible();
   await app.removeDirectory(dir);
 });

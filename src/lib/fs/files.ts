@@ -178,12 +178,17 @@ export async function writeTextAtomic(
 }
 
 /**
- * Returns a file name that does not exist in `dir`, adding ` (2)`, ` (3)` …
- * before the extension when needed.
+ * Returns a file name that does not exist in `dir` and is not `reserved`,
+ * adding ` (2)`, ` (3)` … before the extension when needed.
  */
-export async function uniqueFileName(dir: FsDirHandle, fileName: string): Promise<string> {
+export async function uniqueFileName(
+  dir: FsDirHandle,
+  fileName: string,
+  reserved: Iterable<string> = [],
+): Promise<string> {
   const taken = new Set<string>();
   for await (const [name] of dir.entries()) taken.add(name.toLowerCase());
+  for (const name of reserved) taken.add(name.toLowerCase());
   if (!taken.has(fileName.toLowerCase())) return fileName;
   const dot = fileName.lastIndexOf('.');
   const stem = dot > 0 ? fileName.slice(0, dot) : fileName;

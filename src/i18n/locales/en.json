@@ -170,7 +170,7 @@
       "markers_one": "Its marker and count item are deleted too.",
       "markers_other": "Its {{count}} markers and their count items are deleted too.",
       "links": "Drawing links on it are deleted, and links to it from other drawings lose their target.",
-      "undo": "The file stays in the drawings folder, and Undo brings the drawing back.",
+      "undo": "Its file leaves the drawings folder unless another drawing uses it. Undo brings both back.",
       "confirm": "Delete drawing"
     },
     "history": {
@@ -583,6 +583,7 @@
     "entities_other": "{{count}} entities",
     "viewports_one": "{{count}} viewport",
     "viewports_other": "{{count}} viewports",
+    "imported": "Already in the project",
     "import_one": "Import {{count}} drawing",
     "import_other": "Import {{count}} drawings"
   },

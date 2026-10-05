@@ -5,6 +5,18 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Several DWG files import at once**: importing more than one DWG imported only the first; the
+  others were copied into `drawings/` but never became drawings ("The CAD document is no longer
+  open"). Closing the first file stopped the DWG reader that still held the rest. The reader now
+  stays up until its last file is closed, and a file is only copied into `drawings/` once its
+  layouts have been read.
+
+- **Deleted drawings can be imported again**: deleting a drawing takes its file out of `drawings/`
+  (with its render cache) when no other drawing uses it; `Ctrl+Z` puts both back. Importing a file
+  again brings back the pages and layouts that are not drawings, instead of refusing the whole file
+  as "already in the project" because one of its other pages was. In the layout picker, layouts
+  that are already drawings are ticked, greyed out and marked **Already in the project**.
+
 - **Warnings for the stage**: the status bar and the amber outlines show only the problems of the
   stage. Defining segments: highlights, zones, ESDVs and end flanges that are in no segment
   ("2 set-up markers not in a segment"). Counting: equipment not in a segment, items missing their

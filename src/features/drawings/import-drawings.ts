@@ -2,26 +2,23 @@
  * Drawing import (DRW-01, DRW-02, DRW-03, DRW-04, DRW-10): copies files into
  * `drawings/` (the originals are only read, never modified), creates one
  * drawing per PDF page or per chosen DWG/DXF space, and pre-fills metadata
- * from the title block.
+ * from the title block. A page or layout already in the project is not
+ * imported twice, but importing a file again brings back the pages and
+ * layouts whose drawings were deleted.
  */
 import { addDrawings } from '@/domain/actions/drawings';
+import type { ProjectDoc } from '@/domain/model';
 import type { Drawing } from '@/domain/schema/types';
 import { guessTitleBlock, type TextItem } from '@/domain/title-block';
 import type { CadHandle } from '@/features/cad/cad-client';
 import { displayListText, type DisplayList, type SpaceInfo } from '@/features/cad/display-list';
 import { MODEL_SPACE } from '@/features/cad/model';
-import {
-  getDirectory,
-  readFile,
-  sanitizeFileName,
-  uniqueFileName,
-  writeFile,
-} from '@/lib/fs/files';
-import { isNotFound, type FsDirHandle } from '@/lib/fs/types';
+import type { FsDirHandle } from '@/lib/fs/types';
 import { sha256Hex } from '@/lib/hash';
 import { newId } from '@/lib/ids';
 import { requireWorkingDirectory } from '@/services/session';
 import { useProjectStore } from '@/store/project-store';
+import { copyIntoDrawings } from './drawing-files';
 import { isCadPlotProducer, type InspectedPdf } from './pdf-inspect';
 
 export const IMPORTABLE_EXTENSIONS = ['.pdf', '.dwg', '.dxf'] as const;
@@ -41,6 +38,8 @@ export interface CadCandidate {
   spaces: SpaceInfo[];
   /** Spaces preselected in the picker: layouts with content, else model space. */
   defaultSpaces: string[];
+  /** Spaces that are drawings in the project already; they cannot be chosen again. */
+  importedSpaces: string[];
 }
 
 /** Returns the chosen space names for each candidate, or null to cancel CAD import. */
@@ -74,34 +73,6 @@ export function defaultSpaces(spaces: readonly SpaceInfo[]): string[] {
   return layouts.length > 0 ? layouts.map((space) => space.name) : [MODEL_SPACE];
 }
 
-/**
- * Copies a file into drawings/, reusing an identical copy already there (for
- * example after an import was undone) instead of creating a duplicate.
- */
-export async function copyIntoDrawings(
-  dir: FsDirHandle,
-  fileName: string,
-  bytes: ArrayBuffer,
-  hash: string,
-): Promise<string> {
-  const drawingsDir = await getDirectory(dir, 'drawings', { create: true });
-  const safe = sanitizeFileName(fileName, 'drawing');
-  try {
-    const existing = await readFile(dir, `drawings/${safe}`);
-    if (
-      existing.size === bytes.byteLength &&
-      (await sha256Hex(await existing.arrayBuffer())) === hash
-    ) {
-      return safe;
-    }
-  } catch (error) {
-    if (!isNotFound(error)) throw error;
-  }
-  const name = await uniqueFileName(drawingsDir, safe);
-  await writeFile(dir, `drawings/${name}`, bytes);
-  return name;
-}
-
 /** Title-block text of a CAD display list, in the TextItem form the heuristics use. */
 export function cadTextItems(list: DisplayList): TextItem[] {
   return displayListText(list)
@@ -117,6 +88,17 @@ interface PendingCad {
   candidate: CadCandidate;
 }
 
+/** The pages and layouts of each file (by hash) that are drawings in the project. */
+function importedSheets(doc: ProjectDoc): Map<string, Set<string>> {
+  const sheets = new Map<string, Set<string>>();
+  for (const drawing of Object.values(doc.drawings)) {
+    let set = sheets.get(drawing.fileHash);
+    if (!set) sheets.set(drawing.fileHash, (set = new Set()));
+    set.add(drawing.layout ?? `page ${drawing.page ?? 1}`);
+  }
+  return sheets;
+}
+
 export async function importDrawingFiles(
   files: readonly File[],
   onProgress: ((done: number, total: number, fileName: string) => void) | undefined,
@@ -125,7 +107,9 @@ export async function importDrawingFiles(
   const dir = requireWorkingDirectory();
   const doc = useProjectStore.getState().doc;
   if (!doc) throw new Error('No project is open');
-  const knownHashes = new Set(Object.values(doc.drawings).map((d) => d.fileHash));
+  const imported = importedSheets(doc);
+  // The same content twice in one import is imported once.
+  const seen = new Set<string>();
   const report: ImportReport = { imported: [], skipped: [], drawingIds: [] };
   const created: Drawing[] = [];
   const pendingCad: PendingCad[] = [];
@@ -140,16 +124,23 @@ export async function importDrawingFiles(
     try {
       const bytes = await file.arrayBuffer();
       const hash = await sha256Hex(bytes);
-      if (knownHashes.has(hash)) {
+      if (seen.has(hash)) {
         report.skipped.push({ fileName: file.name, reason: 'duplicate' });
         continue;
       }
+      const present = imported.get(hash) ?? new Set<string>();
       if (extension === '.pdf') {
         const inspected = await deps.inspect(bytes);
+        const pages = inspected.pages.filter((page) => !present.has(`page ${page.pageNumber}`));
+        if (pages.length === 0) {
+          report.skipped.push({ fileName: file.name, reason: 'duplicate' });
+          seen.add(hash);
+          continue;
+        }
         const fileName = await copyIntoDrawings(dir, file.name, bytes, hash);
         const importedAt = deps.now().toISOString();
         const isCadPlot = isCadPlotProducer(inspected.producer);
-        for (const page of inspected.pages) {
+        for (const page of pages) {
           const guess = guessTitleBlock(page.text, page.textFrameSize, file.name);
           created.push({
             id: newId('drw'),
@@ -169,7 +160,7 @@ export async function importDrawingFiles(
             needsReview: false,
           });
         }
-        report.imported.push({ fileName: file.name, pages: inspected.pages.length });
+        report.imported.push({ fileName: file.name, pages: pages.length });
       } else {
         const fileType = extension === '.dwg' ? 'dwg' : 'dxf';
         if (fileType === 'dwg' && !deps.cad.available()) {
@@ -178,6 +169,15 @@ export async function importDrawingFiles(
         }
         // The worker takes ownership of the buffer it is given, so keep our own copy.
         const handle = await deps.cad.open(bytes.slice(0), fileType);
+        const importedSpaces = handle.spaces
+          .map((space) => space.name)
+          .filter((name) => present.has(name));
+        if (importedSpaces.length === handle.spaces.length) {
+          await deps.cad.close(handle);
+          report.skipped.push({ fileName: file.name, reason: 'duplicate' });
+          seen.add(hash);
+          continue;
+        }
         pendingCad.push({
           file,
           bytes,
@@ -187,11 +187,14 @@ export async function importDrawingFiles(
             fileName: file.name,
             fileType,
             spaces: handle.spaces,
-            defaultSpaces: defaultSpaces(handle.spaces),
+            defaultSpaces: defaultSpaces(handle.spaces).filter(
+              (name) => !importedSpaces.includes(name),
+            ),
+            importedSpaces,
           },
         });
       }
-      knownHashes.add(hash);
+      seen.add(hash);
     } catch (error) {
       report.skipped.push({
         fileName: file.name,
@@ -204,11 +207,26 @@ export async function importDrawingFiles(
   if (pendingCad.length > 0) {
     const choices = await deps.chooseSpaces(pendingCad.map((p) => p.candidate));
     for (const [index, pending] of pendingCad.entries()) {
-      const spaces = choices?.[index] ?? [];
+      const { candidate } = pending;
+      const spaces = (choices?.[index] ?? []).filter(
+        (space) => !candidate.importedSpaces.includes(space),
+      );
       try {
         if (spaces.length === 0) {
-          report.skipped.push({ fileName: pending.file.name, reason: 'noSpaces' });
+          report.skipped.push({
+            fileName: pending.file.name,
+            // Nothing new chosen from a file that is in the project already.
+            reason: candidate.importedSpaces.length > 0 ? 'duplicate' : 'noSpaces',
+          });
           continue;
+        }
+        // Build every chosen space before copying the file, so a file that
+        // cannot be read is not left behind in drawings/.
+        const built: { space: string; list: DisplayList }[] = [];
+        for (const space of spaces) {
+          const list = await deps.cad.build(pending.handle, space);
+          await deps.cad.writeCache(dir, pending.hash, list).catch(() => {});
+          built.push({ space, list });
         }
         const fileName = await copyIntoDrawings(
           dir,
@@ -217,16 +235,14 @@ export async function importDrawingFiles(
           pending.hash,
         );
         const importedAt = deps.now().toISOString();
-        for (const space of spaces) {
-          const list = await deps.cad.build(pending.handle, space);
-          await deps.cad.writeCache(dir, pending.hash, list).catch(() => {});
+        for (const { space, list } of built) {
           const guess = guessTitleBlock(cadTextItems(list), list, pending.file.name);
           created.push({
             id: newId('drw'),
             fileName,
             originalFileName: pending.file.name,
             fileHash: pending.hash,
-            fileType: pending.candidate.fileType,
+            fileType: candidate.fileType,
             page: null,
             layout: space,
             isCadPlot: false,

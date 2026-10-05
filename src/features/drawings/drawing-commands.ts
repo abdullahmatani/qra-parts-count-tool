@@ -35,7 +35,8 @@ export function requestDeleteDrawing(drawingId: string): boolean {
 
 /**
  * Deletes a drawing with its markers, count items and links, and closes its
- * tab. The file stays in drawings/, so Undo brings the drawing back.
+ * tab. Its file leaves drawings/ once no drawing uses it (see drawing-files),
+ * and Undo brings both back.
  */
 export function deleteDrawingCommand(drawingId: string): boolean {
   const drawing = useProjectStore.getState().doc?.drawings[drawingId];

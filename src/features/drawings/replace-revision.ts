@@ -13,7 +13,8 @@ import i18n from '@/i18n';
 import { sha256Hex } from '@/lib/hash';
 import { requireWorkingDirectory } from '@/services/session';
 import { useProjectStore } from '@/store/project-store';
-import { cadTextItems, copyIntoDrawings, defaultSpaces } from './import-drawings';
+import { copyIntoDrawings } from './drawing-files';
+import { cadTextItems, defaultSpaces } from './import-drawings';
 import { inspectPdf, isCadPlotProducer } from './pdf-inspect';
 
 const t = i18n.t.bind(i18n);

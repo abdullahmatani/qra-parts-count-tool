@@ -54,19 +54,24 @@ function PickerBody({
             <ul className="grid gap-1.5">
               {candidate.spaces.map((space) => {
                 const id = `space-${fileIndex}-${space.name}`;
+                const imported = candidate.importedSpaces.includes(space.name);
                 return (
                   <li key={space.name} className="flex items-center gap-2">
                     <Checkbox
                       id={id}
-                      checked={selected[fileIndex]!.has(space.name)}
+                      checked={imported || selected[fileIndex]!.has(space.name)}
+                      disabled={imported}
                       onCheckedChange={(checked) => toggle(fileIndex, space.name, checked === true)}
                     />
                     <Label htmlFor={id} className="font-normal">
                       {space.name === MODEL_SPACE ? t('spaces.model') : space.name}
                     </Label>
                     <span className="text-xs text-muted-foreground">
-                      {t('spaces.entities', { count: space.entities })}
-                      {space.viewports > 0 &&
+                      {imported
+                        ? t('spaces.imported')
+                        : t('spaces.entities', { count: space.entities })}
+                      {!imported &&
+                        space.viewports > 0 &&
                         ` · ${t('spaces.viewports', { count: space.viewports })}`}
                     </span>
                   </li>
