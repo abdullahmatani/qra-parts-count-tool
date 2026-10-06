@@ -3,8 +3,11 @@ import {
   ChevronDown,
   Cog,
   FileOutput,
+  FolderOpen,
+  FolderPlus,
   Grid3x3,
   History,
+  House,
   Keyboard,
   Table2,
   X,
@@ -16,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -30,10 +34,51 @@ import { StageSwitcher } from '@/features/stage/StageSwitcher';
 
 export interface HeaderProps {
   onCloseProject?: () => void;
+  /** Closes the project and starts a new one (from the app menu). */
+  onNewProject?: () => void;
+  /** Opens another project in place of this one (from the app menu). */
+  onOpenProject?: () => void;
 }
 
-/** Project name · stage · save status · offline status · export · settings (FDS section 6). */
-export function Header({ onCloseProject }: HeaderProps) {
+/**
+ * The app menu behind the logo: back to the start screen, or straight on to
+ * a new or another project. Each closes the open project first.
+ */
+function AppMenu({ onCloseProject, onNewProject, onOpenProject }: HeaderProps) {
+  const { t } = useTranslation();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={t('header.appMenu')}
+          className="flex shrink-0 items-center gap-0.5 rounded-md p-0.5 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          <AppMark className="size-7" />
+          <ChevronDown className="size-3 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          {t('app.name')}
+        </DropdownMenuLabel>
+        <DropdownMenuItem disabled={!onCloseProject} onSelect={onCloseProject}>
+          <House /> {t('header.startScreen')}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled={!onNewProject} onSelect={onNewProject}>
+          <FolderPlus /> {t('header.newProject')}
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={!onOpenProject} onSelect={onOpenProject}>
+          <FolderOpen /> {t('header.openProject')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** App menu · project name · stage · save status · offline status · export · settings (FDS section 6). */
+export function Header({ onCloseProject, onNewProject, onOpenProject }: HeaderProps) {
   const { t } = useTranslation();
   const name = useProjectStore((s) => s.doc?.name ?? '');
   const subtitle = useProjectStore((s) =>
@@ -43,8 +88,12 @@ export function Header({ onCloseProject }: HeaderProps) {
   const openDialog = useUiStore((s) => s.openDialog);
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b bg-panel ps-3 pe-2">
-      <AppMark className="size-7 shrink-0" />
+    <header className="flex h-12 shrink-0 items-center gap-3 border-b bg-panel ps-2 pe-2">
+      <AppMenu
+        onCloseProject={onCloseProject}
+        onNewProject={onNewProject}
+        onOpenProject={onOpenProject}
+      />
       <div className="min-w-0">
         <h1 className="truncate text-sm leading-tight font-semibold" data-testid="project-name">
           {name}

@@ -56,6 +56,10 @@ computer crashes, at most the last two seconds of work are lost.
 If the same project is open in another tab, the app opens it **read-only** so two tabs cannot
 overwrite each other. When the other tab closes the project, **Reopen for editing** takes over.
 
+While a project is open, click the app logo at the top left for the app menu: **Back to start
+screen** closes the project (it is already saved) and shows the start screen; **New project…** and
+**Open project…** close it and go straight on to another project.
+
 ## 3. Import drawings
 
 Click **Import drawings** (or drop files on the drawing list):
@@ -97,7 +101,8 @@ The pre-export check also lists it.
 
 ## 4. Viewing drawings
 
-Click a drawing in the list to open it in a tab.
+Click a drawing in the list to open it in a tab. When the tabs no longer fit, scroll them sideways
+with the mouse wheel over the tab bar; the tab you are on is always kept in view.
 
 - **Zoom** with the mouse wheel (at the pointer), `+` / `−`, or the controls at the bottom right.
   `0` fits the page. **Pan** with the middle mouse button, or hold `Space` and drag.

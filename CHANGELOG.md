@@ -5,6 +5,15 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Drawing tabs no longer cut off**: the tab bar is taller, and when the open drawings no longer
+  fit, its scrollbar is no longer drawn over the tabs (which hid the top of their names). The tabs
+  scroll sideways with the mouse wheel, the active tab is kept in view, long names show in full on
+  hover, and the split-view button stays at the end of the bar.
+
+- **App menu on the logo**: clicking the logo at the top left opens a menu to go **Back to start
+  screen** (the screen the app starts on), or straight to a **New project…** or **Open project…**.
+  Each closes the open project first.
+
 - **Drawings are named after their files**: an imported drawing takes the name of its file
   (`PEFS-1001.pdf` becomes **PEFS-1001**), with the page number or layout name added when one file
   holds several drawings, instead of a drawing number and sheet guessed from the title block, which
