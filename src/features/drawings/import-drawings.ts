@@ -9,7 +9,7 @@
 import { addDrawings } from '@/domain/actions/drawings';
 import type { ProjectDoc } from '@/domain/model';
 import type { Drawing } from '@/domain/schema/types';
-import { guessTitleBlock, type TextItem } from '@/domain/title-block';
+import { guessTitleBlock, type TextItem, type TitleBlockGuess } from '@/domain/title-block';
 import type { CadHandle } from '@/features/cad/cad-client';
 import { displayListText, type DisplayList, type SpaceInfo } from '@/features/cad/display-list';
 import { MODEL_SPACE } from '@/features/cad/model';
@@ -58,11 +58,36 @@ export interface ImportDeps {
   cad: CadDeps;
   chooseSpaces: ChooseSpaces;
   now: () => Date;
+  /** Name drawings after their files instead of the title block's drawing number and sheet. */
+  nameFromFile: boolean;
 }
 
 function extensionOf(name: string): string {
   const dot = name.lastIndexOf('.');
   return dot >= 0 ? name.slice(dot).toLowerCase() : '';
+}
+
+/** A file name without its extension: PEFS-1001_A1.pdf is PEFS-1001_A1. */
+export function fileStem(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return (dot > 0 ? name.slice(0, dot) : name).trim();
+}
+
+/**
+ * The name of a drawing: its drawing number and sheet. Named after the file,
+ * the sheet is the page or layout, and only when the file holds several
+ * drawings (`part` is then non-empty), so every drawing of one file gets a
+ * distinct name. Otherwise both come from the title block, with the page or
+ * layout as the sheet when the title block has none.
+ */
+function drawingName(
+  guess: TitleBlockGuess,
+  fileName: string,
+  part: string,
+  nameFromFile: boolean,
+): Pick<Drawing, 'drawingNo' | 'sheet'> {
+  if (nameFromFile) return { drawingNo: fileStem(fileName), sheet: part };
+  return { drawingNo: guess.drawingNo, sheet: guess.sheet || part };
 }
 
 /** Default picker selection: paper layouts that have content, otherwise model space. */
@@ -151,8 +176,12 @@ export async function importDrawingFiles(
             page: page.pageNumber,
             layout: null,
             isCadPlot,
-            drawingNo: guess.drawingNo,
-            sheet: guess.sheet || (inspected.pages.length > 1 ? String(page.pageNumber) : ''),
+            ...drawingName(
+              guess,
+              file.name,
+              inspected.pages.length > 1 ? String(page.pageNumber) : '',
+              deps.nameFromFile,
+            ),
             title: guess.title,
             revision: guess.revision,
             size: page.size,
@@ -246,8 +275,13 @@ export async function importDrawingFiles(
             page: null,
             layout: space,
             isCadPlot: false,
-            drawingNo: guess.drawingNo,
-            sheet: guess.sheet || (spaces.length > 1 ? space : ''),
+            ...drawingName(
+              guess,
+              pending.file.name,
+              // Layouts imported before count too, so a re-imported one keeps its layout name.
+              spaces.length + candidate.importedSpaces.length > 1 ? space : '',
+              deps.nameFromFile,
+            ),
             title: guess.title,
             revision: guess.revision,
             size: { width: list.width, height: list.height },

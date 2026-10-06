@@ -11,6 +11,7 @@ describe('preferences', () => {
       initials: '',
       cadColorMode: 'monochrome',
       autoAssignSegment: true,
+      drawingNamesFromFiles: true,
     });
     document.documentElement.className = '';
   });
@@ -35,6 +36,7 @@ describe('preferences', () => {
       initials: 'abm',
       cadColorMode: 'monochrome',
       autoAssignSegment: true,
+      drawingNamesFromFiles: true,
     });
   });
 
@@ -43,6 +45,28 @@ describe('preferences', () => {
     usePreferences.getState().setAutoAssignSegment(false);
     const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
     expect(stored.state.autoAssignSegment).toBe(false);
+  });
+
+  it('names imported drawings after their files until it is switched off', () => {
+    expect(usePreferences.getState().drawingNamesFromFiles).toBe(true);
+    usePreferences.getState().setDrawingNamesFromFiles(false);
+    const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
+    expect(stored.state.drawingNamesFromFiles).toBe(false);
+  });
+
+  it('switches drawing names from files on for preferences stored before the setting existed', async () => {
+    // Setting state writes it to storage, so the old entry goes in afterwards.
+    usePreferences.setState({ drawingNamesFromFiles: true });
+    localStorage.setItem(
+      'qrapc.preferences',
+      JSON.stringify({ state: { theme: 'dark', autoAssignSegment: false }, version: 1 }),
+    );
+    await usePreferences.persist.rehydrate();
+    expect(usePreferences.getState()).toMatchObject({
+      theme: 'dark',
+      autoAssignSegment: false,
+      drawingNamesFromFiles: true,
+    });
   });
 
   it('resolves explicit themes directly', () => {

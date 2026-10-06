@@ -12,6 +12,8 @@ import { StatusBar, type StatusBarProps } from './StatusBar';
 
 export interface WorkspaceProps {
   onCloseProject?: () => void;
+  onNewProject?: () => void;
+  onOpenProject?: () => void;
   onImportDrawings?: () => void;
   /** Files dropped anywhere on the workspace (drawing import). */
   onDropFiles?: (files: File[]) => void;
@@ -29,6 +31,8 @@ export interface WorkspaceProps {
  */
 export function Workspace({
   onCloseProject,
+  onNewProject,
+  onOpenProject,
   onImportDrawings,
   onDropFiles,
   onAddSegment,
@@ -68,7 +72,11 @@ export function Workspace({
           {t('import.dropHint')}
         </div>
       )}
-      <Header onCloseProject={onCloseProject} />
+      <Header
+        onCloseProject={onCloseProject}
+        onNewProject={onNewProject}
+        onOpenProject={onOpenProject}
+      />
       <ResizablePanelGroup
         orientation="horizontal"
         className="min-h-0 flex-1"

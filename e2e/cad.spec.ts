@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { expect, test } from './fixtures';
-import { createProject, importDrawings } from './helpers';
+import { createProject, importDrawings, setDrawingNamesFromFiles } from './helpers';
 
 const DWG_FIXTURE = 'PEFS-4001.dwg';
 const hasDwgFixture = existsSync(new URL(`./fixtures/${DWG_FIXTURE}`, import.meta.url));
@@ -15,6 +15,7 @@ test.describe('CAD drawings (DRW-02, DRW-10)', () => {
     await app.pickDirectory(dir);
     await createProject(app.page, { name: 'CAD study' });
     const page = app.page;
+    await setDrawingNamesFromFiles(page, false);
 
     await importDrawings(page, ['PEFS-4001.dxf']);
     const picker = page.getByRole('dialog', { name: 'Choose drawings to import' });
@@ -81,9 +82,10 @@ test.describe('CAD drawings (DRW-02, DRW-10)', () => {
     await importDrawings(page, [DWG_FIXTURE]);
     const picker = page.getByRole('dialog', { name: 'Choose drawings to import' });
     await picker.getByRole('button', { name: /Import 1 drawing/ }).click();
-    await expect(page.getByTestId('drawing-list').getByText('PEFS-4001 / 1')).toBeVisible({
-      timeout: 30_000,
-    });
+    // Named after the file; one layout, so no sheet.
+    await expect(
+      page.getByTestId('drawing-list').getByText('PEFS-4001', { exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
     // At fit zoom the preview is sharp enough; zooming in triggers the full-resolution render.
     for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: 'Zoom in' }).click();
     await expect(page.getByTestId('viewer-detail-layer')).toHaveAttribute('data-rendered', 'true', {

@@ -56,6 +56,10 @@ computer crashes, at most the last two seconds of work are lost.
 If the same project is open in another tab, the app opens it **read-only** so two tabs cannot
 overwrite each other. When the other tab closes the project, **Reopen for editing** takes over.
 
+While a project is open, click the app logo at the top left for the app menu: **Back to start
+screen** closes the project (it is already saved) and shows the start screen; **New project…** and
+**Open project…** close it and go straight on to another project.
+
 ## 3. Import drawings
 
 Click **Import drawings** (or drop files on the drawing list):
@@ -68,9 +72,13 @@ Click **Import drawings** (or drop files on the drawing list):
 A page or layout that is already a drawing is not imported twice. Importing a file again brings back
 only the pages and layouts that are not in the project, for example one you deleted.
 
-The app reads the drawing number, title, sheet and revision from the title block where it can. Check
-and correct them in **Project › Drawing register**: they appear in the count, the stamps and the
-export file names.
+Each drawing is named after the file it came from: `PEFS-1001.pdf` becomes **PEFS-1001**. When one
+file holds several drawings, the page number or layout name is added (**PEFS-2000 / 2**,
+**PEFS-4001 / Layout1**). To read the drawing number and sheet from the title block instead, turn off
+**Settings › General › Name drawings after their files**; drawings already imported keep their
+names. The title and revision are read from the title block where the app can find them. Check and
+correct the names and metadata in **Project › Drawing register**: they appear in the count, the
+stamps and the export file names.
 
 **Rename or delete a drawing.** Hover a drawing in the drawing list and click **⋯** (or right-click
 the drawing):
@@ -93,7 +101,8 @@ The pre-export check also lists it.
 
 ## 4. Viewing drawings
 
-Click a drawing in the list to open it in a tab.
+Click a drawing in the list to open it in a tab. When the tabs no longer fit, scroll them sideways
+with the mouse wheel over the tab bar; the tab you are on is always kept in view.
 
 - **Zoom** with the mouse wheel (at the pointer), `+` / `−`, or the controls at the bottom right.
   `0` fits the page. **Pan** with the middle mouse button, or hold `Space` and drag.

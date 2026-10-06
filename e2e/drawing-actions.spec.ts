@@ -116,14 +116,14 @@ test('a deleted drawing leaves the drawings folder and can be imported again', a
   await expect(page.getByText('Imported 4 drawings from 2 file(s).')).toBeVisible();
 
   // The only drawing on a file takes the file with it; Undo puts both back.
-  await deleteDrawing(page, 'PEFS-1001 / 1');
+  await deleteDrawing(page, 'PEFS-1001_A1');
   await expect.poll(() => app.list(dir, 'drawings')).toEqual(['PEFS-2000_multipage.pdf']);
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(rows).toHaveCount(4);
   await expect.poll(() => app.list(dir, 'drawings')).toEqual(files);
-  await deleteDrawing(page, 'PEFS-1001 / 1');
+  await deleteDrawing(page, 'PEFS-1001_A1');
   // A page of a file whose other pages are still drawings leaves the file in place.
-  await deleteDrawing(page, 'PEFS-2002 / 2');
+  await deleteDrawing(page, 'PEFS-2000_multipage / 2');
   await expect(rows).toHaveCount(2);
   await expect.poll(() => app.list(dir, 'drawings')).toEqual(['PEFS-2000_multipage.pdf']);
 
@@ -131,7 +131,7 @@ test('a deleted drawing leaves the drawings folder and can be imported again', a
   await importDrawings(page, files);
   await expect(page.getByText('Imported 2 drawings from 2 file(s).')).toBeVisible();
   await expect(rows).toHaveCount(4);
-  await expect(page.getByTestId('drawing-list').getByText('PEFS-2002 / 2')).toBeVisible();
+  await expect(page.getByTestId('drawing-list').getByText('PEFS-2000_multipage / 2')).toBeVisible();
   expect(await app.list(dir, 'drawings')).toEqual(files);
 
   // A file that is wholly in the project is still reported as such.

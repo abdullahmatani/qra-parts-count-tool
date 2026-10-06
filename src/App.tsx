@@ -8,7 +8,11 @@ import { BackupsDialog } from '@/features/project/BackupsDialog';
 import { NewProjectDialog } from '@/features/project/NewProjectDialog';
 import { ProjectSettingsForm } from '@/features/project/ProjectSettingsForm';
 import { RecentProjects } from '@/features/project/RecentProjects';
-import { closeProject, openProjectFromPicker } from '@/features/project/project-actions';
+import {
+  closeProject,
+  openProjectFromPicker,
+  switchProjectFromPicker,
+} from '@/features/project/project-actions';
 import { openSampleFromPicker } from '@/features/sample/create-sample';
 import { OpenZipDialog } from '@/features/project/OpenZipDialog';
 import { LinkSuggestionsDialog } from '@/features/links/LinkSuggestionsDialog';
@@ -48,6 +52,10 @@ export function App() {
       {hasProject ? (
         <Workspace
           onCloseProject={() => void closeProject()}
+          onNewProject={
+            supported ? () => void closeProject().then(() => openDialog('newProject')) : undefined
+          }
+          onOpenProject={supported ? () => void switchProjectFromPicker() : undefined}
           onImportDrawings={openDrawingImport}
           onDropFiles={(files) => void importWithFeedback(files)}
           renderDrawing={(drawingId) => <MarkupViewer drawingId={drawingId} />}

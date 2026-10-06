@@ -62,6 +62,21 @@ export async function setClient(page: Page, client: string) {
   await expect(dialog).toBeHidden();
 }
 
+/**
+ * Switches Settings › General › Name drawings after their files (on by
+ * default): off, imported drawings take the drawing number and sheet read
+ * from their title block.
+ */
+export async function setDrawingNamesFromFiles(page: Page, on: boolean) {
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Settings' });
+  const toggle = dialog.getByRole('switch', { name: 'Name drawings after their files' });
+  if ((await toggle.getAttribute('aria-checked')) !== String(on)) await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', String(on));
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+}
+
 /** Imports fixture files through the "Import drawings" button and its file chooser. */
 export async function importDrawings(page: Page, files: string[]) {
   const chooser = page.waitForEvent('filechooser');

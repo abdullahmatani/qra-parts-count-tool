@@ -1,7 +1,8 @@
 import { Columns2, Link2, MousePointer2, SquareDashed, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { drawingDisplayName } from '@/domain/drawings';
+import type { Drawing } from '@/domain/schema/types';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -48,6 +49,115 @@ function OptionsBar() {
   }
 }
 
+interface DrawingTabsProps {
+  tabs: Drawing[];
+  activeDrawingId: string | null;
+  onOpen: (drawingId: string) => void;
+  onClose: (drawingId: string) => void;
+  split: boolean;
+  onToggleSplit: () => void;
+}
+
+/**
+ * The open drawings as tabs, with the split-view button. Tabs that do not fit
+ * scroll sideways (with the mouse wheel too) under a hidden scrollbar, which
+ * would otherwise sit over the tabs, and the active tab is kept in view.
+ */
+function DrawingTabs({
+  tabs,
+  activeDrawingId,
+  onOpen,
+  onClose,
+  split,
+  onToggleSplit,
+}: DrawingTabsProps) {
+  const { t } = useTranslation();
+  const strip = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = strip.current;
+    if (!element) return;
+    const onWheel = (event: WheelEvent) => {
+      const overflowing = element.scrollWidth > element.clientWidth;
+      if (!overflowing || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      element.scrollLeft += event.deltaY;
+      event.preventDefault();
+    };
+    // Not passive: the page must not scroll while the wheel scrolls the tabs.
+    element.addEventListener('wheel', onWheel, { passive: false });
+    return () => element.removeEventListener('wheel', onWheel);
+  }, []);
+
+  useEffect(() => {
+    // Scrolls the strip only: scrollIntoView would also move the panes around it.
+    const element = strip.current;
+    const tab = element?.querySelector('[aria-selected="true"]')?.parentElement;
+    if (!element || !tab) return;
+    const bounds = element.getBoundingClientRect();
+    const box = tab.getBoundingClientRect();
+    if (box.left < bounds.left) element.scrollLeft -= bounds.left - box.left;
+    else if (box.right > bounds.right) element.scrollLeft += box.right - bounds.right;
+  }, [activeDrawingId, tabs.length]);
+
+  return (
+    <div className="flex h-10 shrink-0 items-end border-b bg-panel">
+      <div
+        ref={strip}
+        role="tablist"
+        data-testid="drawing-tabs"
+        className="flex h-full min-w-0 flex-1 [scrollbar-width:none] items-end gap-px overflow-x-auto overflow-y-hidden ps-1"
+      >
+        {tabs.map((drawing) => {
+          const active = drawing.id === activeDrawingId;
+          const name = drawingDisplayName(drawing);
+          return (
+            <div
+              key={drawing.id}
+              className={cn(
+                'flex h-8 shrink-0 items-center gap-1.5 rounded-t-md border border-b-0 ps-3 pe-1.5 text-xs',
+                active ? 'bg-background font-medium' : 'bg-muted text-muted-foreground',
+              )}
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={active}
+                title={name}
+                className="max-w-56 truncate font-mono leading-normal"
+                onClick={() => onOpen(drawing.id)}
+              >
+                {name}
+              </button>
+              <button
+                type="button"
+                aria-label={t('canvas.closeTab', { name })}
+                className="rounded p-0.5 hover:bg-accent"
+                onClick={() => onClose(drawing.id)}
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        aria-pressed={split}
+        aria-label={t('canvas.split')}
+        title={t('canvas.split')}
+        disabled={!split && tabs.length < 2}
+        onClick={onToggleSplit}
+        className={cn(
+          'mx-1 self-center rounded p-1.5 text-muted-foreground hover:bg-accent disabled:opacity-40',
+          split && 'bg-accent text-foreground',
+        )}
+      >
+        <Columns2 className="size-4" />
+      </button>
+    </div>
+  );
+}
+
 /** Centre pane: toolbar, drawing tabs and the drawing canvas. */
 export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
   const { t } = useTranslation();
@@ -67,56 +177,14 @@ export function CanvasArea({ renderDrawing }: CanvasAreaProps) {
       <Toolbar />
       <OptionsBar />
       {tabs.length > 0 && (
-        <div
-          role="tablist"
-          className="flex h-8 shrink-0 items-end gap-px overflow-x-auto border-b bg-panel ps-1"
-        >
-          {tabs.map((drawing) => {
-            const active = drawing.id === activeDrawingId;
-            const name = drawingDisplayName(drawing);
-            return (
-              <div
-                key={drawing.id}
-                className={cn(
-                  'flex h-7 items-center gap-1 rounded-t-md border border-b-0 ps-2 pe-1 text-xs',
-                  active ? 'bg-background font-medium' : 'bg-muted text-muted-foreground',
-                )}
-              >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  className="max-w-48 truncate font-mono"
-                  onClick={() => openDrawing(drawing.id)}
-                >
-                  {name}
-                </button>
-                <button
-                  type="button"
-                  aria-label={t('canvas.closeTab', { name })}
-                  className="rounded p-0.5 hover:bg-accent"
-                  onClick={() => closeDrawing(drawing.id)}
-                >
-                  <X className="size-3" />
-                </button>
-              </div>
-            );
-          })}
-          <button
-            type="button"
-            aria-pressed={split !== null}
-            aria-label={t('canvas.split')}
-            title={t('canvas.split')}
-            disabled={!split && tabs.length < 2}
-            onClick={toggleSplit}
-            className={cn(
-              'ms-auto me-1 mb-0.5 rounded p-1 text-muted-foreground hover:bg-accent disabled:opacity-40',
-              split && 'bg-accent text-foreground',
-            )}
-          >
-            <Columns2 className="size-4" />
-          </button>
-        </div>
+        <DrawingTabs
+          tabs={tabs}
+          activeDrawingId={activeDrawingId}
+          onOpen={openDrawing}
+          onClose={closeDrawing}
+          split={split !== null}
+          onToggleSplit={toggleSplit}
+        />
       )}
       <div className="relative flex min-h-0 flex-1 bg-canvas" data-testid="canvas-area">
         <FindBar />

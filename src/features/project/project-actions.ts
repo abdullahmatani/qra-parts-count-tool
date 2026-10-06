@@ -179,3 +179,16 @@ export async function reopenRecentProject(recent: RecentProject): Promise<boolea
 export async function closeProject(): Promise<void> {
   await endSession();
 }
+
+/**
+ * Opens another project from the folder picker while one is open. The picker
+ * only opens straight from the user's click, so the open project is closed
+ * (saved, its tab lock released) once a folder is chosen, before the new one
+ * opens; cancelling the picker keeps it open.
+ */
+export async function switchProjectFromPicker(): Promise<boolean> {
+  const dir = await pickWorkingDirectory();
+  if (!dir) return false;
+  await endSession();
+  return openProject(dir);
+}

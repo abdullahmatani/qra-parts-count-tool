@@ -61,6 +61,46 @@ test.describe('create and open projects (PRJ-01..03, PRJ-06)', () => {
     await app.removeDirectory(dir);
   });
 
+  test('the app menu behind the logo goes back to the start screen or on to another project', async ({
+    app,
+  }) => {
+    const dir = `app-menu-${test.info().project.name}`;
+    const other = `app-menu-other-${test.info().project.name}`;
+    await app.open();
+    await app.removeDirectory(dir);
+    await app.removeDirectory(other);
+    const page = app.page;
+    await app.pickDirectory(other);
+    await createProject(page, { name: 'Other study' });
+    await closeProject(page);
+    await app.pickDirectory(dir);
+    await createProject(page, { name: 'Menu study' });
+    const appMenu = page.getByRole('button', { name: 'App menu' });
+
+    // Back to the start screen: the project is closed and listed with the recent ones.
+    await appMenu.click();
+    await page.getByRole('menuitem', { name: 'Back to start screen' }).click();
+    await expect(page.getByTestId('start-screen')).toBeVisible();
+    await expect(page.getByTestId('recent-projects')).toContainText('Menu study');
+
+    // Open project… goes straight to another project.
+    await page.getByTestId('recent-projects').getByText('Menu study').click();
+    await expect(page.getByTestId('project-name')).toHaveText('Menu study');
+    await app.pickDirectory(other);
+    await appMenu.click();
+    await page.getByRole('menuitem', { name: 'Open project…' }).click();
+    await expect(page.getByTestId('project-name')).toHaveText('Other study');
+
+    // New project… closes it and shows the new-project form over the start screen.
+    await appMenu.click();
+    await page.getByRole('menuitem', { name: 'New project…' }).click();
+    await expect(page.getByRole('dialog', { name: 'New project' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('start-screen')).toBeVisible();
+    await app.removeDirectory(dir);
+    await app.removeDirectory(other);
+  });
+
   test('reports a folder without a project and refuses to overwrite one', async ({ app }) => {
     const empty = `empty-${test.info().project.name}`;
     const existing = `existing-${test.info().project.name}`;

@@ -5,6 +5,22 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Drawing tabs no longer cut off**: the tab bar is taller, and when the open drawings no longer
+  fit, its scrollbar is no longer drawn over the tabs (which hid the top of their names). The tabs
+  scroll sideways with the mouse wheel, the active tab is kept in view, long names show in full on
+  hover, and the split-view button stays at the end of the bar.
+
+- **App menu on the logo**: clicking the logo at the top left opens a menu to go **Back to start
+  screen** (the screen the app starts on), or straight to a **New project…** or **Open project…**.
+  Each closes the open project first.
+
+- **Drawings are named after their files**: an imported drawing takes the name of its file
+  (`PEFS-1001.pdf` becomes **PEFS-1001**), with the page number or layout name added when one file
+  holds several drawings, instead of a drawing number and sheet guessed from the title block, which
+  could differ from file to file. **Settings › General › Name drawings after their files** (on by
+  default) switches back to reading them from the title block. The title and revision are still
+  read from the title block, and drawings already imported keep their names.
+
 - **Several DWG files import at once**: importing more than one DWG imported only the first; the
   others were copied into `drawings/` but never became drawings ("The CAD document is no longer
   open"). Closing the first file stopped the DWG reader that still held the rest. The reader now

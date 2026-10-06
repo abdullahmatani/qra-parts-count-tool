@@ -13,6 +13,7 @@ import { importDrawingFiles, type ImportDeps } from './import-drawings';
 const A3 = { width: 1191, height: 842 };
 const deps = (pages: number): ImportDeps => ({
   now: () => new Date('2026-09-23T10:00:00Z'),
+  nameFromFile: true,
   cad: {
     available: () => false,
     open: () => Promise.reject(new Error('no CAD in this test')),
