@@ -10,7 +10,7 @@ import { addLink, updateLink } from '@/domain/actions/links';
 import { addMarker, syncBoundingEsdvs } from '@/domain/actions/markers';
 import { addNote } from '@/domain/actions/notes';
 import { createSegment } from '@/domain/actions/segments';
-import { docToProject, projectToDoc } from '@/domain/model';
+import { docToProject, projectToDoc, type ProjectDoc } from '@/domain/model';
 import { createProject } from '@/domain/schema';
 import type { Drawing, Library, Marker, MarkerGeometry, Project } from '@/domain/schema/types';
 import { newId } from '@/lib/ids';
@@ -37,6 +37,32 @@ const RADIUS: Record<SampleSymbol['kind'], number> = {
   compressor: 40,
 };
 
+/** Adds the two sample sheets (pages of {@link SAMPLE_FILE}) as drawings; returns their ids. */
+function addSampleDrawings(doc: ProjectDoc, file: { hash: string }, now: Date): string[] {
+  return SAMPLE_SHEETS.map((sheet, index) => {
+    const drawing: Drawing = {
+      id: newId('drw'),
+      fileName: SAMPLE_FILE,
+      originalFileName: SAMPLE_FILE,
+      fileHash: file.hash,
+      fileType: 'pdf',
+      page: index + 1,
+      layout: null,
+      isCadPlot: false,
+      drawingNo: sheet.drawingNo,
+      sheet: sheet.sheet,
+      title: sheet.title,
+      revision: sheet.revision,
+      size: { width: SHEET.width, height: SHEET.height },
+      importedAt: now.toISOString(),
+      needsReview: false,
+    };
+    doc.drawings[drawing.id] = drawing;
+    doc.drawingOrder.push(drawing.id);
+    return drawing.id;
+  });
+}
+
 export function buildSampleProject(
   library: Library,
   file: { hash: string },
@@ -60,29 +86,7 @@ export function buildSampleProject(
   const doc = projectToDoc(project);
   // The segments are done and counted: the sample opens at the parts count.
   doc.stage = 'count';
-
-  const drawingIds = SAMPLE_SHEETS.map((sheet, index) => {
-    const drawing: Drawing = {
-      id: newId('drw'),
-      fileName: SAMPLE_FILE,
-      originalFileName: SAMPLE_FILE,
-      fileHash: file.hash,
-      fileType: 'pdf',
-      page: index + 1,
-      layout: null,
-      isCadPlot: false,
-      drawingNo: sheet.drawingNo,
-      sheet: sheet.sheet,
-      title: sheet.title,
-      revision: sheet.revision,
-      size: { width: SHEET.width, height: SHEET.height },
-      importedAt: now.toISOString(),
-      needsReview: false,
-    };
-    doc.drawings[drawing.id] = drawing;
-    doc.drawingOrder.push(drawing.id);
-    return drawing.id;
-  });
+  const drawingIds = addSampleDrawings(doc, file, now);
 
   const segmentIds = new Map<string, string>();
   SAMPLE_SEGMENTS.forEach((segment, i) => {
@@ -227,4 +231,34 @@ export function buildSampleProject(
 
 function isSized(library: Library, category: string): boolean {
   return library.equipmentTypes.find((type) => type.category === category)?.sizeRequired ?? false;
+}
+
+/**
+ * The practice project of the guided tour: the same two sheets, imported and
+ * named, with nothing marked yet, at the start of segment set-up. The user
+ * builds the study in the tour, step by step.
+ */
+export function buildTourProject(
+  library: Library,
+  file: { hash: string },
+  now: Date,
+  appVersion = '',
+): Project {
+  const project = createProject(
+    {
+      name: 'Guided tour - inlet separator',
+      client: 'Example Operating Company',
+      facility: 'Example central processing facility',
+      studyRef: 'QRA-TOUR',
+      description:
+        'The practice project of the guided tour: two PEFS sheets to define a segment on, count and export. Nothing is saved.',
+      settings: { esdvBoundaryRule: 'upstream', flangeConvention: 'perJoint' },
+      library,
+      appVersion,
+    },
+    now,
+  );
+  const doc = projectToDoc(project);
+  addSampleDrawings(doc, file, now);
+  return docToProject(doc);
 }

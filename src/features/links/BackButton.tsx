@@ -16,6 +16,7 @@ export function BackButton() {
     <Button
       size="sm"
       variant="secondary"
+      data-tour="back"
       className="absolute top-2 left-2 z-10 shadow"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={() => goBack()}

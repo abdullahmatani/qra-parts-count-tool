@@ -2,9 +2,13 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { projectToDoc } from '@/domain/model';
+import { useHelpStore } from '@/features/help/help-store';
+import { closeProject } from '@/features/project/project-actions';
+import { useTourStore } from '@/features/tour/tour-store';
 import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { useWorkspaceStore } from '@/store/workspace-store';
 import { makePopulatedProject } from '@/test/fixtures';
 import { App } from './App';
 
@@ -91,5 +95,41 @@ describe('App shell', () => {
     expect(screen.getByTestId('project-name')).toHaveTextContent('Renamed');
     await user.click(screen.getByRole('button', { name: 'Undo' }));
     expect(screen.getByTestId('project-name')).toHaveTextContent('Test project');
+  });
+
+  it('opens the documentation with F1 on the start screen', async () => {
+    render(<App />);
+    await userEvent.setup().keyboard('{F1}');
+    const dialog = await screen.findByRole('dialog', { name: 'Documentation' });
+    expect(await within(dialog).findByTestId('help-search')).toBeInTheDocument();
+    act(() => useHelpStore.getState().close());
+  });
+
+  it('starts the guided tour on a practice project from the start screen', async () => {
+    render(<App />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /Take the guided tour/ }));
+    const card = await screen.findByTestId('tour-card', {}, { timeout: 10_000 });
+    expect(card).toHaveAttribute('data-step', 'welcome');
+    expect(screen.getByTestId('practice-badge')).toHaveTextContent('Practice project');
+    expect(screen.getByTestId('project-name')).toHaveTextContent('Guided tour');
+    expect(
+      within(screen.getByTestId('drawing-list')).getByText('PEFS-S-001 / 1'),
+    ).toBeInTheDocument();
+    expect(useWorkspaceStore.getState().inMemory).toBe(true);
+
+    // The app menu on the logo offers the tour again, and the documentation.
+    // Radix menus open from the keyboard in jsdom (pointer events lack a button there).
+    act(() => screen.getByRole('button', { name: 'App menu' }).focus());
+    await user.keyboard('{Enter}');
+    expect(
+      await screen.findByRole('menuitem', { name: 'Restart the guided tour' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('menuitem', { name: /Documentation/ }));
+    expect(await screen.findByRole('dialog', { name: 'Documentation' })).toBeInTheDocument();
+    act(() => useHelpStore.getState().close());
+
+    await act(() => closeProject());
+    expect(useTourStore.getState().projectId).toBeNull();
   });
 });

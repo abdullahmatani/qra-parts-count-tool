@@ -2,6 +2,7 @@ import { SuggestionLayer } from '@/features/assist/SuggestionLayer';
 import { LayerMenu } from '@/features/cad/LayerMenu';
 import { ReviewBanner } from '@/features/drawings/ReviewBanner';
 import { SearchHitsLayer } from '@/features/search/SearchHitsLayer';
+import { TourHintLayer } from '@/features/tour/TourHintLayer';
 import { DrawingViewer } from '@/features/viewer/DrawingViewer';
 import { useMarkupTools } from './useMarkupTools';
 
@@ -17,6 +18,7 @@ export function MarkupViewer({ drawingId }: { drawingId: string }) {
             <SearchHitsLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
             <SuggestionLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
             {tools.overlay(context)}
+            <TourHintLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
           </>
         )}
         screenOverlay={tools.screenOverlay}

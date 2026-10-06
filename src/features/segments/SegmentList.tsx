@@ -50,6 +50,7 @@ export function SegmentList({ onAdd }: SegmentListProps) {
             className="h-7 gap-1 px-2"
             disabled={readOnly}
             onClick={onAdd}
+            data-tour="add-segment"
           >
             <Plus /> {t('segments.add')}
           </Button>

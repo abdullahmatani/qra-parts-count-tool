@@ -35,7 +35,12 @@
     "library": "Equipment library",
     "templateMapper": "Template mapper",
     "backups": "Backups",
-    "shortcuts": "Keyboard shortcuts"
+    "shortcuts": "Keyboard shortcuts",
+    "guidedTour": "Guided tour",
+    "restartTour": "Restart the guided tour",
+    "resumeTour": "Resume the guided tour",
+    "documentation": "Documentation",
+    "documentationHint": "Documentation (F1)"
   },
   "save": {
     "idle": "Not saved yet",
@@ -421,6 +426,8 @@
     "sampleCreated": "The sample project is ready. Open a drawing from the list on the left.",
     "sampleExists": "That folder already holds a project. Choose an empty folder for the sample.",
     "sampleFailed": "The sample project could not be created.",
+    "tour": "Take the guided tour",
+    "tourDetail": "Walk through one complete parts count, step by step, on a practice project. No folder needed; nothing is saved.",
     "recent": "Recent projects",
     "noRecent": "No recent projects.",
     "unsupported": "This browser cannot write to local folders. Use a current version of Microsoft Edge or Google Chrome.",
@@ -1249,7 +1256,7 @@
     "failed": "The .zip could not be opened",
     "openedReadOnly": "{{file}} is open read-only. Nothing is saved; download exports from the Export dialog.",
     "downloadExports": "Download exports (.zip)",
-    "exportsNotSaved": "This project is open from a .zip: download the exports to keep them.",
+    "exportsNotSaved": "This project lives in the browser tab only: download the exports to keep them.",
     "readOnlyExport": "Exports are written by the tab or window that has this project open for editing."
   },
   "layers": {
@@ -1284,6 +1291,150 @@
     "errors": {
       "render": "The drawing could not be rendered for matching.",
       "tooSmall": "The marker is too small on this sheet to match. Ring the symbol with a larger circle and try again."
+    }
+  },
+  "help": {
+    "title": "Documentation",
+    "description": "Search every article at once, or browse the contents.",
+    "search": "Search the documentation",
+    "searchPlaceholder": "Search, e.g. auto trace, ESDV, export",
+    "clear": "Clear the search",
+    "contents": "Contents",
+    "resultsLabel": "Search results",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results",
+    "partialResults_one": "No section has every word. {{count}} result with some of them:",
+    "partialResults_other": "No section has every word. {{count}} results with some of them:",
+    "noResults": "Nothing found for “{{query}}”.",
+    "noResultsHint": "Check the spelling, or try fewer or other words.",
+    "loading": "Loading the documentation…"
+  },
+  "tour": {
+    "label": "Guided tour",
+    "folder": "Guided tour",
+    "practice": "Practice project",
+    "practiceHint": "The guided tour’s practice project lives in this browser tab only. Nothing is saved to your computer.",
+    "progress": "Step {{step}} of {{count}}",
+    "drag": "Drag to move the tour card",
+    "collapse": "Fold the tour card",
+    "expand": "Unfold the tour card",
+    "end": "End the tour",
+    "ended": "Tour ended. The practice project stays open until you go back to the start screen; resume the tour from the app menu on the logo.",
+    "finished": "Tour complete. Start your own study with New project, or keep exploring the practice project.",
+    "failed": "The guided tour could not be started.",
+    "begin": "Start the tour",
+    "notNow": "Not now",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip",
+    "finish": "Finish",
+    "openDocs": "Documentation",
+    "showMe": "Show me",
+    "learnMore": "Learn more",
+    "done": "Done",
+    "waiting": "Waiting for you…",
+    "wrongStage": "This step is in {{stage}}.",
+    "steps": {
+      "welcome": {
+        "title": "Welcome to the QRA Parts Count Tool",
+        "body": "This tour walks you through one complete parts count on a practice project: two PEFS sheets of an inlet separator, already imported. You will define the isolatable segment **IS-01**, count its leak sources and export the results. Nothing is saved to your computer, so try anything. It takes about 15 minutes."
+      },
+      "openDrawing": {
+        "title": "Open a drawing",
+        "body": "The drawing list on the left holds the project’s drawings. Click **PEFS-S-001 / 1** (sheet 1 of drawing PEFS-S-001) to open it. In your own projects, **+** above the list imports PDF, DWG and DXF files; you can also drop them onto the window."
+      },
+      "navigate": {
+        "title": "Move round the sheet",
+        "body": "Zoom with the mouse wheel, and pan by holding `Space` and dragging (or with the middle mouse button). `0` fits the whole page. The controls at the bottom of the sheet zoom, rotate and show the minimap."
+      },
+      "findText": {
+        "title": "Find text on the drawing",
+        "body": "Press `Ctrl+F` (or the search button in the toolbar) and type **ESDV** to find the shutdown valves. `Enter` steps through the matches, and **Search all drawings** looks in every sheet. Press `Esc` to close the find bar when you are done."
+      },
+      "createSegment": {
+        "title": "Create the segment IS-01",
+        "body": "An isolatable segment is the inventory between ESD valves. Click **+ Segment** in the left pane. Enter the label **IS-01**, the fluid **Gas / condensate**, pressure **45** and temperature **60**, then click **Create segment**. It becomes the active segment: new markers go to it."
+      },
+      "esdv": {
+        "title": "Mark the first ESDV",
+        "body": "Pick the **ESDV** tool in the toolbar (`E`) and click **ESDV-101** on the inlet line at the left of the sheet, inside the dashed ring (**Show me** zooms to it). The bar under the toolbar draws ESDVs as a ring or as a double line across the pipe."
+      },
+      "esdvSegments": {
+        "title": "Set the segments on each side",
+        "body": "In the panel on the right, type the tag **ESDV-101** and set **Downstream segment** to **IS-01**: the flow comes from the wellhead manifold, outside the study, into IS-01. Leave **Upstream segment** as None. The panel says which segment counts the valve."
+      },
+      "moreEsdvs": {
+        "title": "Mark the other ESDVs",
+        "body": "Mark the other two ends of IS-01 the same way: **ESDV-102** on the gas line at the top right, and **ESDV-103** on the liquid line at the bottom right. For both, IS-01 is the **Upstream segment**: the flow leaves IS-01 through them."
+      },
+      "endFlange": {
+        "title": "Mark an end flange",
+        "body": "The separator’s drain runs down to the closed drain, where IS-01 ends without an ESDV. Pick **End flange** (`F`), keep **Closed drain** in the bar, and click on the drain pipe just above **TO CLOSED DRAIN**. End flanges bound a segment but are not counted."
+      },
+      "links": {
+        "title": "Link the off-page connectors",
+        "body": "The gas line carries on on the next sheet. Open the **Project** menu and choose **Suggest drawing links…**: the app finds connector text that names another drawing. Click **Add**. (The **Drawing link** tool, `L`, draws a link by hand.)"
+      },
+      "autoTrace": {
+        "title": "Highlight the segment with Auto trace",
+        "body": "Press `T`, or click **Auto trace** in the bar under the toolbar: the Highlighter paints IS-01’s pipework out to its ESDVs, the end flange and the off-page connector. Pipe it cannot place is shown dashed; click it to add it. `Ctrl+Z` undoes the whole trace."
+      },
+      "dashed": {
+        "title": "Outline the separator",
+        "body": "Equipment can be marked as an area too. Pick **Dashed highlight** (`D`) and drag a box round the separator **V-100**. Equipment placed on a segment’s highlighting or inside its zones goes to that segment, whichever segment is active."
+      },
+      "followLink": {
+        "title": "Follow a drawing link",
+        "body": "Pick **Select** (`V`) and click the **TO PEFS-S-002** connector at the top right: the link opens the sheet where the gas line continues. Then click **Back** at the top left of the sheet (or press `Alt+←`) to return."
+      },
+      "startCount": {
+        "title": "Start the parts count",
+        "body": "IS-01 is defined. Click **2 Parts count** in the header. A check lists anything that may be unfinished; click **Start counting**. While you count, the segment set-up is drawn faint and locked; **1 Segments** takes you back at any time."
+      },
+      "equipmentBar": {
+        "title": "Choose what to count",
+        "body": "The toolbar now holds **Select**, **Circle** and **Stamp**, and the equipment bar under it chooses what the next circle counts. Click **Valve (manual)** in the bar."
+      },
+      "circleValve": {
+        "title": "Count a valve",
+        "body": "Click the hand valve **HV-101** on the inlet line. The item editor on the right opens with the size field ready: type **8** and press `Enter`. You can add the tag **HV-101** in the editor too."
+      },
+      "stamp": {
+        "title": "Count flanges with Stamp",
+        "body": "Now the flanges either side of HV-101. Choose **Flange** in the equipment bar (under **… more** if the bar is short of room), click **F-1**, type **8** and press `Enter`. Then pick **Stamp** (`S`) and click **F-2**: Stamp repeats the last item without opening the editor."
+      },
+      "findSimilar": {
+        "title": "Find similar symbols",
+        "body": "Let the app find the other valves. Pick **Select** (`V`), click the HV-101 circle, then **Find similar symbols** in the right pane. Step through the violet rings: **Accept** the valves of IS-01 (HV-102, HV-104 and HV-105) and **Reject** HV-103, which is beyond ESDV-102."
+      },
+      "sizes": {
+        "title": "Check the sizes",
+        "body": "Accepted valves take the example’s size, 8\". Press `0` to see the whole sheet, then click each one and correct its size in the item editor: **HV-102** is 6\", **HV-104** is 4\" and **HV-105** is 2\". `Shift`+click selects several markers, to edit them together."
+      },
+      "countTable": {
+        "title": "Read the count table",
+        "body": "The **count table** on the right totals IS-01 by equipment type, actuation and size bin as you click. Click a count in it to highlight the markers behind it on the drawing."
+      },
+      "finishCount": {
+        "title": "Finish the count",
+        "body": "Count the rest on your own: choose the type in the equipment bar before you click, or press its key just after. The instrument taps **PT-101** (¾\") and **LT-101** (1\") are small-bore connections (`3`), **V-100** a pressure vessel (`4`) and **P-101** a pump (`5`); **NRV-101** is a 4\" check valve and **F-3** a 6\" flange. Markers missing a type or size get an amber outline."
+      },
+      "note": {
+        "title": "Add a note for the checker",
+        "body": "Notes record assumptions and open points. In **Notes** at the bottom right, type a note such as **V-100 counted as one pressure vessel** and press `Ctrl+Enter`. Set your initials in **Settings** to sign your notes."
+      },
+      "status": {
+        "title": "Mark the segment as counted",
+        "body": "At the top of the right pane, set IS-01’s **Status** to **Counted**, and enter your initials in **Counted by**. The segment list shows each segment’s status."
+      },
+      "export": {
+        "title": "Check and export",
+        "body": "Click **Export** at the top right. The pre-export check lists anything unfinished, with **Show** to go to it. Keep **Excel workbook** and **Annotated drawings (PDF)** ticked and click **Export** (or **Export anyway**). In the practice project, **Download exports (.zip)** keeps the files."
+      },
+      "finish": {
+        "title": "You have done a parts count",
+        "body": "Segment defined, parts counted, a note for the checker and the results exported. For a real study, start a **New project** in an empty folder, adjust the equipment library to the client’s dataset, and map the client’s Excel template once in **Project › Template mapper**. Press `F1` at any time for the documentation."
+      }
     }
   }
 }

@@ -70,7 +70,12 @@ export function Toolbar() {
           return (
             <Tooltip key={id}>
               <TooltipTrigger asChild>
-                <ToggleGroupItem value={id} aria-label={label} className="px-2.5">
+                <ToggleGroupItem
+                  value={id}
+                  aria-label={label}
+                  className="px-2.5"
+                  data-tour={`tool-${id}`}
+                >
                   <Icon />
                   <span className={labelClass}>{label}</span>
                 </ToggleGroupItem>
@@ -150,6 +155,7 @@ export function Toolbar() {
         size="icon-sm"
         aria-label={t('search.open')}
         title={t('search.open')}
+        data-tour="find"
         onClick={() => useSearchStore.getState().openFind()}
       >
         <Search />

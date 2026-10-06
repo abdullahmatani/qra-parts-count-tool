@@ -59,7 +59,8 @@ function drawSymbol(pen: Pen, s: SampleSymbol): void {
   switch (s.kind) {
     case 'valve':
       path(pen, bowtie(x, y));
-      centred(pen, s.tag, x, y + 22);
+      if (s.tagBeside) text(pen, s.tag, x + 20, y + 3);
+      else centred(pen, s.tag, x, y + 22);
       break;
     case 'check':
       path(pen, bowtie(x, y));

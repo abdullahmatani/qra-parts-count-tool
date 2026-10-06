@@ -1,11 +1,14 @@
 // @vitest-environment node
-/** Keeps docs/keyboard-shortcuts.md in step with the tools and the starter library (ANN-08). */
+/** Keeps docs/help/keyboard-shortcuts.md in step with the tools and the starter library (ANN-08). */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { starterLibrary } from '@/domain/count/starter-library';
 import { TOOLS } from './tools';
 
-const sheet = readFileSync(new URL('../../docs/keyboard-shortcuts.md', import.meta.url), 'utf8');
+const sheet = readFileSync(
+  new URL('../../docs/help/keyboard-shortcuts.md', import.meta.url),
+  'utf8',
+);
 const rows = sheet.split('\n').filter((line) => line.startsWith('| `'));
 
 describe('keyboard shortcut sheet', () => {

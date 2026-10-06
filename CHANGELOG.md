@@ -12,6 +12,36 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
   `ArrayBuffer.transferToFixedLength`); the app now adds them on the page and in the PDF.js worker
   when the browser lacks them, so PDFs import, show their title-block text and render again.
 
+- **Guided tour**: **Take the guided tour** on the start screen (or **Guided tour** in the app menu
+  on the logo) walks through one complete parts count, step by step, on a practice project: two
+  PEFS sheets of an inlet separator, already imported. In 25 steps the user opens and searches a
+  drawing, creates the segment IS-01, marks its ESDVs and an end flange, adds the drawing links,
+  highlights the segment with auto trace and a dashed zone, follows a link, starts the count,
+  counts valves and flanges with the equipment bar, Circle and Stamp, lets **Find similar
+  symbols** find the rest, reads the count table, adds a note, marks the segment as counted and
+  exports. A card over the corner of the drawing says what to do; an outline shows which control
+  to use and dashed rings show where on the sheet (**Show me** zooms there). Each step ticks
+  itself off when it is done, and **Learn more** opens the matching documentation. The tour is
+  optional: **Skip**, **Back**, fold or drag the card, or **End tour** at any time and resume it
+  from the app menu. The practice project lives in the browser tab only (the header shows
+  **Practice project**), so it needs no folder, works in any browser and leaves nothing behind;
+  its exports are offered as a download.
+
+- **Built-in documentation, searchable**: the user guide is now a set of short articles
+  (`docs/help/`), from getting started to troubleshooting, a FAQ and a glossary, and the same
+  articles are built into the app. Press `F1`, click **?** in the header, or choose
+  **Documentation** in the app menu or on the start screen. The search box searches every
+  article at once: each result is the section that answers, with the matching words marked;
+  words are found by their start (`trac` finds "trace"), and a misspelt word still finds its
+  match (`hilighter`). The arrow keys and `Enter` pick a result, `Esc` clears the search. Links
+  between articles stay in the viewer, and the documentation works offline like the rest of the
+  app. `docs/user-guide.md` lists the articles; the keyboard shortcut sheet moved to
+  `docs/help/keyboard-shortcuts.md`.
+
+- **Sample sheet: the drain goes to the closed drain**: the separator's drain line on the sample
+  PEFS now runs on to a **TO CLOSED DRAIN** end, with the drain valve's tag beside it, so the
+  sheet shows where an end flange goes.
+
 - **Drawing tabs no longer cut off**: the tab bar is taller, and when the open drawings no longer
   fit, its scrollbar is no longer drawn over the tabs (which hid the top of their names). The tabs
   scroll sideways with the mouse wheel, the active tab is kept in view, long names show in full on
