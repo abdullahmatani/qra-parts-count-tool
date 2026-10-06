@@ -26,6 +26,7 @@ const noCad: ImportDeps['cad'] = {
 
 const deps = (pages: number, producer = 'pdf-lib'): ImportDeps => ({
   now: () => new Date('2026-09-23T10:00:00Z'),
+  nameFromFile: false,
   cad: noCad,
   chooseSpaces: async () => null,
   inspect: async () => ({
@@ -69,6 +70,23 @@ describe('drawing import (DRW-01, DRW-03, DRW-04)', () => {
     ]);
     expect(drawings[0]!.fileHash).toMatch(/^[0-9a-f]{64}$/);
     expect(useProjectStore.getState().past.at(-1)?.label).toBe('Import 3 drawings');
+  });
+
+  it('names drawings after their files when asked, with the page when a file has several', async () => {
+    const named = { ...deps(3), nameFromFile: true };
+    await importDrawingFiles([file('Unit 100 PEFS.pdf', 'three pages')], undefined, named);
+    await importDrawingFiles([file('PEFS-1001_A1.pdf', 'one page')], undefined, {
+      ...deps(1),
+      nameFromFile: true,
+    });
+    const doc = useProjectStore.getState().doc!;
+    const drawings = doc.drawingOrder.map((id) => doc.drawings[id]!);
+    expect(drawings.map((d) => [d.drawingNo, d.sheet, d.revision])).toEqual([
+      ['Unit 100 PEFS', '1', 'B'],
+      ['Unit 100 PEFS', '2', 'B'],
+      ['Unit 100 PEFS', '3', 'B'],
+      ['PEFS-1001_A1', '', 'B'],
+    ]);
   });
 
   it('skips a file whose content was already imported', async () => {
@@ -281,6 +299,31 @@ describe('CAD import (DRW-02, DRW-10)', () => {
     ]);
     expect(dir.tree()).not.toContain('drawings/x.dxf');
     expect(closed).toEqual([7]);
+  });
+
+  it('names CAD drawings after their files, with the layout when a file has several', async () => {
+    const options = { ...deps(1), cad: cad(), nameFromFile: true };
+    await importDrawingFiles([file('Plant A.dxf', 'dxf')], undefined, {
+      ...options,
+      chooseSpaces: async () => [['Model']],
+    });
+    await importDrawingFiles([file('Plant A.dxf', 'dxf')], undefined, {
+      ...options,
+      chooseSpaces: async () => [['Sheet A']],
+    });
+    await importDrawingFiles([file('Plant B.dxf', 'other dxf')], undefined, {
+      ...options,
+      chooseSpaces: async () => [['Model']],
+    });
+    const doc = useProjectStore.getState().doc!;
+    expect(
+      doc.drawingOrder.map((id) => [doc.drawings[id]!.drawingNo, doc.drawings[id]!.sheet]),
+    ).toEqual([
+      ['Plant A', ''],
+      // Imported later, but the file now has two drawings: the layout tells them apart.
+      ['Plant A', 'Sheet A'],
+      ['Plant B', ''],
+    ]);
   });
 
   it('reports DWG files when the build has no DWG reader', async () => {

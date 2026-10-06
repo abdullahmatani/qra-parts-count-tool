@@ -69,6 +69,8 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
   const setCadColorMode = usePreferences((s) => s.setCadColorMode);
   const autoAssignSegment = usePreferences((s) => s.autoAssignSegment);
   const setAutoAssignSegment = usePreferences((s) => s.setAutoAssignSegment);
+  const drawingNamesFromFiles = usePreferences((s) => s.drawingNamesFromFiles);
+  const setDrawingNamesFromFiles = usePreferences((s) => s.setDrawingNamesFromFiles);
 
   return (
     <Dialog open={open} onOpenChange={(next) => openDialog(next ? 'settings' : null)}>
@@ -133,6 +135,17 @@ export function SettingsDialog({ projectSettings }: SettingsDialogProps) {
                 id="settings-auto-assign"
                 checked={autoAssignSegment}
                 onCheckedChange={setAutoAssignSegment}
+              />
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-md border p-3">
+              <div className="grid gap-1">
+                <Label htmlFor="settings-drawing-names">{t('settings.drawingNames')}</Label>
+                <p className="text-xs text-muted-foreground">{t('settings.drawingNamesHint')}</p>
+              </div>
+              <Switch
+                id="settings-drawing-names"
+                checked={drawingNamesFromFiles}
+                onCheckedChange={setDrawingNamesFromFiles}
               />
             </div>
           </TabsContent>

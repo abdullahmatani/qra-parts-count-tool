@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { createProject, importDrawings, openMenu } from './helpers';
+import { createProject, importDrawings, openMenu, setDrawingNamesFromFiles } from './helpers';
 
 test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
   test('imports PDFs, one drawing per page, with title-block metadata', async ({ app }) => {
@@ -9,6 +9,7 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
     await app.pickDirectory(dir);
     await createProject(app.page, { name: 'Import study' });
     const page = app.page;
+    await setDrawingNamesFromFiles(page, false);
 
     await importDrawings(page, [
       'PEFS-2000_multipage.pdf',
@@ -67,6 +68,46 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
     await app.removeDirectory(dir);
   });
 
+  test('names drawings after their files by default (Settings › General)', async ({ app }) => {
+    const dir = `import-names-${test.info().project.name}`;
+    await app.open();
+    await app.removeDirectory(dir);
+    await app.pickDirectory(dir);
+    await createProject(app.page, { name: 'Names study' });
+    const page = app.page;
+
+    await importDrawings(page, ['PEFS-2000_multipage.pdf', 'PEFS-1001_A1.pdf']);
+    await expect(page.getByText('Imported 4 drawings from 2 file(s).')).toBeVisible();
+    const list = page.getByTestId('drawing-list');
+    await expect(list.locator('li[data-drawing-id]')).toHaveCount(4);
+    for (const name of [
+      'PEFS-2000_multipage / 1',
+      'PEFS-2000_multipage / 2',
+      'PEFS-2000_multipage / 3',
+      'PEFS-1001_A1',
+    ]) {
+      await expect(list.getByText(name, { exact: true })).toBeVisible();
+    }
+    // The title and revision still come from the title block.
+    await expect(page.getByTestId('save-status')).toHaveAttribute('data-status', 'saved');
+    const saved = JSON.parse(await app.readText(dir, 'project.qrapc.json'));
+    expect(
+      saved.drawings.find((d: { fileName: string }) => d.fileName === 'PEFS-1001_A1.pdf'),
+    ).toMatchObject({
+      drawingNo: 'PEFS-1001_A1',
+      sheet: '',
+      title: 'INLET SEPARATOR V-100',
+      revision: 'C',
+    });
+
+    // Switched off, the next import reads names from the title block; earlier ones stay.
+    await setDrawingNamesFromFiles(page, false);
+    await importDrawings(page, ['PEFS-3001_rotated.pdf']);
+    await expect(list.getByText('PEFS-3001 / 1', { exact: true })).toBeVisible();
+    await expect(list.getByText('PEFS-1001_A1', { exact: true })).toBeVisible();
+    await app.removeDirectory(dir);
+  });
+
   test('edits metadata in the drawing register and removes a drawing', async ({ app }) => {
     const dir = `register-${test.info().project.name}`;
     await app.open();
@@ -80,12 +121,12 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
     await openMenu(page, 'Drawing register');
     const register = page.getByTestId('drawing-register');
     await expect(register.locator('tbody tr[data-drawing-id]')).toHaveCount(3);
-    const title = register.getByLabel('Title PEFS-2002 / 2');
+    const title = register.getByLabel('Title PEFS-2000_multipage / 2');
     await expect(title).toHaveValue('COMPRESSION TRAIN STAGE 2');
     await title.fill('2ND STAGE COMPRESSOR K-200');
     await title.press('Enter');
-    await register.getByLabel('Rev PEFS-2002 / 2').fill('C');
-    await register.getByLabel('Rev PEFS-2002 / 2').press('Tab');
+    await register.getByLabel('Rev PEFS-2000_multipage / 2').fill('C');
+    await register.getByLabel('Rev PEFS-2000_multipage / 2').press('Tab');
 
     await expect
       .poll(async () => {
@@ -96,7 +137,7 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
       })
       .toBe('2ND STAGE COMPRESSOR K-200|C');
 
-    await register.getByRole('button', { name: 'Delete PEFS-2003 / 3' }).click();
+    await register.getByRole('button', { name: 'Delete PEFS-2000_multipage / 3' }).click();
     await page.getByRole('alertdialog').getByRole('button', { name: 'Delete drawing' }).click();
     await expect(register.locator('tbody tr[data-drawing-id]')).toHaveCount(2);
     await expect(page.getByRole('alertdialog')).toBeHidden();

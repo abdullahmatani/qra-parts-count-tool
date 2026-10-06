@@ -24,11 +24,17 @@ export interface PreferencesState {
    * highlighting it follows.
    */
   autoAssignSegment: boolean;
+  /**
+   * An imported drawing is named after its file (PEFS-1001.pdf is PEFS-1001),
+   * instead of the drawing number read from its title block.
+   */
+  drawingNamesFromFiles: boolean;
   setTheme: (theme: ThemePreference) => void;
   setCadColorMode: (mode: CadColorMode) => void;
   setDensity: (density: Density) => void;
   setInitials: (initials: string) => void;
   setAutoAssignSegment: (autoAssignSegment: boolean) => void;
+  setDrawingNamesFromFiles: (drawingNamesFromFiles: boolean) => void;
 }
 
 export const usePreferences = create<PreferencesState>()(
@@ -39,22 +45,32 @@ export const usePreferences = create<PreferencesState>()(
       initials: '',
       cadColorMode: 'monochrome',
       autoAssignSegment: true,
+      drawingNamesFromFiles: true,
       setTheme: (theme) => set({ theme }),
       setCadColorMode: (cadColorMode) => set({ cadColorMode }),
       setDensity: (density) => set({ density }),
       setInitials: (initials) => set({ initials: initials.trim().slice(0, 8) }),
       setAutoAssignSegment: (autoAssignSegment) => set({ autoAssignSegment }),
+      setDrawingNamesFromFiles: (drawingNamesFromFiles) => set({ drawingNamesFromFiles }),
     }),
     {
       name: 'qrapc.preferences',
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ theme, density, initials, cadColorMode, autoAssignSegment }) => ({
+      partialize: ({
         theme,
         density,
         initials,
         cadColorMode,
         autoAssignSegment,
+        drawingNamesFromFiles,
+      }) => ({
+        theme,
+        density,
+        initials,
+        cadColorMode,
+        autoAssignSegment,
+        drawingNamesFromFiles,
       }),
     },
   ),

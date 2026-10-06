@@ -68,9 +68,13 @@ Click **Import drawings** (or drop files on the drawing list):
 A page or layout that is already a drawing is not imported twice. Importing a file again brings back
 only the pages and layouts that are not in the project, for example one you deleted.
 
-The app reads the drawing number, title, sheet and revision from the title block where it can. Check
-and correct them in **Project › Drawing register**: they appear in the count, the stamps and the
-export file names.
+Each drawing is named after the file it came from: `PEFS-1001.pdf` becomes **PEFS-1001**. When one
+file holds several drawings, the page number or layout name is added (**PEFS-2000 / 2**,
+**PEFS-4001 / Layout1**). To read the drawing number and sheet from the title block instead, turn off
+**Settings › General › Name drawings after their files**; drawings already imported keep their
+names. The title and revision are read from the title block where the app can find them. Check and
+correct the names and metadata in **Project › Drawing register**: they appear in the count, the
+stamps and the export file names.
 
 **Rename or delete a drawing.** Hover a drawing in the drawing list and click **⋯** (or right-click
 the drawing):

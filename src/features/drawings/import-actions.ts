@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import i18n from '@/i18n';
+import { usePreferences } from '@/store/preferences';
 import { useUiStore } from '@/store/ui-store';
 import { IMPORTABLE_EXTENSIONS, importDrawingFiles, type ImportDeps } from './import-drawings';
 import { inspectPdf } from './pdf-inspect';
@@ -14,6 +15,7 @@ async function importDeps(): Promise<ImportDeps> {
   return {
     inspect: inspectPdf,
     now: () => new Date(),
+    nameFromFile: usePreferences.getState().drawingNamesFromFiles,
     chooseSpaces: (candidates) => useSpacePicker.getState().ask(candidates),
     cad: {
       available: client.isDwgReaderAvailable,
