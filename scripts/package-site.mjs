@@ -52,7 +52,8 @@ Free software under the GNU General Public License, version 3 or later
 (LICENSE.txt), with no warranty. SOURCE.md says where the source code is;
 site/THIRD_PARTY_LICENSES.txt lists the components and their licences.
 
-Documentation: docs/user-guide.md in the source repository.
+Documentation: built into the app (F1, or the ? button in the header), and
+in docs/help/ in the source repository.
 `;
 }
 

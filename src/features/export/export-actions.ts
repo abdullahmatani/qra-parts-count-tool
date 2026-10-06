@@ -24,6 +24,7 @@ import { isNotFound, type FsDirHandle } from '@/lib/fs/types';
 import { requireWorkingDirectory } from '@/services/session';
 import { usePreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
+import { useWorkspaceStore } from '@/store/workspace-store';
 import { TemplateError } from './excel-writer';
 import { templateSheetNames, writeWorkbook } from './xlsx-writer';
 import { PdfSourceError, type PageSource } from './pdf-export-protocol';
@@ -407,5 +408,6 @@ export async function runExport(options: ExportOptions, now = new Date()): Promi
   };
   await writeTextAtomic(dir, `${folder}/export_log.json`, `${JSON.stringify(log, null, 2)}\n`);
   files.push('export_log.json');
+  useWorkspaceStore.getState().setLastExportFolder(folder);
   return { folder, files, unmapped, failures };
 }

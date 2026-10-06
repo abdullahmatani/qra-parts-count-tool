@@ -43,6 +43,8 @@ export interface SampleSymbol {
   esdvSize?: number;
   /** Tag text drawn on the sheet (defaults to `tag`). */
   showTag?: boolean;
+  /** The tag goes beside the symbol, for a valve on a vertical pipe (default: below). */
+  tagBeside?: boolean;
 }
 
 export interface SampleConnector {
@@ -128,9 +130,10 @@ export const SAMPLE_SHEETS: SampleSheet[] = [
         label: { text: '4"-P-1003-A1', x: 560, y: 550 },
       },
       {
+        // The separator's drain, down to the closed drain.
         points: [
           [620, 360],
-          [620, 440],
+          [620, 490],
         ],
       },
       {
@@ -205,6 +208,7 @@ export const SAMPLE_SHEETS: SampleSheet[] = [
         tag: 'HV-105',
         segment: 'IS-01',
         item: { category: 'valve', actuation: 'manual', size: 2, remarks: 'Drain' },
+        tagBeside: true,
       },
       {
         kind: 'instrument',
@@ -284,7 +288,10 @@ export const SAMPLE_SHEETS: SampleSheet[] = [
       { x: 1040, y: 150, text: 'TO PEFS-S-002', to: 1, side: 'right' },
       { x: 1040, y: 560, text: 'TO PW TREATMENT', to: -1, side: 'right' },
     ],
-    notes: [{ text: 'FROM WELLHEAD MANIFOLD', x: 70, y: 330 }],
+    notes: [
+      { text: 'FROM WELLHEAD MANIFOLD', x: 70, y: 330 },
+      { text: 'TO CLOSED DRAIN', x: 593, y: 504 },
+    ],
   },
   {
     drawingNo: 'PEFS-S-002',
