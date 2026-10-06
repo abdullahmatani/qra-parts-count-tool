@@ -150,3 +150,48 @@ test.describe('drawing import and register (DRW-01, DRW-03, DRW-04)', () => {
     await app.removeDirectory(dir);
   });
 });
+
+test.describe('drawing import in an older browser (DRW-01)', () => {
+  // The service worker would answer the PDF.js worker request, and the test
+  // needs to rewrite it.
+  test.use({ serviceWorkers: 'block' });
+
+  test('imports and shows a PDF without the newest JavaScript APIs', async ({ app }) => {
+    test.skip(test.info().project.name.includes('offline'), 'needs request interception');
+    const page = app.page;
+    // APIs PDF.js calls that its legacy build does not polyfill, as missing in
+    // Chrome or Edge 118: removed in the page and ahead of the PDF.js worker.
+    const removeApis = [
+      'delete Promise.withResolvers;',
+      'delete ReadableStream.prototype[Symbol.asyncIterator];',
+      'delete ReadableStream.prototype.values;',
+      'delete ArrayBuffer.prototype.transferToFixedLength;',
+    ].join('\n');
+    await page.addInitScript(removeApis);
+    let pdfWorkers = 0;
+    await page.route(/\/workers\/pdf\.worker-[\w-]+\.js$/, async (route) => {
+      pdfWorkers += 1;
+      const response = await route.fetch();
+      await route.fulfill({ response, body: `${removeApis}\n${await response.text()}` });
+    });
+
+    const dir = `import-older-${test.info().project.name}`;
+    await app.open();
+    await app.removeDirectory(dir);
+    await app.pickDirectory(dir);
+    await createProject(page, { name: 'Older browser study' });
+    await importDrawings(page, ['PEFS-1001_A1.pdf']);
+    await expect(page.getByText('Imported 1 drawing from 1 file.')).toBeVisible();
+    expect(pdfWorkers).toBeGreaterThan(0);
+
+    // The title block text was read, and the page renders at full resolution.
+    await expect(page.getByTestId('save-status')).toHaveAttribute('data-status', 'saved');
+    const saved = JSON.parse(await app.readText(dir, 'project.qrapc.json'));
+    expect(saved.drawings[0]).toMatchObject({ title: 'INLET SEPARATOR V-100', revision: 'C' });
+    for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: 'Zoom in' }).click();
+    await expect(page.getByTestId('viewer-detail-layer')).toHaveAttribute('data-rendered', 'true', {
+      timeout: 15_000,
+    });
+    await app.removeDirectory(dir);
+  });
+});

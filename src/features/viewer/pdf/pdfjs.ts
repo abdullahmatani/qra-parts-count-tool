@@ -5,9 +5,11 @@
  * The "legacy" build is used: PDF.js targets the newest browsers and relies on
  * very recent JavaScript APIs (e.g. Map.getOrInsertComputed); the legacy build
  * includes polyfills, so drawings also open on managed corporate installs of
- * Edge and Chrome that trail the latest release by a few versions.
+ * Edge and Chrome that trail the latest release by a few versions. It still
+ * skips a few, which polyfills.ts adds here and in the worker (pdf.worker.ts).
  */
 import type * as PdfjsModule from 'pdfjs-dist';
+import './polyfills';
 
 export type Pdfjs = typeof PdfjsModule;
 export type PDFDocumentProxy = PdfjsModule.PDFDocumentProxy;
@@ -19,7 +21,7 @@ export function loadPdfjs(): Promise<Pdfjs> {
   loading ??= (async () => {
     const [pdfjs, worker] = await Promise.all([
       import('pdfjs-dist/legacy/build/pdf.mjs'),
-      import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url'),
+      import('./pdf.worker.ts?worker&url'),
     ]);
     pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
     return pdfjs as unknown as Pdfjs;

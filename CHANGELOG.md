@@ -5,6 +5,13 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **PDFs import in browsers a few releases behind**: importing a PDF failed with "could not be
+  read (Promise.withResolvers is not a function)" in Chrome or Edge before version 119, which
+  managed corporate installs can still run. PDF.js calls three recent JavaScript APIs that its
+  legacy build does not polyfill (`Promise.withResolvers`, reading a stream with `for await`, and
+  `ArrayBuffer.transferToFixedLength`); the app now adds them on the page and in the PDF.js worker
+  when the browser lacks them, so PDFs import, show their title-block text and render again.
+
 - **Drawing tabs no longer cut off**: the tab bar is taller, and when the open drawings no longer
   fit, its scrollbar is no longer drawn over the tabs (which hid the top of their names). The tabs
   scroll sideways with the mouse wheel, the active tab is kept in view, long names show in full on
