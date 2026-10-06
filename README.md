@@ -14,9 +14,12 @@ or exports) ever leaves the browser.
 > plan is in the [Development Roadmap](docs/ROADMAP.md). Requirement IDs such as `PRJ-04` or
 > `CNT-06` in the code, tests and commit messages trace back to those documents.
 >
-> Users start with the [user guide](docs/user-guide.md) and the
-> [keyboard shortcut sheet](docs/keyboard-shortcuts.md), or **Try the sample project** on the start
-> screen. What changed in each version is in the [release notes](CHANGELOG.md).
+> Users start with **Take the guided tour** on the start screen, which walks through one complete
+> parts count on a practice project. The documentation is built into the app (`F1`, searchable
+> across every article, offline); the same articles are in [`docs/help/`](docs/help/), listed in
+> the [user guide](docs/user-guide.md), with the
+> [keyboard shortcut sheet](docs/help/keyboard-shortcuts.md). What changed in each version is in
+> the [release notes](CHANGELOG.md).
 
 ---
 
@@ -51,6 +54,7 @@ or exports) ever leaves the browser.
 | Drawing links | Hotspots that jump between drawings, with Back history, suggested from off-page connector text; never exported                                                                                                                                                                        | LNK     |
 | Export        | Pre-export checks; fill the client's Excel template (four layout modes, one-step mapping for the A2.1 parts count sheet) touching only its input cells; annotated vector PDFs with legend and stamp; CSV item list; export log                                                        | EXP     |
 | Interface     | English; light and dark themes; keyboard shortcuts                                                                                                                                                                                                                                    | NFR-08  |
+| Help          | Optional guided tour through one complete parts count on a practice project (in memory, no folder needed); built-in documentation, searchable across every article, offline (`F1`)                                                                                                    | —       |
 
 ## How it works
 
@@ -216,8 +220,8 @@ Playwright is pinned to the version whose Chromium build is installed. On a new 
 │   ├── schema/                 Generated JSON Schema for project.qrapc.json
 │   ├── spikes/                 Technical spike reports (e.g. DWG renderer selection)
 │   ├── performance.md          Performance method and results (NFR-02..06)
-│   ├── keyboard-shortcuts.md   Keyboard shortcut sheet
-│   └── user-guide.md           User guide
+│   ├── help/                   User documentation, one article per topic (also built into the app)
+│   └── user-guide.md           User guide: the list of the help articles
 ├── e2e/                        Playwright end-to-end tests
 ├── public/                     Static assets copied verbatim (icons, headers)
 ├── scripts/                    Build helpers: JSON Schema, size checks, site packaging

@@ -343,6 +343,7 @@ export function MarkerInspector() {
           size="sm"
           className="w-full justify-start"
           title={t('assist.findHint')}
+          data-tour="find-similar"
           onClick={() => void findSimilarSymbols(first.id)}
           disabled={readOnly}
         >

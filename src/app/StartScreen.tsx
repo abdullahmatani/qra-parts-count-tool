@@ -1,4 +1,12 @@
-import { FileArchive, FolderOpen, FolderPlus, GraduationCap, ShieldCheck } from 'lucide-react';
+import {
+  BookOpen,
+  FileArchive,
+  FolderOpen,
+  FolderPlus,
+  GraduationCap,
+  Route,
+  ShieldCheck,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -12,6 +20,9 @@ export interface StartScreenProps {
   onOpenProject?: () => void;
   onOpenSample?: () => void;
   onOpenZip?: () => void;
+  /** Starts the guided tour on a practice project (works in any browser). */
+  onStartTour?: () => void;
+  onOpenHelp?: () => void;
   recentProjects?: ReactNode;
 }
 
@@ -22,6 +33,8 @@ export function StartScreen({
   onOpenProject,
   onOpenSample,
   onOpenZip,
+  onStartTour,
+  onOpenHelp,
   recentProjects,
 }: StartScreenProps) {
   const { t } = useTranslation();
@@ -80,10 +93,27 @@ export function StartScreen({
           </Button>
         </div>
 
+        {onStartTour && (
+          <Button
+            variant="ghost"
+            className="mt-3 h-auto w-full justify-start gap-3 border border-sky-500/30 bg-sky-500/5 p-3 text-start whitespace-normal hover:bg-sky-500/10"
+            onClick={onStartTour}
+            data-testid="start-tour"
+          >
+            <Route className="shrink-0 text-sky-600 dark:text-sky-400" />
+            <span className="flex flex-col items-start">
+              <span className="font-medium">{t('start.tour')}</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                {t('start.tourDetail')}
+              </span>
+            </span>
+          </Button>
+        )}
+
         {onOpenSample && (
           <Button
             variant="ghost"
-            className="mt-3 h-auto w-full justify-start gap-3 p-3 text-start whitespace-normal"
+            className={`${onStartTour ? 'mt-1' : 'mt-3'} h-auto w-full justify-start gap-3 p-3 text-start whitespace-normal`}
             disabled={!supported}
             onClick={onOpenSample}
           >
@@ -141,6 +171,16 @@ export function StartScreen({
           >
             {t('header.settings')}
           </button>
+          {onOpenHelp && (
+            <button
+              type="button"
+              className="flex items-center gap-1 underline"
+              onClick={onOpenHelp}
+              title={t('header.documentationHint')}
+            >
+              <BookOpen className="size-3.5" /> {t('header.documentation')}
+            </button>
+          )}
         </p>
       </div>
     </main>

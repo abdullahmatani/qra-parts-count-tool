@@ -1,6 +1,7 @@
 import {
   BookOpen,
   ChevronDown,
+  CircleHelp,
   Cog,
   FileOutput,
   FolderOpen,
@@ -9,6 +10,7 @@ import {
   History,
   House,
   Keyboard,
+  Route,
   Table2,
   X,
 } from 'lucide-react';
@@ -21,16 +23,21 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { AppMark } from './AppMark';
 import { OfflineIndicator } from './OfflineIndicator';
 import { SaveIndicator } from './SaveIndicator';
+import { openHelp } from '@/features/help/help-store';
 import { exportProjectZip } from '@/features/project/project-zip-actions';
 import { StageSwitcher } from '@/features/stage/StageSwitcher';
+import { startGuidedTour, usePracticeProject } from '@/features/tour/tour-actions';
+import { useTourStore } from '@/features/tour/tour-store';
 
 export interface HeaderProps {
   onCloseProject?: () => void;
@@ -42,10 +49,13 @@ export interface HeaderProps {
 
 /**
  * The app menu behind the logo: back to the start screen, or straight on to
- * a new or another project. Each closes the open project first.
+ * a new or another project (each closes the open project first); the guided
+ * tour and the documentation.
  */
 function AppMenu({ onCloseProject, onNewProject, onOpenProject }: HeaderProps) {
   const { t } = useTranslation();
+  const practice = usePracticeProject();
+  const touring = useTourStore((s) => s.active);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -72,6 +82,20 @@ function AppMenu({ onCloseProject, onNewProject, onOpenProject }: HeaderProps) {
         <DropdownMenuItem disabled={!onOpenProject} onSelect={onOpenProject}>
           <FolderOpen /> {t('header.openProject')}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {practice && !touring ? (
+          <DropdownMenuItem onSelect={() => useTourStore.getState().resume()}>
+            <Route /> {t('header.resumeTour')}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onSelect={() => void startGuidedTour()}>
+            <Route /> {practice ? t('header.restartTour') : t('header.guidedTour')}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onSelect={() => openHelp()}>
+          <BookOpen /> {t('header.documentation')}
+          <DropdownMenuShortcut>F1</DropdownMenuShortcut>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -85,6 +109,7 @@ export function Header({ onCloseProject, onNewProject, onOpenProject }: HeaderPr
     [s.doc?.client, s.doc?.facility, s.doc?.studyRef].filter(Boolean).join(' · '),
   );
   const readOnly = useProjectStore((s) => s.readOnly);
+  const practice = usePracticeProject();
   const openDialog = useUiStore((s) => s.openDialog);
 
   return (
@@ -103,6 +128,16 @@ export function Header({ onCloseProject, onNewProject, onOpenProject }: HeaderPr
         )}
       </div>
       {readOnly && <Badge variant="outline">{t('header.readOnly')}</Badge>}
+      {practice && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="secondary" data-testid="practice-badge">
+              {t('tour.practice')}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64">{t('tour.practiceHint')}</TooltipContent>
+        </Tooltip>
+      )}
       <Separator orientation="vertical" className="mx-1 h-5!" />
       <StageSwitcher />
 
@@ -112,7 +147,7 @@ export function Header({ onCloseProject, onNewProject, onOpenProject }: HeaderPr
         <Separator orientation="vertical" className="h-5!" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" data-tour="project-menu">
               {t('header.projectMenu')}
               <ChevronDown />
             </Button>
@@ -149,9 +184,18 @@ export function Header({ onCloseProject, onNewProject, onOpenProject }: HeaderPr
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button size="sm" onClick={() => openDialog('export')}>
+        <Button size="sm" onClick={() => openDialog('export')} data-tour="export">
           <FileOutput />
           {t('header.export')}
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label={t('header.documentation')}
+          title={t('header.documentationHint')}
+          onClick={() => openHelp()}
+        >
+          <CircleHelp />
         </Button>
         <Button
           size="icon"

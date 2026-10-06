@@ -34,6 +34,10 @@ import { SegmentCountPanel, SegmentDetails } from '@/features/segments/SegmentDe
 import { StartCountDialog } from '@/features/stage/StartCountDialog';
 import { useWorkspaceShortcuts } from '@/features/markup/shortcuts';
 import { CountTablePanel } from '@/features/count/CountTablePanel';
+import { HelpDialog } from '@/features/help/HelpDialog';
+import { openHelp, useHelpShortcut } from '@/features/help/help-store';
+import { TourCoach } from '@/features/tour/TourCoach';
+import { startGuidedTour } from '@/features/tour/tour-actions';
 import { isFileSystemAccessSupported } from '@/lib/fs/support';
 import { useApplyPreferences } from '@/store/preferences';
 import { useProjectStore } from '@/store/project-store';
@@ -44,6 +48,7 @@ export function App() {
   useServiceWorker();
   const hasProject = useProjectStore((s) => s.doc !== null);
   useWorkspaceShortcuts(hasProject);
+  useHelpShortcut();
   const openDialog = useUiStore((s) => s.openDialog);
   const supported = isFileSystemAccessSupported();
 
@@ -76,6 +81,8 @@ export function App() {
           onOpenProject={() => void openProjectFromPicker()}
           onOpenSample={() => void openSampleFromPicker()}
           onOpenZip={() => openDialog('openZip')}
+          onStartTour={() => void startGuidedTour()}
+          onOpenHelp={() => openHelp()}
           recentProjects={supported ? <RecentProjects /> : undefined}
         />
       )}
@@ -94,6 +101,8 @@ export function App() {
       {hasProject && <TemplateMapperDialog />}
       {hasProject && <ExportDialog />}
       <SettingsDialog projectSettings={hasProject ? <ProjectSettingsForm /> : undefined} />
+      {hasProject && <TourCoach />}
+      <HelpDialog />
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>
   );

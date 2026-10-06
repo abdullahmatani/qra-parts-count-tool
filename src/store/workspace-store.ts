@@ -20,12 +20,15 @@ export interface WorkspaceState {
    * folder access). Nothing is saved; exports are offered as a download.
    */
   inMemory: boolean;
+  /** The folder of the last export written in this session, e.g. `exports/2026-09-23_104512`. */
+  lastExportFolder: string | null;
 
   setDirectory: (name: string | null) => void;
   setSaveStatus: (status: SaveStatus, error?: string | null) => void;
   markSaved: (at: Date) => void;
   setOpenWarnings: (warnings: string[]) => void;
   setInMemory: (inMemory: boolean) => void;
+  setLastExportFolder: (folder: string | null) => void;
   reset: () => void;
 }
 
@@ -36,12 +39,14 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
   saveError: null,
   openWarnings: [],
   inMemory: false,
+  lastExportFolder: null,
 
   setDirectory: (directoryName) => set({ directoryName }),
   setSaveStatus: (saveStatus, saveError = null) => set({ saveStatus, saveError }),
   markSaved: (at) => set({ saveStatus: 'saved', lastSavedAt: at, saveError: null }),
   setOpenWarnings: (openWarnings) => set({ openWarnings }),
   setInMemory: (inMemory) => set({ inMemory }),
+  setLastExportFolder: (lastExportFolder) => set({ lastExportFolder }),
   reset: () =>
     set({
       directoryName: null,
@@ -50,5 +55,6 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
       saveError: null,
       openWarnings: [],
       inMemory: false,
+      lastExportFolder: null,
     }),
 }));

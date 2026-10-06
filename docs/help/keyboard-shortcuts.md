@@ -69,3 +69,9 @@ Change or add keys in **Project › Equipment library** (column **Key**).
 | Keys         | Action       |
 | ------------ | ------------ |
 | `Ctrl+Enter` | Add the note |
+
+## Help
+
+| Keys | Action                                           |
+| ---- | ------------------------------------------------ |
+| `F1` | Open the documentation (on the start screen too) |
