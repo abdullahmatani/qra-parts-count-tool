@@ -126,7 +126,8 @@ const EPSILON = 1e-9;
  */
 export type Region = (a: XY, b: XY) => [number, number] | null;
 
-function discRegion(cx: number, cy: number, radius: number): Region {
+/** A disc of `radius` round (cx, cy). */
+export function discRegion(cx: number, cy: number, radius: number): Region {
   return (a, b) => {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
@@ -146,7 +147,7 @@ function discRegion(cx: number, cy: number, radius: number): Region {
 }
 
 /** A rectangle centred on `centre`, its long axis along the unit vector (ux, uy). */
-function boxRegion(
+export function boxRegion(
   centre: XY,
   ux: number,
   uy: number,
@@ -251,8 +252,34 @@ function pathLength(points: readonly XY[]): number {
   return length;
 }
 
-function overlaps(a: Box, b: Box): boolean {
+export function overlaps(a: Box, b: Box): boolean {
   return a.minX <= b.maxX && a.maxX >= b.minX && a.minY <= b.maxY && a.maxY >= b.minY;
+}
+
+/**
+ * The pieces of a highlighter stroke whose path keeps out of every region,
+ * each drawn with the same pen, or null when the path does not enter any of
+ * them. Crumbs shorter than half the pen width are dropped, so the list is
+ * empty when (next to) nothing is left.
+ */
+export function strokeOutside(
+  stroke: StrokeGeometry,
+  regions: readonly Region[],
+): StrokeGeometry[] | null {
+  const pieces = pathOutside(
+    stroke.points.map(([x, y]) => ({ x, y })),
+    regions,
+  );
+  if (!pieces) return null;
+  const pad = stroke.width / 2;
+  return pieces
+    .map((piece) => dedupePoints(piece, 0))
+    .filter((piece) => piece.length >= 2 && pathLength(piece) >= pad)
+    .map((piece) => ({
+      type: 'stroke',
+      points: piece.map((p): [number, number] => [p.x, p.y]),
+      width: stroke.width,
+    }));
 }
 
 /**
@@ -279,20 +306,8 @@ export function cutStroke(
     if (overlaps(reach, bounds)) regions.push(cutRegion(esdv, stroke.width));
   }
   if (!regions.length) return null;
-  const pieces = pathOutside(
-    stroke.points.map(([x, y]) => ({ x, y })),
-    regions,
-  );
-  if (!pieces) return null;
-  const kept = pieces
-    .map((piece) => dedupePoints(piece, 0))
-    .filter((piece) => piece.length >= 2 && pathLength(piece) >= pad);
-  if (!kept.length) return null;
-  return kept.map((piece) => ({
-    type: 'stroke',
-    points: piece.map((p): [number, number] => [p.x, p.y]),
-    width: stroke.width,
-  }));
+  const kept = strokeOutside(stroke, regions);
+  return kept?.length ? kept : null;
 }
 
 // ---------------------------------------------------------------------------

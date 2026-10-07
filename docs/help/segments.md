@@ -9,8 +9,8 @@ of the study, **1 Segments**.
 A new project starts at **Segments**. In this stage:
 
 - the toolbar holds the tools that set out segments: **Select** (`V`), **Dashed highlight** (`D`),
-  **Highlighter** (`H`), **Drawing link** (`L`), **ESDV** (`E`) and **End flange** (`F`), and
-  **Auto trace** (`T`);
+  **Highlighter** (`H`), **Eraser** (`X`), **Drawing link** (`L`), **ESDV** (`E`) and **End flange**
+  (`F`), and **Auto trace** (`T`);
 - the right pane shows the selected marker and the segment's set-up: process data, bounding ESDVs
   and linked drawings;
 - the status bar counts the highlights, zones, ESDVs and end flanges that are in no segment.
@@ -85,7 +85,7 @@ source to count.
 
 Highlight the pipework and equipment of the segment so the count can follow it, and so the exported
 PDFs show where each segment runs. Paint it with the **Highlighter**, let **Auto trace** paint it
-for you, or outline areas with **Dashed highlight**. See
+for you, or outline areas with **Dashed highlight**; trim the paint with the **Eraser**. See
 [Highlighting and auto trace](highlighting.md).
 
 ## Linked drawings

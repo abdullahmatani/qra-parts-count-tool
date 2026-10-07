@@ -5,6 +5,15 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Eraser** (`X`) for the highlighting: drag over highlighter paint, or click on it, to rub it out
+  and trim a segment's highlighting finely where a stroke or an auto trace went too far. The paint
+  disappears as the eraser goes; what is left either side stays in its segment with the same pen,
+  and a stroke rubbed out altogether is deleted. The whole drag is one undo step. A stroke is as
+  wide as its pen all along, so where the eraser touches the paint it cuts the stroke across its
+  width. The bar sets the eraser's size (**Fine**, **Medium**, **Broad**, as wide as the pens),
+  shown by a ring round the pointer, and **Active segment only** spares other segments' paint where
+  it overlaps. It works on highlighter strokes; dashed zones and line runs are changed with Select.
+
 - **PDFs import in browsers a few releases behind**: importing a PDF failed with "could not be
   read (Promise.withResolvers is not a function)" in Chrome or Edge before version 119, which
   managed corporate installs can still run. PDF.js calls three recent JavaScript APIs that its

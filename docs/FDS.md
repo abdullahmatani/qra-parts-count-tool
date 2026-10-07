@@ -248,7 +248,7 @@ A study runs in two stages, chosen in the header: **1 Segments**, then **2 Parts
 
 | | Segments | Parts count |
 | --- | --- | --- |
-| Toolbar | Select, Highlighter, Dashed highlight, ESDV, End flange, Drawing link; Auto trace | Select, Circle, Stamp; Line run when pipe lengths are counted |
+| Toolbar | Select, Highlighter, Eraser, Dashed highlight, ESDV, End flange, Drawing link; Auto trace | Select, Circle, Stamp; Line run when pipe lengths are counted |
 | Right pane | Selected marker, segment set-up (label, colour, description, process data, bounding ESDVs and end flanges, linked drawings), notes | Segment status and counted/checked by, item editor, count table, notes |
 | Segment list | Segments and their status; **+ Segment** | Segments with their item count and status |
 | Markers | All editable | ESDVs, end flanges, highlights, zones (and line runs when pipe lengths are not counted) are drawn faint and locked |

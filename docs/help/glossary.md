@@ -70,6 +70,11 @@ flare. Not counted.
 
 The equipment types, size bins and dataset a project counts with.
 
+## Eraser
+
+The tool that rubs out highlighter paint, cutting a stroke where it goes over it, to trim a
+segment's highlighting.
+
 ## ESDV
 
 Emergency shutdown valve. ESDVs close to isolate the plant into segments, so they are the usual

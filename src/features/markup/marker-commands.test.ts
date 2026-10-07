@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { itemForMarker } from '@/domain/actions/items';
 import { starterLibrary } from '@/domain/count/starter-library';
 import { projectToDoc } from '@/domain/model';
+import { NO_ERASURE, eraseAlong } from '@/domain/markup/eraser';
 import { doubleLine } from '@/domain/markup/esdv-boundary';
 import { penWidth } from '@/domain/markup/highlighter';
 import { updateItemCommand } from '@/features/count/item-commands';
@@ -13,6 +14,7 @@ import {
   assignMarkerIds,
   copySelection,
   deleteMarkerIds,
+  eraseStrokes,
   moveMarkerIds,
   pasteClipboard,
   pasteOffset,
@@ -198,6 +200,54 @@ describe('marker commands', () => {
     // One stroke painted, one step to take it back.
     project().undo();
     expect(ids.some((id) => project().doc!.markers[id])).toBe(false);
+  });
+
+  it('rubs out highlighter paint as one undo step (SEG-06)', () => {
+    ui().setActiveSegment(segmentId);
+    const pipe = {
+      type: 'stroke' as const,
+      points: [
+        [0, 600],
+        [400, 600],
+      ] as [number, number][],
+      width: 10,
+    };
+    const [long] = placeStroke(drawingId, pipe);
+    const [short] = placeStroke(drawingId, {
+      ...pipe,
+      points: [
+        [0, 800],
+        [40, 800],
+      ],
+    });
+    ui().setSelection([short!]);
+    const strokes = [long!, short!].map((id) => ({
+      id,
+      geometry: project().doc!.markers[id]!.geometry as typeof pipe,
+    }));
+    const before = markerCount();
+    // A click in the middle of the long stroke, then a drag over the short one.
+    let erasure = eraseAlong(NO_ERASURE, strokes, { x: 200, y: 600 }, { x: 200, y: 600 }, 20);
+    erasure = eraseAlong(erasure, strokes, { x: -20, y: 800 }, { x: 60, y: 800 }, 20);
+
+    expect(eraseStrokes(erasure)).toBe(true);
+    const doc = project().doc!;
+    expect(project().past.at(-1)?.label).toBe('erase highlighting');
+    // The long stroke is in two pieces in its segment; the short one is gone.
+    expect(markerCount()).toBe(before);
+    expect(doc.markers[short!]).toBeUndefined();
+    const pieces = Object.values(doc.markers).filter((m) => m.geometry.type === 'stroke');
+    expect(pieces.map((m) => m.segmentId)).toEqual([segmentId, segmentId]);
+    expect((doc.markers[long!]!.geometry as typeof pipe).points.at(-1)).toEqual([185, 600]);
+    expect(ui().selection).toEqual([]);
+
+    project().undo();
+    expect(markerCount()).toBe(before);
+    expect(project().doc!.markers[long!]!.geometry).toEqual(pipe);
+    expect(project().doc!.markers[short!]).toBeDefined();
+    project().redo();
+    expect(project().doc!.markers[short!]).toBeUndefined();
+    expect(eraseStrokes(NO_ERASURE)).toBe(false);
   });
 
   describe('equipment on a highlighted segment (SEG-06)', () => {

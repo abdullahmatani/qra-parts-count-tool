@@ -19,8 +19,8 @@ count on a practice project.
    layers.
 6. [Segments and ESDVs](help/segments.md): segments, process data, ESDVs, end flanges, split, merge
    and status.
-7. [Highlighting and auto trace](help/highlighting.md): the Highlighter, auto trace, dashed zones
-   and how equipment follows the highlighting.
+7. [Highlighting and auto trace](help/highlighting.md): the Highlighter, auto trace, the Eraser,
+   dashed zones and how equipment follows the highlighting.
 8. [The equipment library](help/equipment-library.md): equipment types, size bins and datasets.
 9. [Counting parts](help/counting.md): the count stage, the equipment bar, Stamp, Find similar
    symbols, warnings and the count table.

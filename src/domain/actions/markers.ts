@@ -5,6 +5,7 @@
 import { isDraft, original } from 'immer';
 import { newId } from '@/lib/ids';
 import { isBoundaryMarker } from '../end-flange';
+import type { Erasure } from '../markup/eraser';
 import { cutStroke, type EsdvGeometry } from '../markup/esdv-boundary';
 import { radiusForSymbol, translateGeometry, type XY } from '../markup/geometry';
 import {
@@ -185,6 +186,30 @@ export function strokeAtBoundaries(
 }
 
 /**
+ * Makes a stroke into its `pieces` (at least one): the first keeps the
+ * stroke (its id, segment and note references); the others are new strokes
+ * in the same segment. Returns the ids of the new strokes.
+ */
+function splitStroke(doc: ProjectDoc, marker: Marker, pieces: readonly StrokeGeometry[]): string[] {
+  const [first, ...rest] = pieces;
+  marker.geometry = first!;
+  return rest.map((geometry) => {
+    const id = newId('mkr');
+    addMarker(doc, {
+      id,
+      drawingId: marker.drawingId,
+      segmentId: marker.segmentId,
+      shape: marker.shape,
+      geometry,
+      style: newMarkerStyle(),
+      esdv: null,
+      endFlange: null,
+    });
+    return id;
+  });
+}
+
+/**
  * An ESDV or end flange is a segment boundary (SEG-01): highlighter strokes on
  * its drawing that run through it are cut there, so the paint stops at it and
  * each side can go to its own segment. The first piece keeps the stroke (its
@@ -199,25 +224,33 @@ export function cutStrokesAtBoundary(doc: ProjectDoc, boundaryId: string): strin
   for (const marker of Object.values(doc.markers)) {
     if (marker.drawingId !== esdv.drawingId || marker.geometry.type !== 'stroke') continue;
     const pieces = cutStroke(marker.geometry, [boundary]);
-    if (!pieces) continue;
-    const [first, ...rest] = pieces;
-    marker.geometry = first!;
-    for (const geometry of rest) {
-      const id = newId('mkr');
-      addMarker(doc, {
-        id,
-        drawingId: marker.drawingId,
-        segmentId: marker.segmentId,
-        shape: marker.shape,
-        geometry,
-        style: newMarkerStyle(),
-        esdv: null,
-        endFlange: null,
-      });
-      added.push(id);
-    }
+    if (pieces) added.push(...splitStroke(doc, marker, pieces));
   }
   return added;
+}
+
+/**
+ * Leaves highlighter strokes as the eraser left them (SEG-06). The first
+ * piece of a stroke keeps the stroke (its id, segment and note references);
+ * the others are new strokes in the same segment, with the same pen. A
+ * stroke with nothing left is deleted. A stroke that has changed since the
+ * eraser went over it is left alone. Returns the new and deleted strokes.
+ */
+export function applyErasure(
+  doc: ProjectDoc,
+  erasure: Erasure,
+): { added: string[]; deleted: string[] } {
+  const base = baseOf(doc);
+  const added: string[] = [];
+  const deleted: string[] = [];
+  for (const [id, pieces] of erasure.left) {
+    const marker = doc.markers[id];
+    if (!marker || base.markers[id]?.geometry !== erasure.from.get(id)) continue;
+    if (pieces.length) added.push(...splitStroke(doc, marker, pieces));
+    else deleted.push(id);
+  }
+  deleteMarkers(doc, deleted);
+  return { added, deleted };
 }
 
 export type EndFlangePatch = Partial<EndFlangeData>;

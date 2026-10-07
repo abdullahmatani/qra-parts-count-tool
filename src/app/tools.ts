@@ -1,5 +1,6 @@
 import {
   Circle,
+  Eraser,
   Highlighter,
   Link2,
   MousePointer2,
@@ -23,6 +24,7 @@ export const TOOLS: ToolDef[] = [
   { tool: 'circle', icon: Circle, labelKey: 'toolbar.circle', shortcut: 'C' },
   { tool: 'dashed', icon: SquareDashed, labelKey: 'toolbar.dashed', shortcut: 'D' },
   { tool: 'highlighter', icon: Highlighter, labelKey: 'toolbar.highlighter', shortcut: 'H' },
+  { tool: 'eraser', icon: Eraser, labelKey: 'toolbar.eraser', shortcut: 'X' },
   { tool: 'link', icon: Link2, labelKey: 'toolbar.link', shortcut: 'L' },
   { tool: 'esdv', icon: EsdvIcon, labelKey: 'toolbar.esdv', shortcut: 'E' },
   { tool: 'endFlange', icon: EndFlangeIcon, labelKey: 'toolbar.endFlange', shortcut: 'F' },
