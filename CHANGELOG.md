@@ -5,6 +5,16 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Undo and redo history**: a small arrow beside **Undo** and beside **Redo** in the toolbar opens
+  the list of steps that can be undone (most recent first) or redone (next first). Each step shows
+  its name, the time and a short summary of what it changed, such as _Removes 3 markers, 3 count
+  items · PEFS-1001_ or _Changes 1 segment, project settings_. Pointing at a step (or moving to it
+  with the arrow keys) highlights it and every step above it, since they go together, and previews
+  the result: the markers they would change or take away are greyed out on the drawing, dashed
+  outlines show where markers would come back or move to, and segments and drawings they would
+  change are greyed out in the left pane and the drawing tabs. Clicking the step undoes or redoes
+  them all as one change; `Esc` closes the list and leaves everything as it was.
+
 - **PDFs import in browsers a few releases behind**: importing a PDF failed with "could not be
   read (Promise.withResolvers is not a function)" in Chrome or Edge before version 119, which
   managed corporate installs can still run. PDF.js calls three recent JavaScript APIs that its

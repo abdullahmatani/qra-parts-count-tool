@@ -10,6 +10,8 @@ import {
   DOT_ALPHA,
   END_FLANGE_ALPHA,
   HIGHLIGHTER_ALPHA,
+  HISTORY_PREVIEW_ALPHA,
+  HISTORY_PREVIEW_GREY,
   MARKER_SELECTION,
   MARKER_WARNING,
   SETUP_DIMMED_ALPHA,
@@ -45,6 +47,8 @@ export interface MarkerEntry {
   segmentId: string | null;
   /** Segment set-up while counting: drawn faint, under the equipment. */
   dimmed: boolean;
+  /** Undoing or redoing the steps pointed at in a history menu would change it: drawn greyed out. */
+  changing: boolean;
 }
 
 /** A marker and the geometry it is drawn with this frame (moved or resized while dragged). */
@@ -232,17 +236,40 @@ export function drawMarkers(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'butt';
 
-  const drawn = entries.map((entry): Drawn => [entry, previewGeometry(entry, options.preview)]);
-  // While counting, the segments' set-up goes first and faint, so the
-  // equipment is drawn over it at full strength.
-  const faint = drawn.filter(([e]) => e.dimmed);
+  const drawn = entries.map((entry): Drawn => [
+    entry.changing ? greyedOut(entry) : entry,
+    previewGeometry(entry, options.preview),
+  ]);
+  // Markers a history step would change go first, grey and faint. While
+  // counting, the segments' set-up goes next and faint, so the equipment is
+  // drawn over it at full strength.
+  const changing = drawn.filter(([e]) => e.changing);
+  const faint = drawn.filter(([e]) => e.dimmed && !e.changing);
+  if (changing.length) paintMarkers(ctx, changing, options, HISTORY_PREVIEW_ALPHA);
   if (faint.length) paintMarkers(ctx, faint, options, SETUP_DIMMED_ALPHA);
-  paintMarkers(ctx, faint.length ? drawn.filter(([e]) => !e.dimmed) : drawn, options, 1);
+  paintMarkers(
+    ctx,
+    changing.length || faint.length ? drawn.filter(([e]) => !e.dimmed && !e.changing) : drawn,
+    options,
+    1,
+  );
   ctx.globalAlpha = 1;
   ctx.setLineDash([]);
 
   if (options.showLabels) drawLabels(ctx, drawn, options);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/** A marker as drawn while a history step that changes it is pointed at: no halos. */
+function greyedOut(entry: MarkerEntry): MarkerEntry {
+  return {
+    ...entry,
+    colour: HISTORY_PREVIEW_GREY,
+    dash: [],
+    selected: false,
+    highlighted: false,
+    warning: false,
+  };
 }
 
 /** Paints markers in the current transform, every opacity scaled by `fade`. */
@@ -413,7 +440,7 @@ function drawLabels(
   const margin = 150;
   const grid = new LabelGrid();
   // Selected markers claim their label space first, faint set-up last.
-  const rank = (e: MarkerEntry) => (e.selected ? 0 : e.dimmed ? 2 : 1);
+  const rank = (e: MarkerEntry) => (e.selected ? 0 : e.dimmed || e.changing ? 2 : 1);
   const ordered = [...drawn].sort(([a], [b]) => rank(a) - rank(b));
   for (const [entry, geometry] of ordered) {
     if (!entry.label) continue;
@@ -433,7 +460,11 @@ function drawLabels(
     const width = entry.label.length * LABEL_CHAR_WIDTH;
     if (!grid.place(x - 1, top, x + width + 1, top + LABEL_HEIGHT)) continue;
     ctx.textBaseline = anchor.above ? 'bottom' : 'middle';
-    ctx.globalAlpha = entry.dimmed ? SETUP_DIMMED_ALPHA : 1;
+    ctx.globalAlpha = entry.changing
+      ? HISTORY_PREVIEW_ALPHA
+      : entry.dimmed
+        ? SETUP_DIMMED_ALPHA
+        : 1;
     ctx.strokeText(entry.label, x, y);
     ctx.fillStyle = entry.colour;
     ctx.fillText(entry.label, x, y);

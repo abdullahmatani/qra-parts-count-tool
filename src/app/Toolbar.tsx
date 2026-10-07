@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { segmentAppearance } from '@/domain/palette';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore, type Tool } from '@/store/ui-store';
+import { HistoryMenu } from '@/features/history/HistoryMenu';
 import { MarkerFilterMenu } from '@/features/markup/MarkerFilters';
 import { useSearchStore } from '@/features/search/search-store';
 import { useStage, useStageTools } from '@/features/stage/stage';
@@ -96,6 +97,7 @@ export function Toolbar() {
             <Button
               size="icon-sm"
               variant="ghost"
+              className="rounded-e-none"
               aria-label={t('toolbar.undo')}
               disabled={!undoLabel || readOnly}
               onClick={() => undo()}
@@ -109,12 +111,14 @@ export function Toolbar() {
           <Kbd>Ctrl+Z</Kbd>
         </TooltipContent>
       </Tooltip>
+      <HistoryMenu direction="undo" />
       <Tooltip>
         <TooltipTrigger asChild>
           <span>
             <Button
               size="icon-sm"
               variant="ghost"
+              className="rounded-e-none"
               aria-label={t('toolbar.redo')}
               disabled={!redoLabel || readOnly}
               onClick={() => redo()}
@@ -128,6 +132,7 @@ export function Toolbar() {
           <Kbd>Ctrl+Y</Kbd>
         </TooltipContent>
       </Tooltip>
+      <HistoryMenu direction="redo" />
 
       <Separator orientation="vertical" className="mx-1 h-5!" />
 

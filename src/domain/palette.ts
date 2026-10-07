@@ -37,6 +37,12 @@ export const HIGHLIGHTER_ALPHA = 0.35;
  * where a segment runs, faint enough for the equipment to stand out.
  */
 export const SETUP_DIMMED_ALPHA = 0.4;
+/**
+ * Markers that the undo or redo steps pointed at in a history menu would
+ * change or take away: grey and faint, so they read as about to go.
+ */
+export const HISTORY_PREVIEW_GREY = '#94a3b8';
+export const HISTORY_PREVIEW_ALPHA = 0.45;
 
 /** Stroke dash patterns used after the palette cycles; index 0 is solid. */
 export const SEGMENT_DASH_VARIANTS: readonly (readonly number[])[] = [

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { SuggestionBar } from '@/features/assist/SuggestionBar';
+import { useChangingDrawings } from '@/features/history/history-store';
 import { FindBar } from '@/features/search/FindBar';
 import { useStage } from '@/features/stage/stage';
 import { EndFlangeBar } from './EndFlangeBar';
@@ -73,6 +74,7 @@ function DrawingTabs({
 }: DrawingTabsProps) {
   const { t } = useTranslation();
   const strip = useRef<HTMLDivElement>(null);
+  const changing = useChangingDrawings();
 
   useEffect(() => {
     const element = strip.current;
@@ -116,7 +118,9 @@ function DrawingTabs({
               className={cn(
                 'flex h-8 shrink-0 items-center gap-1.5 rounded-t-md border border-b-0 ps-3 pe-1.5 text-xs',
                 active ? 'bg-background font-medium' : 'bg-muted text-muted-foreground',
+                changing.has(drawing.id) && 'opacity-50',
               )}
+              data-changing={changing.has(drawing.id) ? 'true' : undefined}
             >
               <button
                 type="button"

@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { useMarkerCountsByDrawing, useOrderedDrawings } from '@/store/selectors';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
+import { useChangingDrawings } from '@/features/history/history-store';
 import { renameDrawingCommand, requestDeleteDrawing } from './drawing-commands';
 
 function matches(drawing: Drawing, query: string): boolean {
@@ -47,6 +48,7 @@ export function DrawingList({ onImport }: DrawingListProps) {
   const activeDrawingId = useUiStore((s) => s.activeDrawingId);
   const openDrawing = useUiStore((s) => s.openDrawing);
   const readOnly = useProjectStore((s) => s.readOnly);
+  const changing = useChangingDrawings();
   const [query, setQuery] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const visible = useMemo(() => drawings.filter((d) => matches(d, query)), [drawings, query]);
@@ -102,6 +104,7 @@ export function DrawingList({ onImport }: DrawingListProps) {
             drawing={drawing}
             markerCount={counts.get(drawing.id) ?? 0}
             active={drawing.id === activeDrawingId}
+            changing={changing.has(drawing.id)}
             readOnly={readOnly}
             renaming={drawing.id === renamingId}
             onOpen={() => openDrawing(drawing.id)}
@@ -118,6 +121,8 @@ interface DrawingRowProps {
   drawing: Drawing;
   markerCount: number;
   active: boolean;
+  /** A history step pointed at in the undo or redo menu would change it: greyed out. */
+  changing: boolean;
   readOnly: boolean;
   renaming: boolean;
   onOpen: () => void;
@@ -133,6 +138,7 @@ function DrawingRow({
   drawing,
   markerCount,
   active,
+  changing,
   readOnly,
   renaming,
   onOpen,
@@ -158,8 +164,10 @@ function DrawingRow({
       className={cn(
         'group flex h-row items-center rounded-md hover:bg-accent',
         active && 'bg-accent font-medium',
+        changing && 'opacity-50 grayscale',
       )}
       data-drawing-id={drawing.id}
+      data-changing={changing ? 'true' : undefined}
       onContextMenu={(event) => {
         if (readOnly || renaming) return;
         event.preventDefault();

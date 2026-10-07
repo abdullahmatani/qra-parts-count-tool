@@ -49,8 +49,10 @@ export interface ProjectState {
     recipe: (draft: Draft<ProjectDoc>) => void,
     options?: ApplyOptions,
   ) => boolean;
-  undo: () => string | null;
-  redo: () => string | null;
+  /** Undoes `steps` steps (default 1) as one change; returns the label of the last one undone. */
+  undo: (steps?: number) => string | null;
+  /** Redoes `steps` steps (default 1) as one change; returns the label of the last one redone. */
+  redo: (steps?: number) => string | null;
   /** Records save metadata without creating an undo step or triggering autosave. */
   markSaved: (meta: Pick<ProjectDoc, 'revision' | 'updatedAt'>) => void;
   setReadOnly: (readOnly: boolean) => void;
@@ -121,30 +123,33 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
     return true;
   },
 
-  undo: () => {
+  undo: (steps = 1) => {
     const { doc, past, future, readOnly, changeCounter } = get();
-    const entry = past[past.length - 1];
-    if (!doc || !entry || readOnly) return null;
+    const count = Math.min(Math.max(Math.floor(steps), 0), past.length);
+    if (!doc || count === 0 || readOnly) return null;
+    // Most recent first: each step's inverse runs on the result of the one after it.
+    const undone = past.slice(past.length - count).reverse();
     set({
-      doc: applyPatches(doc, entry.inverse),
-      past: past.slice(0, -1),
-      future: [...future, { ...entry, coalesceKey: undefined }],
+      doc: undone.reduce((next, entry) => applyPatches(next, entry.inverse), doc),
+      past: past.slice(0, past.length - count),
+      future: [...future, ...undone.map((entry) => ({ ...entry, coalesceKey: undefined }))],
       changeCounter: changeCounter + 1,
     });
-    return entry.label;
+    return undone[undone.length - 1]!.label;
   },
 
-  redo: () => {
+  redo: (steps = 1) => {
     const { doc, past, future, readOnly, changeCounter } = get();
-    const entry = future[future.length - 1];
-    if (!doc || !entry || readOnly) return null;
+    const count = Math.min(Math.max(Math.floor(steps), 0), future.length);
+    if (!doc || count === 0 || readOnly) return null;
+    const redone = future.slice(future.length - count).reverse();
     set({
-      doc: applyPatches(doc, entry.patches),
-      past: [...past, { ...entry, coalesceKey: undefined }],
-      future: future.slice(0, -1),
+      doc: redone.reduce((next, entry) => applyPatches(next, entry.patches), doc),
+      past: [...past, ...redone.map((entry) => ({ ...entry, coalesceKey: undefined }))],
+      future: future.slice(0, future.length - count),
       changeCounter: changeCounter + 1,
     });
-    return entry.label;
+    return redone[redone.length - 1]!.label;
   },
 
   markSaved: (meta) => {

@@ -63,6 +63,13 @@ time. If the browser or the computer crashes, at most the last two seconds of wo
 
 - `Ctrl+Z` undoes any change, including edits in panels and dialogs; `Ctrl+Y` redoes it. The undo
   and redo buttons in the toolbar name the step they will undo.
+- To go back several steps at once, click the small arrow beside **Undo** (or beside **Redo** to go
+  forward again). The list shows the steps, the most recent first, each with the time and a short
+  summary of what it changed, such as _Removes 3 markers, 3 count items · PEFS-1001_. Point at a
+  step: it and the steps above it are highlighted, because they are undone together. On the drawing,
+  the markers they would change or take away are greyed out, and dashed outlines show where markers
+  would come back or move to; segments and drawings they would change are greyed out in the left
+  pane. Click the step to undo (or redo) them all, or press `Esc` to leave everything as it is.
 - Snapshots of the project file are kept in `.backup/` (the last 20). To go back to one, open
   **Project › Backups** and choose **Restore**. The current state is kept as a new snapshot first,
   so you can go back to it the same way. A snapshot is taken when the project opens and at most

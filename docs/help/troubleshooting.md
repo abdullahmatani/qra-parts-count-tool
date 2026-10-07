@@ -72,8 +72,10 @@ count table re-bins them at once. Deleting a type in use warns you first.
 
 ### How do I undo a mistake?
 
-`Ctrl+Z` undoes any change, including edits in panels and dialogs, and `Ctrl+Y` redoes it. For
-larger mistakes, restore a snapshot from **Project › Backups**.
+`Ctrl+Z` undoes any change, including edits in panels and dialogs, and `Ctrl+Y` redoes it. The
+arrow beside **Undo** lists the last steps; point at one to see what undoing back to it would change
+(greyed out on the drawing), then click it. For larger mistakes, restore a snapshot from
+**Project › Backups**.
 
 ### Where are my exports?
 

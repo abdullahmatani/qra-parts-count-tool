@@ -79,6 +79,51 @@
     "activeSegment": "New markers go to {{segment}}",
     "noActiveSegment": "No active segment: new markers are unassigned"
   },
+  "history": {
+    "undo": {
+      "menu": "History",
+      "title": "Undo history",
+      "steps_one": "Undo {{count}} step",
+      "steps_other": "Undo {{count}} steps"
+    },
+    "redo": {
+      "menu": "Forward history",
+      "title": "Redo history",
+      "steps_one": "Redo {{count}} step",
+      "steps_other": "Redo {{count}} steps"
+    },
+    "preview": "Greyed out: what changes. Dashed: what it becomes.",
+    "summary": {
+      "added": "Adds {{list}}",
+      "removed": "Removes {{list}}",
+      "changed": "Changes {{list}}",
+      "moreDrawings": "{{drawings}} +{{count}}"
+    },
+    "kinds": {
+      "drawings_one": "{{count}} drawing",
+      "drawings_other": "{{count}} drawings",
+      "segments_one": "{{count}} segment",
+      "segments_other": "{{count}} segments",
+      "markers_one": "{{count}} marker",
+      "markers_other": "{{count}} markers",
+      "items_one": "{{count}} count item",
+      "items_other": "{{count}} count items",
+      "notes_one": "{{count}} note",
+      "notes_other": "{{count}} notes",
+      "links_one": "{{count}} drawing link",
+      "links_other": "{{count}} drawing links"
+    },
+    "areas": {
+      "project": "project details",
+      "settings": "project settings",
+      "stage": "workflow step",
+      "library": "equipment library",
+      "template": "Excel template mapping",
+      "duplicates": "accepted duplicate tags",
+      "drawingOrder": "drawing order",
+      "segmentOrder": "segment order"
+    }
+  },
   "equipmentBar": {
     "label": "Equipment for new markers",
     "shape": "Shape",
