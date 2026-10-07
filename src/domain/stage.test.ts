@@ -33,6 +33,7 @@ describe('study stages', () => {
     expect(stageTools('segments', false)).toEqual([
       'select',
       'highlighter',
+      'eraser',
       'dashed',
       'esdv',
       'endFlange',

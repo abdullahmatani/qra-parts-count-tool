@@ -20,7 +20,8 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
     expect(shortcutFor(key('v'))).toEqual({ kind: 'tool', tool: 'select' });
     expect(shortcutFor(key('f'))).toEqual({ kind: 'tool', tool: 'endFlange' });
     expect(shortcutFor(key('t'))).toEqual({ kind: 'autoTrace' });
-    expect(shortcutFor(key('x'))).toBeNull();
+    expect(shortcutFor(key('x'))).toEqual({ kind: 'tool', tool: 'eraser' });
+    expect(shortcutFor(key('q'))).toBeNull();
   });
 
   it('maps undo, redo and clipboard keys, with Ctrl or Cmd', () => {

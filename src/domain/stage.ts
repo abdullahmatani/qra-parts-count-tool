@@ -12,11 +12,20 @@ export const STAGES: readonly ProjectStage[] = ['segments', 'count'];
 
 /** Tools ids, as in the toolbar. Kept as strings here so the domain does not import the UI. */
 export type StageTool =
-  'select' | 'circle' | 'dashed' | 'highlighter' | 'link' | 'esdv' | 'endFlange' | 'stamp';
+  | 'select'
+  | 'circle'
+  | 'dashed'
+  | 'highlighter'
+  | 'eraser'
+  | 'link'
+  | 'esdv'
+  | 'endFlange'
+  | 'stamp';
 
 const SEGMENT_TOOLS: readonly StageTool[] = [
   'select',
   'highlighter',
+  'eraser',
   'dashed',
   'esdv',
   'endFlange',

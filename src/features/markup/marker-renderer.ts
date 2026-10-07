@@ -4,8 +4,8 @@
  * While the whole sheet fits in a bitmap of CACHE_MAX_PIXELS, the markers are
  * drawn once into that bitmap and each frame only copies it into place: a pan
  * costs one image draw. During a zoom the bitmap is scaled, and it is redrawn
- * at the new scale once the view settles. Markers being dragged and the hover
- * halo are drawn on top every frame. Further in, where the sheet is larger than
+ * at the new scale once the view settles. Markers being dragged or erased and
+ * the hover halo are drawn on top every frame. Further in, where the sheet is larger than
  * the bitmap, only the markers in view are drawn.
  */
 import type { Size2D } from '@/domain/schema/types';
@@ -57,6 +57,7 @@ interface Cache {
 function excludedIds(preview: MarkerPreview | null): Set<string> {
   if (preview?.kind === 'move') return new Set(preview.ids);
   if (preview?.kind === 'resize') return new Set([preview.id]);
+  if (preview?.kind === 'erase') return new Set(preview.left.keys());
   return new Set();
 }
 
