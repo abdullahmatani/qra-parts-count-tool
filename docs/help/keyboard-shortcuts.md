@@ -5,9 +5,9 @@ same list is in the app under **Project › Keyboard shortcuts**. On a Mac, use 
 
 ## Markup tools
 
-The toolbar shows the tools of the study's stage. While defining segments: `V`, `H`, `D`, `L`, `E`,
-`F` and `T`. While counting: `V`, `C` and `S`, and `D` for line runs when pipe lengths are counted.
-Pressing the key of a tool from the other stage says where it is.
+The toolbar shows the tools of the study's stage. While defining segments: `V`, `H`, `X`, `D`, `L`,
+`E`, `F` and `T`. While counting: `V`, `C` and `S`, and `D` for line runs when pipe lengths are
+counted. Pressing the key of a tool from the other stage says where it is.
 
 | Key | Tool                                                                                                                                                               |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -15,6 +15,7 @@ Pressing the key of a tool from the other stage says where it is.
 | `C` | Circle: one leak source per click, then type its size                                                                                                              |
 | `D` | Dashed highlight: drag an area, or click points along a run                                                                                                        |
 | `H` | Highlighter: paint over a segment's pipework in its colour, following the drawn lines; `Shift` for a straight stroke; `Alt` paints freely (no line or ESDV magnet) |
+| `X` | Eraser: drag over highlighter paint to rub it out; what is left either side stays in its segment                                                                   |
 | `L` | Drawing link: drag a hotspot, then choose the target drawing                                                                                                       |
 | `E` | ESDV: click an ESD valve (or drag a double line across the pipe, `Shift` for 45° steps), then set its tag, size and adjoining segments                             |
 | `F` | End flange: drag a bar across the pipe where a segment ends at a closed drain, the flare or another end point (or click on the pipe), then set its tag             |

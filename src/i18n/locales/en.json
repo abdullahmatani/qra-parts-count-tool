@@ -64,6 +64,7 @@
     "circle": "Circle",
     "dashed": "Dashed highlight",
     "highlighter": "Highlighter",
+    "eraser": "Eraser",
     "link": "Drawing link",
     "esdv": "ESDV",
     "endFlange": "End flange",
@@ -161,6 +162,16 @@
     "hint": "Drag along the segment's pipework: the stroke follows the drawn line (dashed until you let go). Shift draws a straight stroke; Alt paints freely. Strokes snap to ESDVs and end flanges and stop at them.",
     "followLines": "Follow lines",
     "followLinesHint": "Strokes follow the drawing's lines round bends and corners, shown dashed until you let go. Hold Alt to paint freely."
+  },
+  "eraser": {
+    "label": "Eraser options",
+    "all": "Erasing any segment's highlighting",
+    "segment": "Erasing {{segment}} only",
+    "unassigned": "Erasing unassigned highlighting only",
+    "size": "Size",
+    "activeOnly": "Active segment only",
+    "activeOnlyHint": "Rub out only the active segment's highlighter strokes, so another segment's paint stays where they overlap.",
+    "hint": "Drag over highlighter paint to rub it out: the stroke is cut across its width and the rest stays. Ctrl+Z puts it back."
   },
   "esdvBar": {
     "label": "ESDV options",
@@ -650,6 +661,7 @@
       "addCircle": "add circle",
       "addHighlight": "add dashed highlight",
       "addHighlighter": "add highlighter stroke",
+      "erase": "erase highlighting",
       "move_one": "move marker",
       "move_other": "move {{count}} markers",
       "resize": "resize marker",
@@ -720,6 +732,8 @@
     "polylineHint": "Click to add points. Double-click or press Enter to finish, Esc to cancel.",
     "freeformHint": "Drag around a symbol to draw a free-form outline.",
     "highlighterHint": "Drag over the pipework and equipment to highlight them.",
+    "eraserHint": "Drag over highlighter strokes to rub them out. Dashed zones and line runs are changed with Select.",
+    "eraserOnlyHint": "Only the active segment's highlighting is rubbed out. Turn off Active segment only to erase other paint.",
     "esdvSplit": "The highlighter is cut at the ESDV: select a piece to move it to another segment.",
     "endFlangeSplit": "The highlighter is cut at the end flange.",
     "filters": {

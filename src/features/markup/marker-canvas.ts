@@ -54,10 +54,15 @@ export interface MarkerEntry {
 /** A marker and the geometry it is drawn with this frame (moved or resized while dragged). */
 export type Drawn = readonly [MarkerEntry, MarkerGeometry];
 
-/** A marker drawn somewhere else while it is being dragged or resized. */
+/**
+ * A marker drawn somewhere else while it is being dragged or resized, or
+ * drawn as what is left of it while the eraser goes over it (none of it once
+ * it is rubbed out).
+ */
 export type MarkerPreview =
   | { kind: 'move'; ids: ReadonlySet<string>; dx: number; dy: number }
-  | { kind: 'resize'; id: string; geometry: MarkerGeometry };
+  | { kind: 'resize'; id: string; geometry: MarkerGeometry }
+  | { kind: 'erase'; left: ReadonlyMap<string, readonly MarkerGeometry[]> };
 
 export interface DrawOptions {
   /** Drawing → CSS px within the canvas. */
@@ -236,10 +241,15 @@ export function drawMarkers(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'butt';
 
-  const drawn = entries.map((entry): Drawn => [
-    entry.changing ? greyedOut(entry) : entry,
-    previewGeometry(entry, options.preview),
-  ]);
+  const { preview } = options;
+  const shown = (entry: MarkerEntry) => (entry.changing ? greyedOut(entry) : entry);
+  // A stroke the eraser cut is drawn as its pieces.
+  const drawn =
+    preview?.kind === 'erase'
+      ? entries.flatMap((entry) =>
+          (preview.left.get(entry.id) ?? [entry.geometry]).map((g): Drawn => [shown(entry), g]),
+        )
+      : entries.map((entry): Drawn => [shown(entry), previewGeometry(entry, preview)]);
   // Markers a history step would change go first, grey and faint. While
   // counting, the segments' set-up goes next and faint, so the equipment is
   // drawn over it at full strength.

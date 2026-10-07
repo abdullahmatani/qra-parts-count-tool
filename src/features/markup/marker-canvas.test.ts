@@ -147,6 +147,41 @@ describe('preview geometry', () => {
     const geometry = { type: 'circle' as const, cx: 0, cy: 0, r: 1 };
     expect(previewGeometry(b, { kind: 'resize', id: 'b', geometry })).toBe(geometry);
   });
+
+  it('draws a stroke the eraser went over as what is left of it', () => {
+    const stroke = (id: string, from: number, to: number): MarkerEntry => ({
+      ...entry(id, 0, 0),
+      geometry: {
+        type: 'stroke',
+        points: [
+          [from, 0],
+          [to, 0],
+        ],
+        width: 10,
+      },
+    });
+    const starts: number[] = [];
+    const { ctx } = recordingContext();
+    (ctx as unknown as { moveTo: (x: number) => void }).moveTo = (x) => starts.push(x);
+    const cut = stroke('cut', 0, 400);
+    drawMarkers(ctx, [cut, stroke('gone', 0, 50), stroke('kept', 500, 600)], {
+      matrix: [1, 0, 0, 1, 0, 0],
+      devicePixelRatio: 1,
+      unitsPerPixel: 1,
+      canvasSize: { width: 100, height: 100 },
+      preview: {
+        kind: 'erase',
+        left: new Map([
+          ['cut', [stroke('a', 0, 185).geometry, stroke('b', 215, 400).geometry]],
+          ['gone', []],
+        ]),
+      },
+      hoveredId: null,
+      showLabels: false,
+    });
+    // Two pieces of the cut stroke and the stroke it did not touch; none of the one rubbed out.
+    expect(starts).toEqual([0, 215, 500]);
+  });
 });
 
 describe('culling (NFR-03)', () => {

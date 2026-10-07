@@ -5,6 +5,7 @@
 import { toast } from 'sonner';
 import {
   addMarker,
+  applyErasure,
   assignMarkers,
   copyMarkers,
   cutStrokesAtBoundary,
@@ -20,6 +21,7 @@ import {
   type EndFlangePatch,
   type MarkerClip,
 } from '@/domain/actions/markers';
+import type { Erasure } from '@/domain/markup/eraser';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { Draft } from 'immer';
 import { addItem, nextTag, type ItemDefaults } from '@/domain/actions/items';
@@ -318,6 +320,24 @@ export function placeMarker(
   if (withItem && !stamp) ui.requestEdit(marker.id);
   else ui.setSelection([marker.id]);
   return marker.id;
+}
+
+/**
+ * Rubs out highlighter paint (SEG-06): leaves the strokes the eraser went
+ * over as it left them, as one undo step. Strokes rubbed out altogether are
+ * deleted, and drop out of the selection.
+ */
+export function eraseStrokes(erasure: Erasure): boolean {
+  if (erasure.left.size === 0) return false;
+  let deleted: string[] = [];
+  const done = apply(t('markup.history.erase'), (draft) => {
+    deleted = applyErasure(draft, erasure).deleted;
+  });
+  if (done && deleted.length) {
+    const ui = useUiStore.getState();
+    ui.setSelection(ui.selection.filter((id) => !deleted.includes(id)));
+  }
+  return done;
 }
 
 /** Repaints the highlighter strokes among `ids` with another pen, as one undo step. */

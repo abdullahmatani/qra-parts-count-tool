@@ -96,6 +96,10 @@ export interface UiState {
   highlighterPen: HighlighterPen;
   /** The highlighter follows the drawing's lines (Alt paints freely while it is on). */
   highlighterFollowsLines: boolean;
+  /** How big the eraser is: as wide as one of the highlighter's pens. */
+  eraserSize: HighlighterPen;
+  /** The eraser rubs out only the active segment's highlighter strokes (unassigned ones without one). */
+  eraserActiveSegmentOnly: boolean;
   /** How the ESDV tool draws the next ESDV: a ring, or a double line across the pipe. */
   esdvShape: EsdvShape;
   /** What a click with the ESDV double line places, away from a highlighter stroke. */
@@ -148,6 +152,8 @@ export interface UiState {
   setMarkerSymbol: (symbol: MarkerSymbol) => void;
   setHighlighterPen: (pen: HighlighterPen) => void;
   setHighlighterFollowsLines: (on: boolean) => void;
+  setEraserSize: (size: HighlighterPen) => void;
+  setEraserActiveSegmentOnly: (on: boolean) => void;
   setEsdvShape: (shape: EsdvShape) => void;
   setDoubleLine: (doubleLine: DoubleLineMemory) => void;
   setEndFlangeDestination: (destination: EndFlangeDestination) => void;
@@ -200,6 +206,8 @@ const initial = {
   markerSymbol: 'circle' as MarkerSymbol,
   highlighterPen: 'medium' as HighlighterPen,
   highlighterFollowsLines: true,
+  eraserSize: 'medium' as HighlighterPen,
+  eraserActiveSegmentOnly: false,
   esdvShape: 'circle' as EsdvShape,
   doubleLine: { lengthFraction: DOUBLE_LINE_LENGTH_FRACTION, angle: Math.PI / 2 },
   endFlangeDestination: 'closedDrain' as EndFlangeDestination,
@@ -285,6 +293,8 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setMarkerSymbol: (markerSymbol) => set({ markerSymbol }),
   setHighlighterPen: (highlighterPen) => set({ highlighterPen }),
   setHighlighterFollowsLines: (highlighterFollowsLines) => set({ highlighterFollowsLines }),
+  setEraserSize: (eraserSize) => set({ eraserSize }),
+  setEraserActiveSegmentOnly: (eraserActiveSegmentOnly) => set({ eraserActiveSegmentOnly }),
   setEsdvShape: (esdvShape) => set({ esdvShape }),
   setDoubleLine: (doubleLine) => set({ doubleLine }),
   setEndFlangeDestination: (endFlangeDestination) => set({ endFlangeDestination }),

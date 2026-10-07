@@ -12,8 +12,8 @@ painted in the active segment's colour (click a segment in the list to make it a
 - The bar under the toolbar shows which segment you are highlighting and sets the pen: **Fine**,
   **Medium** or **Broad**.
 - Hold `Shift` for a straight stroke along a line.
-- Select a stroke to move it, change its pen, move it to another segment or delete it. `Ctrl+Z`
-  takes back the last stroke.
+- Select a stroke to move it, change its pen, move it to another segment or delete it; rub out
+  part of it with the [Eraser](highlighting.md#the-eraser). `Ctrl+Z` takes back the last stroke.
 
 ### Follow lines
 
@@ -61,10 +61,29 @@ into; when the pipe carries on on another drawing, **Open** takes you there.
 
 The whole trace is one undo step, and pipe already highlighted is not painted again. It works on
 the lines as drawn: a pipe that touches text or another symbol is followed into it, so check the
-result and undo or delete stray strokes.
+result: undo it, or trim stray paint with the [Eraser](highlighting.md#the-eraser).
 
 Auto trace needs something to run out to: the button is available once the drawing has an ESDV, an
 end flange or a drawing link.
+
+## The Eraser
+
+Pick the **Eraser** (`X`) to trim the highlighting finely, where a stroke or an auto trace went too
+far or ran into the wrong pipe. Drag over the paint, or click on it: the paint under the eraser is
+rubbed out as you go, and what is left either side stays in its segment, drawn with the same pen.
+Let go to keep it, or press `Esc` first to cancel. `Ctrl+Z` takes back the whole drag.
+
+- A stroke is as wide as its pen all along, so the eraser cannot make it thinner: where it touches
+  the paint, it cuts the stroke across its whole width.
+- The bar sets the size of the eraser, **Fine**, **Medium** or **Broad**, as wide as the pens. The
+  ring round the pointer shows it; zoom in to place it more precisely.
+- **Active segment only** rubs out only the active segment's strokes (the unassigned ones when no
+  segment is active), so another segment's paint stays where the two overlap, at an ESDV say.
+- A stroke rubbed out altogether is deleted. Each piece left is a stroke of its own: select it to
+  move it to another segment.
+
+The Eraser works on highlighter strokes, auto trace's among them. Dashed zones and line runs are
+changed or deleted with **Select**.
 
 ## Dashed highlight
 

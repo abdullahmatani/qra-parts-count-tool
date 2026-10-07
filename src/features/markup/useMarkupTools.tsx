@@ -21,6 +21,10 @@
  *   Alt paints freely, without either magnet. With auto trace on, a click
  *   (no drag) traces the pipe under it out to its ESDVs, end flanges and
  *   drawing links; pipe a trace could not assign shows dashed until clicked.
+ * - Eraser: drag (or click) over highlighter paint to rub it out. Where the
+ *   eraser touches a stroke it cuts it across its width and the rest stays,
+ *   shown as the eraser goes and kept when it is let go, as one undo step.
+ *   With "Active segment only" it rubs out only that segment's strokes.
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
@@ -56,6 +60,7 @@ import {
   snapToEsdv,
 } from '@/domain/markup/esdv-boundary';
 import { endFlangeThickness, isBoundaryMarker } from '@/domain/end-flange';
+import { NO_ERASURE, eraseAlong, type ErasableStroke, type Erasure } from '@/domain/markup/eraser';
 import { penWidth } from '@/domain/markup/highlighter';
 import { LineTracer, inkMap, lineAt, type InkMap } from '@/domain/markup/line-trace';
 import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
@@ -82,6 +87,7 @@ import { createLinkCommand, followLink } from '@/features/links/link-commands';
 import { autoTraceAt } from '@/features/trace/auto-trace-actions';
 import { Draft, SelectionBox, type DraftShape } from './MarkupDrafts';
 import {
+  eraseStrokes,
   moveMarkerIds,
   placeEndFlange,
   placeEsdv,
@@ -120,6 +126,18 @@ type Gesture =
       trace: XY[] | null;
       /** Where the traced path holds on to a line, if it does. */
       traceEnd: XY | null;
+    }
+  | {
+      kind: 'erase';
+      last: XY;
+      lastScreen: XY;
+      /** The eraser's diameter in drawing units, fixed when it is pressed. */
+      width: number;
+      /** The strokes it rubs out: only the active segment's with "Active segment only". */
+      strokes: readonly ErasableStroke[];
+      activeOnly: boolean;
+      /** What is left of the strokes it has gone over. */
+      erasure: Erasure;
     }
   | { kind: 'doubleLine'; start: XY; startScreen: XY; current: XY; dragging: boolean }
   | { kind: 'rect'; start: XY; startScreen: XY; current: XY; dragging: boolean }
@@ -224,6 +242,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const markerSymbol = useUiStore((s) => s.markerSymbol);
   const symbol = placedSymbol(tool, markerSymbol);
   const esdvShape = useUiStore((s) => s.esdvShape);
+  const eraserSize = useUiStore((s) => s.eraserSize);
+  const eraserActiveOnly = useUiStore((s) => s.eraserActiveSegmentOnly);
   const filters = useUiStore((s) => s.filters);
   const selection = useUiStore((s) => s.selection);
   const readOnly = useProjectStore((s) => s.readOnly);
@@ -279,6 +299,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       prev === next || (prev && next && prev.x === next.x && prev.y === next.y) ? prev : next,
     );
   }, []);
+  // The eraser's ring, where the pointer is (CSS px in the canvas).
+  const [eraserAt, setEraserAt] = useState<XY | null>(null);
   const linksHere = useMemo(
     () => Object.values(links ?? {}).filter((link) => link.sourceDrawingId === drawingId),
     [links, drawingId],
@@ -304,6 +326,16 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     selectedHere.length === 1 ? (visibleById.get(selectedHere[0]!) ?? null) : null;
   // Segment boundaries: the highlighter's magnet and cut.
   const boundariesHere = useMemo(() => visible.filter(isBoundaryMarker), [visible]);
+  // What the eraser can rub out: the highlighter strokes in view.
+  const strokesHere = useMemo(
+    () =>
+      visible.flatMap((m) =>
+        m.shape === 'highlighter' && m.geometry.type === 'stroke'
+          ? [{ id: m.id, geometry: m.geometry, segmentId: m.segmentId }]
+          : [],
+      ),
+    [visible],
+  );
 
   const longSide = drawingSize ? Math.max(drawingSize.width, drawingSize.height) : 1000;
   // The ESDV tool draws a double line across the pipe, or a ring like the
@@ -312,7 +344,12 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const doubleLineTool = (tool === 'esdv' && esdvShape === 'doubleLine') || tool === 'endFlange';
   const circleLike = tool === 'circle' || (tool === 'esdv' && !doubleLineTool) || tool === 'stamp';
   const drawingTool =
-    circleLike || doubleLineTool || tool === 'dashed' || tool === 'highlighter' || tool === 'link';
+    circleLike ||
+    doubleLineTool ||
+    tool === 'dashed' ||
+    tool === 'highlighter' ||
+    tool === 'eraser' ||
+    tool === 'link';
   const selectLike = !drawingTool;
   const editable = !readOnly;
 
@@ -498,6 +535,28 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         setSnap(null);
         return;
       }
+      if (tool === 'eraser' && editable) {
+        const ui = useUiStore.getState();
+        const width = penWidth(ui.eraserSize, context.drawingSize);
+        const activeOnly = ui.eraserActiveSegmentOnly;
+        // Only the active segment's strokes, or the unassigned ones when no segment is active.
+        const segmentId = activeSegment?.id ?? null;
+        const strokes = activeOnly
+          ? strokesHere.filter((s) => s.segmentId === segmentId)
+          : strokesHere;
+        // A press rubs out what is under the eraser at once, as a click does.
+        setGesture({
+          kind: 'erase',
+          last: point,
+          lastScreen: screen,
+          width,
+          strokes,
+          activeOnly,
+          erasure: eraseAlong(NO_ERASURE, strokes, point, point, width),
+        });
+        setEraserAt(screen);
+        return;
+      }
       if (tool === 'dashed' && editable) {
         if (polylineRef.current) setGesture({ kind: 'polyPoint', point });
         else
@@ -610,6 +669,17 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           setSnap(snapAt(point, context, event.native.altKey, g.fromEsdvId)?.point ?? null);
           return;
         }
+        case 'erase':
+          setEraserAt(screen);
+          if (screenDistance(screen, g.lastScreen) >= FREEFORM_STEP) {
+            setGesture({
+              ...g,
+              last: point,
+              lastScreen: screen,
+              erasure: eraseAlong(g.erasure, g.strokes, g.last, point, g.width),
+            });
+          }
+          return;
         case 'doubleLine':
           setGesture({
             ...g,
@@ -667,6 +737,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
         if (tool === 'highlighter' && editable) {
           setSnap(snapAt(point, context, event.native.altKey)?.point ?? null);
         }
+        if (tool === 'eraser' && editable) setEraserAt(screen);
+        else if (eraserAt) setEraserAt(null);
         return;
       }
       const handle = handleAt(screen, context);
@@ -735,6 +807,17 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             points: path.map((p) => [p.x, p.y]),
             width: g.width,
           });
+          return;
+        }
+        case 'erase': {
+          // The last stretch, shorter than a step, is rubbed out too.
+          const erasure = eraseAlong(g.erasure, g.strokes, g.last, point, g.width);
+          if (erasure.left.size) eraseStrokes(erasure);
+          else {
+            toast(t(g.activeOnly ? 'markup.eraserOnlyHint' : 'markup.eraserHint'), {
+              duration: 2500,
+            });
+          }
           return;
         }
         case 'doubleLine': {
@@ -835,6 +918,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
     onPointerLeave() {
       setSnap(null);
+      setEraserAt(null);
     },
 
     onDoubleClick(event, context) {
@@ -890,14 +974,22 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     },
   };
 
+  // The strokes the eraser has gone over, drawn as what is left of them. Kept
+  // while the eraser moves over bare paper, so the canvas is not redrawn.
+  const erasure = gesture.kind === 'erase' ? gesture.erasure : null;
+  const erasePreview: MarkerPreview | null = useMemo(
+    () => (erasure?.left.size ? { kind: 'erase', left: erasure.left } : null),
+    [erasure],
+  );
   const preview: MarkerPreview | null = useMemo(() => {
+    if (erasePreview) return erasePreview;
     if (gesture.kind === 'move' && gesture.dragging) {
       return { kind: 'move', ids: new Set(gesture.ids), dx: gesture.delta.x, dy: gesture.delta.y };
     }
     if (gesture.kind === 'resize')
       return { kind: 'resize', id: gesture.id, geometry: gesture.geometry };
     return null;
-  }, [gesture]);
+  }, [gesture, erasePreview]);
 
   const hoveredId = gesture.kind === 'none' ? hover.id : null;
   const entries = useMarkerEntries(drawingId);
@@ -992,6 +1084,23 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             data-testid="esdv-snap"
             className="pointer-events-none absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-esdv bg-esdv/20 shadow-sm"
             style={{ left: context.toScreen(snap).x, top: context.toScreen(snap).y }}
+          />
+        )}
+        {eraserAt && tool === 'eraser' && editable && (
+          <div
+            data-testid="eraser-cursor"
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-foreground/80 bg-white/30 shadow-[0_0_0_1px_rgb(255_255_255/0.8)]"
+            style={{
+              left: eraserAt.x,
+              top: eraserAt.y,
+              width: penWidth(eraserSize, context.drawingSize) / context.unitsPerPixel,
+              height: penWidth(eraserSize, context.drawingSize) / context.unitsPerPixel,
+              // With "Active segment only", the ring is in that segment's colour.
+              borderColor:
+                eraserActiveOnly && activeSegment
+                  ? segmentAppearance(activeSegment.colour).hex
+                  : undefined,
+            }}
           />
         )}
         {canGoBack && <BackButton />}

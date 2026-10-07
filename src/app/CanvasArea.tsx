@@ -11,6 +11,7 @@ import { useChangingDrawings } from '@/features/history/history-store';
 import { FindBar } from '@/features/search/FindBar';
 import { useStage } from '@/features/stage/stage';
 import { EndFlangeBar } from './EndFlangeBar';
+import { EraserBar } from './EraserBar';
 import { EquipmentBar } from './EquipmentBar';
 import { EsdvBar } from './EsdvBar';
 import { HighlighterBar } from './HighlighterBar';
@@ -37,6 +38,8 @@ function OptionsBar() {
   switch (tool) {
     case 'highlighter':
       return <HighlighterBar />;
+    case 'eraser':
+      return <EraserBar />;
     case 'esdv':
       return <EsdvBar />;
     case 'endFlange':

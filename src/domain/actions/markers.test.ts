@@ -5,12 +5,14 @@ import {
   makeCircleMarker,
   makeDrawing,
   makeItem,
+  makeNote,
   makePopulatedProject,
   makeSegment,
 } from '@/test/fixtures';
 import type { Marker, StrokeGeometry } from '../schema/types';
 import {
   addMarker,
+  applyErasure,
   assignMarkers,
   copyMarkers,
   cutStrokesAtBoundary,
@@ -258,6 +260,56 @@ describe('ESDVs cut highlighter strokes (SEG-01)', () => {
     expect(cutStrokesAtBoundary(doc, 'flange')).toHaveLength(1);
     expect((doc.markers.hl!.geometry as StrokeGeometry).points.at(-1)).toEqual([293, 500]);
     expect(strokeAtBoundaries(doc, drawingId, pipe())).toHaveLength(2);
+    expect(checkIntegrity(docToProject(doc))).toEqual([]);
+  });
+
+  it('leaves strokes as the eraser left them: split, rubbed out or, if changed since, alone', () => {
+    const { doc, drawingId, segmentId } = setup();
+    addMarker(doc, highlight(drawingId, 'split', segmentId));
+    addMarker(doc, highlight(drawingId, 'gone', segmentId));
+    addMarker(doc, highlight(drawingId, 'moved', null));
+    const note = makeNote(segmentId, { id: 'note_gone', markerRef: 'gone' });
+    doc.notes[note.id] = note;
+    const keep = makeNote(segmentId, { id: 'note_split', markerRef: 'split' });
+    doc.notes[keep.id] = keep;
+    const left = (from: number, to: number): StrokeGeometry => ({
+      ...pipe(),
+      points: [
+        [from, 500],
+        [to, 500],
+      ],
+    });
+    const erasure = {
+      from: new Map([
+        ['split', doc.markers.split!.geometry as StrokeGeometry],
+        ['gone', doc.markers.gone!.geometry as StrokeGeometry],
+        // The eraser went over this stroke as it was before it moved.
+        ['moved', pipe()],
+      ]),
+      left: new Map([
+        ['split', [left(0, 185), left(215, 400)]],
+        ['gone', []],
+        ['moved', [left(0, 100)]],
+        ['missing', []],
+      ]),
+    };
+
+    const { added, deleted } = applyErasure(doc, erasure);
+    expect(deleted).toEqual(['gone']);
+    expect(added).toHaveLength(1);
+    // The first piece keeps the stroke and its note; the second is a new stroke in its segment.
+    expect(doc.markers.split!.geometry).toEqual(left(0, 185));
+    expect(doc.markers[added[0]!]).toMatchObject({
+      drawingId,
+      segmentId,
+      shape: 'highlighter',
+      geometry: left(215, 400),
+    });
+    expect(doc.notes.note_split!.markerRef).toBe('split');
+    // Rubbed out altogether: deleted, and its note no longer points at it.
+    expect(doc.markers.gone).toBeUndefined();
+    expect(doc.notes.note_gone!.markerRef).toBeNull();
+    expect(doc.markers.moved!.geometry).toEqual(pipe());
     expect(checkIntegrity(docToProject(doc))).toEqual([]);
   });
 
