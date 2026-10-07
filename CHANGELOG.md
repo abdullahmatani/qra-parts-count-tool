@@ -5,6 +5,16 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Undo and redo history**: a small arrow beside **Undo** and beside **Redo** in the toolbar opens
+  the list of steps that can be undone (most recent first) or redone (next first). Each step shows
+  its name, the time and a short summary of what it changed, such as _Removes 3 markers, 3 count
+  items · PEFS-1001_ or _Changes 1 segment, project settings_. Pointing at a step (or moving to it
+  with the arrow keys) highlights it and every step above it, since they go together, and previews
+  the result: the markers they would change or take away are greyed out on the drawing, dashed
+  outlines show where markers would come back or move to, and segments and drawings they would
+  change are greyed out in the left pane and the drawing tabs. Clicking the step undoes or redoes
+  them all as one change; `Esc` closes the list and leaves everything as it was.
+
 - **Eraser** (`X`) for the highlighting: drag over highlighter paint, or click on it, to rub it out
   and trim a segment's highlighting finely where a stroke or an auto trace went too far. The paint
   disappears as the eraser goes; what is left either side stays in its segment with the same pen,

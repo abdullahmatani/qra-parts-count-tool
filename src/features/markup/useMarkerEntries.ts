@@ -11,13 +11,16 @@ import { useStage } from '@/features/stage/stage';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import { useMarkerWarnings } from '@/features/count/useCount';
+import { useChangingMarkers } from '@/features/history/history-store';
 import type { MarkerEntry } from './marker-canvas';
 
 /**
  * The visible markers on a drawing with their resolved appearance, in paint
  * order: highlights first; circles, ESDV double lines and end flanges on top.
- * While counting, the segments' set-up is dimmed. Recomputed only when the
- * project, stage, selection or filters change, never on pan or zoom.
+ * While counting, the segments' set-up is dimmed; markers that the steps
+ * pointed at in a history menu would change are greyed out. Recomputed only
+ * when the project, stage, selection, filters or that preview change, never
+ * on pan or zoom.
  */
 export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const markers = useProjectStore((s) => s.doc?.markers);
@@ -31,6 +34,7 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
   const stage = useStage();
   const counting = stage === 'count';
   const pipeLengthCounting = useProjectStore((s) => s.doc?.settings.pipeLengthCounting ?? false);
+  const changing = useChangingMarkers();
 
   return useMemo(() => {
     const index = itemsByMarker(items ?? {});
@@ -61,6 +65,7 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
         outline: marker.style.outline,
         segmentId: marker.segmentId,
         dimmed: counting && isSegmentSetupMarker(marker, pipeLengthCounting),
+        changing: changing.has(marker.id),
       };
       const onTop = marker.geometry.type === 'circle' || marker.geometry.type === 'doubleLine';
       (onTop ? circles : areas).push(entry);
@@ -79,5 +84,6 @@ export function useMarkerEntries(drawingId: string): MarkerEntry[] {
     stage,
     counting,
     pipeLengthCounting,
+    changing,
   ]);
 }

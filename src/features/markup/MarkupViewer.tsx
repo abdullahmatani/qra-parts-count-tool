@@ -1,6 +1,7 @@
 import { SuggestionLayer } from '@/features/assist/SuggestionLayer';
 import { LayerMenu } from '@/features/cad/LayerMenu';
 import { ReviewBanner } from '@/features/drawings/ReviewBanner';
+import { HistoryGhostLayer } from '@/features/history/HistoryGhostLayer';
 import { SearchHitsLayer } from '@/features/search/SearchHitsLayer';
 import { TourHintLayer } from '@/features/tour/TourHintLayer';
 import { DrawingViewer } from '@/features/viewer/DrawingViewer';
@@ -18,6 +19,7 @@ export function MarkupViewer({ drawingId }: { drawingId: string }) {
             <SearchHitsLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
             <SuggestionLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
             {tools.overlay(context)}
+            <HistoryGhostLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
             <TourHintLayer drawingId={drawingId} unitsPerPixel={context.unitsPerPixel} />
           </>
         )}

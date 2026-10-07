@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import { useOrderedSegments } from '@/store/selectors';
 import { useUiStore } from '@/store/ui-store';
+import { useChangingSegments } from '@/features/history/history-store';
 import { useStage } from '@/features/stage/stage';
 
 export interface SegmentListProps {
@@ -33,6 +34,7 @@ export function SegmentList({ onAdd }: SegmentListProps) {
   const activeSegmentId = useUiStore((s) => s.activeSegmentId);
   const setActiveSegment = useUiStore((s) => s.setActiveSegment);
   const readOnly = useProjectStore((s) => s.readOnly);
+  const changing = useChangingSegments();
 
   return (
     <section aria-labelledby="segments-heading" className="flex min-h-0 flex-1 flex-col">
@@ -63,15 +65,19 @@ export function SegmentList({ onAdd }: SegmentListProps) {
         {segments.map((segment) => {
           const appearance = segmentAppearance(segment.colour);
           const active = segment.id === activeSegmentId;
+          // Greyed out while a history step that changes it is pointed at.
+          const greyed = changing.has(segment.id);
           return (
             <li key={segment.id}>
               <button
                 type="button"
                 onClick={() => setActiveSegment(active ? null : segment.id)}
                 aria-pressed={active}
+                data-changing={greyed ? 'true' : undefined}
                 className={cn(
                   'flex h-row w-full items-center gap-2 rounded-md px-2 text-start text-sm hover:bg-accent',
                   active && 'bg-accent font-medium',
+                  greyed && 'opacity-50 grayscale',
                 )}
                 title={segment.description || segment.label}
               >

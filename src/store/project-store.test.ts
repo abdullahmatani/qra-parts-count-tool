@@ -88,6 +88,31 @@ describe('project store undo/redo (PRJ-09)', () => {
     expect(store().past).toHaveLength(2);
   });
 
+  it('undoes and redoes several steps as one change, from the history menus', () => {
+    const before = store().doc;
+    store().apply('A', (d) => void (d.client = 'A'));
+    store().apply('B', (d) => void (d.facility = 'B'));
+    store().apply('C', (d) => void (d.studyRef = 'C'));
+    const counter = store().changeCounter;
+
+    // Undoing two steps takes back C, then B, and returns the last one undone.
+    expect(store().undo(2)).toBe('B');
+    expect(store().doc).toMatchObject({ client: 'A', facility: 'Plant A', studyRef: '' });
+    expect(store().changeCounter).toBe(counter + 1);
+    expect(store().past.map((e) => e.label)).toEqual(['A']);
+    // The next redo is B, the step undone last.
+    expect(store().future.map((e) => e.label)).toEqual(['C', 'B']);
+
+    expect(store().redo(5)).toBe('C');
+    expect(store().doc).toMatchObject({ client: 'A', facility: 'B', studyRef: 'C' });
+    expect(store().future).toHaveLength(0);
+
+    expect(store().undo(3)).toBe('A');
+    expect(store().doc).toEqual(before);
+    expect(store().undo(1)).toBeNull();
+    expect(store().redo(0)).toBeNull();
+  });
+
   it('refuses edits, undo and redo in read-only mode (PRJ-07)', () => {
     store().apply('A', (d) => void (d.client = 'A'));
     store().setReadOnly(true);

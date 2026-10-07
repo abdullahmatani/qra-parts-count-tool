@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { HIGHLIGHTER_ALPHA, SETUP_DIMMED_ALPHA } from '@/domain/palette';
+import {
+  HIGHLIGHTER_ALPHA,
+  HISTORY_PREVIEW_ALPHA,
+  HISTORY_PREVIEW_GREY,
+  SETUP_DIMMED_ALPHA,
+} from '@/domain/palette';
 import { LabelGrid, drawMarkers, previewGeometry, type MarkerEntry } from './marker-canvas';
 import { cullToView } from './marker-renderer';
 
@@ -19,6 +24,7 @@ function entry(id: string, cx: number, cy: number): MarkerEntry {
     outline: null,
     segmentId: null,
     dimmed: false,
+    changing: false,
   };
 }
 
@@ -99,6 +105,35 @@ describe('dimmed set-up (counting)', () => {
     expect(of('#2563eb').map((c) => c.alpha)).toEqual([1]);
     // The ESDV, though a ring like the valve, is painted before it.
     expect(calls.indexOf(of('#dc2626')[0]!)).toBeLessThan(calls.indexOf(of('#2563eb')[0]!));
+  });
+});
+
+describe('history preview (PRJ-09)', () => {
+  it('greys out the markers a history step would change, under the others', () => {
+    const { ctx, calls } = recordingContext();
+    // Selected and flagged, but neither halo shows while it is greyed out.
+    const moved: MarkerEntry = {
+      ...entry('moved', 0, 0),
+      colour: '#2563eb',
+      selected: true,
+      warning: true,
+      changing: true,
+    };
+    const kept: MarkerEntry = { ...entry('kept', 40, 0), colour: '#2563eb' };
+    drawMarkers(ctx, [kept, moved], {
+      matrix: [1, 0, 0, 1, 0, 0],
+      devicePixelRatio: 1,
+      unitsPerPixel: 1,
+      canvasSize: { width: 100, height: 100 },
+      preview: null,
+      hoveredId: null,
+      showLabels: false,
+    });
+    const strokes = calls.filter((c) => c.op === 'stroke');
+    expect(strokes.map((c) => [c.style, c.alpha])).toEqual([
+      [HISTORY_PREVIEW_GREY, HISTORY_PREVIEW_ALPHA],
+      ['#2563eb', 1],
+    ]);
   });
 });
 
