@@ -5,6 +5,13 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **No duplicate Circle tool while counting**: the toolbar's **Circle** did what the equipment bar's
+  shapes already do, so it is gone. While counting the toolbar holds **Select** and **Stamp** (and
+  **Line run** when pipe lengths are counted); pick a **shape** in the equipment bar to place
+  markers, and `C` picks the last shape again. The shape shows as pressed only while you are
+  placing, so it no longer looks active alongside **Select**. In the shortcut list, `C` is now
+  **Equipment marker**.
+
 - **Undo and redo history**: a small arrow beside **Undo** and beside **Redo** in the toolbar opens
   the list of steps that can be undone (most recent first) or redone (next first). Each step shows
   its name, the time and a short summary of what it changed, such as _Removes 3 markers, 3 count

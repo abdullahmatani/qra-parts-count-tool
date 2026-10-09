@@ -57,7 +57,8 @@ count reports joints or faces (two per joint); the A2.1 sheet has a column for e
 
 An **end flange** is a segment boundary where the pipe leaves the segment without an ESDV, for
 example to the closed drain or the flare. It is not counted. A **flange** is a leak source and is
-counted with the Circle tool. Where an end flange is also a leak source, circle it as well.
+counted with a marker from the equipment bar. Where an end flange is also a leak source, mark it as
+well.
 
 ### Why is a marker outlined in amber?
 

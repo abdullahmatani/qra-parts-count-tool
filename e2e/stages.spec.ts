@@ -62,7 +62,7 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   for (const name of ['Highlighter', 'ESDV', 'End flange', 'Drawing link', 'Dashed highlight']) {
     await expect(toolbar.getByRole('radio', { name })).toBeVisible();
   }
-  await expect(toolbar.getByRole('radio', { name: 'Circle' })).toHaveCount(0);
+  await expect(page.getByTestId('equipment-bar')).toHaveCount(0);
   await page.getByTestId('segment-list').getByRole('button', { name: /IS-01/ }).click();
   const details = page.getByTestId('segment-details');
   await expect(details.getByTestId('process-summary')).toHaveText('Gas');
@@ -78,7 +78,7 @@ test('defines segments first, then counts with the segments locked', async ({ ap
   await expect(page.getByTestId('viewer-preview-layer')).toBeVisible();
   await page.getByRole('application').focus();
   await page.keyboard.press('c');
-  await expect(page.getByText('Circle is used in the parts count.')).toBeVisible();
+  await expect(page.getByText('Equipment marker is used in the parts count.')).toBeVisible();
   await expect(toolbar.getByRole('radio', { name: 'Select' })).toHaveAttribute(
     'aria-checked',
     'true',
@@ -102,11 +102,11 @@ test('defines segments first, then counts with the segments locked', async ({ ap
 
   // Parts count: the counting tools, the item and count table; no set-up.
   await expect(stages).toHaveAttribute('data-stage', 'count');
-  await expect(toolbar.getByRole('radio', { name: 'Circle' })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
+  // Select and Stamp in the toolbar; markers are placed with the equipment bar's shapes.
+  const bar = page.getByTestId('equipment-bar');
+  await expect(bar.getByTestId('symbol-circle')).toHaveAttribute('aria-checked', 'true');
   await expect(toolbar.getByRole('radio', { name: 'Stamp' })).toBeVisible();
+  await expect(toolbar.getByRole('radio')).toHaveCount(2);
   await expect(toolbar.getByRole('radio', { name: 'Highlighter' })).toHaveCount(0);
   await expect(toolbar.getByRole('radio', { name: 'ESDV' })).toHaveCount(0);
   await expect(page.getByTestId('segment-details')).toHaveCount(0);

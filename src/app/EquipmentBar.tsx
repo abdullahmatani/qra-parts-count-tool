@@ -97,16 +97,18 @@ function armCircleTool(keepStamp: boolean): void {
 }
 
 /**
- * The equipment bar under the markup toolbar: the shape new equipment markers
- * are drawn with, and the equipment type (and valve actuation) they are
- * counted as. Both apply to the markers placed next; a placed marker is
- * changed in the panel. The types that do not fit go in a "More" menu; the
- * chosen type always stays in the bar.
+ * The equipment bar under the markup toolbar, which places equipment markers
+ * while counting: a shape arms placing (`C` arms the last one; Stamp places
+ * with it too), and the equipment type (and valve actuation) and label say
+ * what the next markers count. A placed marker is changed in the panel. The
+ * types that do not fit go in a "More" menu; the chosen type always stays in the bar.
  */
 export function EquipmentBar() {
   const { t } = useTranslation();
   const readOnly = useProjectStore((s) => s.readOnly);
   const types = useProjectStore((s) => s.doc?.library.equipmentTypes);
+  const tool = useUiStore((s) => s.tool);
+  const placing = tool === 'circle' || tool === 'stamp';
   const markerSymbol = useUiStore((s) => s.markerSymbol);
   const defaults = useUiStore((s) => s.itemDefaults);
   const choices = equipmentChoices(types ?? []);
@@ -153,11 +155,13 @@ export function EquipmentBar() {
       <ToggleGroup
         type="single"
         size="sm"
-        value={markerSymbol}
+        // No shape is pressed while the Select tool is.
+        value={placing ? markerSymbol : ''}
         // Clicking the chosen shape again (value '') still arms the tool.
         onValueChange={(value) => chooseSymbol((value || markerSymbol) as MarkerSymbol)}
         disabled={readOnly}
         aria-label={t('equipmentBar.shape')}
+        data-tour="tool-circle"
       >
         {SYMBOLS.map((symbol) => (
           <Tooltip key={symbol}>

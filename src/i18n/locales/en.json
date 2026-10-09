@@ -61,7 +61,7 @@
   "toolbar": {
     "label": "Markup tools",
     "select": "Select",
-    "circle": "Circle",
+    "circle": "Equipment marker",
     "dashed": "Dashed highlight",
     "highlighter": "Highlighter",
     "eraser": "Eraser",
@@ -1452,7 +1452,7 @@
       },
       "equipmentBar": {
         "title": "Choose what to count",
-        "body": "The toolbar now holds **Select**, **Circle** and **Stamp**, and the equipment bar under it chooses what the next circle counts. Click **Valve (manual)** in the bar."
+        "body": "While counting, the toolbar holds **Select** and **Stamp**. You place markers by picking a **shape** in the equipment bar under it, which also chooses what the next markers count. Click **Valve (manual)** in the bar."
       },
       "circleValve": {
         "title": "Count a valve",

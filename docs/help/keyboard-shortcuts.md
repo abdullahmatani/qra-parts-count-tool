@@ -12,7 +12,7 @@ counted. Pressing the key of a tool from the other stage says where it is.
 | Key | Tool                                                                                                                                                               |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `V` | Select: click, `Shift`+click or drag a box; drag to move                                                                                                           |
-| `C` | Circle: one leak source per click, then type its size                                                                                                              |
+| `C` | Equipment marker: place markers with the shape chosen in the equipment bar, one leak source per click, then type its size                                          |
 | `D` | Dashed highlight: drag an area, or click points along a run                                                                                                        |
 | `H` | Highlighter: paint over a segment's pipework in its colour, following the drawn lines; `Shift` for a straight stroke; `Alt` paints freely (no line or ESDV magnet) |
 | `X` | Eraser: drag over highlighter paint to rub it out; what is left either side stays in its segment                                                                   |
