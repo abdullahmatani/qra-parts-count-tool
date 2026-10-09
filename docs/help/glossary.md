@@ -139,7 +139,8 @@ The step of the study: **1 Segments**, then **2 Parts count**. Each stage has it
 
 ## Stamp
 
-The tool that repeats the last item with each click.
+The parts count tool (`S`) that logs a copy of the last item with each click: its equipment type,
+actuation and size, without opening the item editor. See [Counting parts](counting.md#stamp).
 
 ## Working directory
 

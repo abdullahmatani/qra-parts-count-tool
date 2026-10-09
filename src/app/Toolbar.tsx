@@ -18,8 +18,9 @@ import { TOOLS } from './tools';
 
 /**
  * Markup toolbar, with the tools of the stage: segment set-up while defining
- * segments, equipment while counting. The active segment's colour tints the
- * toolbar so the user always sees where new markers go (FDS section 6).
+ * segments; Select and Stamp (and line runs) while counting, where equipment
+ * markers are placed with the equipment bar's shapes. The active segment's
+ * colour tints the toolbar so the user always sees where new markers go (FDS section 6).
  */
 export function Toolbar() {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export function Toolbar() {
   const setTool = useUiStore((s) => s.setTool);
   const stage = useStage();
   const stageTools = useStageTools();
-  const tools = TOOLS.filter((def) => stageTools.includes(def.tool));
+  const tools = TOOLS.filter((def) => stageTools.includes(def.tool) && !def.equipmentBar);
   // Names beside the icons when the stage's few tools leave room for them.
   const labelClass = tools.length <= 4 ? 'hidden xl:inline' : 'hidden 2xl:inline';
   const showLabels = useUiStore((s) => s.showLabels);

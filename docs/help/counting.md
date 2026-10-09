@@ -19,8 +19,8 @@ project.
 
 While counting, the workspace shows only what counting needs:
 
-- the toolbar holds **Select** (`V`), **Circle** (`C`) and **Stamp** (`S`), and **Line run** (`D`)
-  when pipe lengths are counted, with the **equipment bar** under it;
+- the toolbar holds **Select** (`V`) and **Stamp** (`S`), and **Line run** (`D`) when pipe lengths
+  are counted; markers are placed with the **equipment bar** under it;
 - the right pane shows the segment's **status**, **Counted by** and **Checked by**, then the **item
   editor**, the **count table** and the notes. Process data, ESDVs and linked drawings are not
   shown;
@@ -31,38 +31,49 @@ While counting, the workspace shows only what counting needs:
 
 ## Count an item
 
-1. Make the segment active (or rely on the highlighting: a circle placed on a segment's
+1. Make the segment active (or rely on the highlighting: a marker placed on a segment's
    highlighting goes to that segment).
-2. Choose the **Circle** tool (`C`) and click the leak source. The item editor opens with the size
-   field ready: type the size (`2`, `2"`, `3/4`, `1-1/2` or `DN50`) and press `Enter`. The editor
-   shows the size bin it falls in.
+2. Pick a **shape** in the equipment bar (or press `C`) and click the leak source. The item editor
+   opens with the size field ready: type the size (`2`, `2"`, `3/4`, `1-1/2` or `DN50`) and press
+   `Enter`. The editor shows the size bin it falls in.
 3. Set the **equipment type** from the list or with its key (`1` valve, `2` flange, …), and the
    **actuation** for valves.
 4. Add the **tag** where the drawing shows one, the **quantity** if one marker stands for several
    identical items, and any **remarks**.
 
-The type, actuation and unit you last used carry over to the next circle, so a run of manual 2"
+The type, actuation and unit you last used carry over to the next marker, so a run of manual 2"
 valves is one click and one size each.
 
 ## The equipment bar
 
-The **equipment bar** under the toolbar chooses what the next markers count before you click: pick
-**Valve (automated)**, **Flange** or any other type (valves come once per actuation) and the Circle
-tool is ready to count that equipment. **Any type** places markers without a type. Types that do not
-fit in the bar are under **… more** at its end; the chosen type always stays in the bar.
+The **equipment bar** under the toolbar places the markers. Pick a **shape** to start: a **dot**
+(smaller, filled), a **circle**, a **square**, or a **free-form** outline you drag around an
+odd-shaped symbol. The shape is only how the marker looks; it counts the same. `C` picks the last
+shape again and `Esc` goes back to **Select**. Change a placed marker's shape under **Shape** in the
+right pane.
 
-The same bar sets:
+The same bar chooses, before you click:
 
-- the **shape** new markers are drawn with: a **dot** (smaller, filled), a **circle**, a **square**,
-  or a **free-form** outline you drag around an odd-shaped symbol. The shape is only how the marker
-  looks; it counts the same. Change a placed marker's shape under **Shape** in the right pane;
+- what the next markers count: pick **Valve (automated)**, **Flange** or any other type (valves come
+  once per actuation) and the bar is ready to count that equipment. **Any type** places markers
+  without a type. Types that do not fit in the bar are under **… more** at its end; the chosen type
+  always stays in the bar;
 - the **label** shown on new markers, for example `HV-1`: a trailing number counts up after each
   marker. Leave it empty to show `#1`, `#2`, ….
 
 ## Stamp
 
-For a run of identical items, switch to **Stamp** (`S`): each click logs a copy of the last item
-(type, actuation and size) without opening the editor.
+For a run of identical items, switch to **Stamp** (`S`) in the toolbar. Each click logs a copy of
+the last item, the one you placed or edited last, without opening the item editor, so the drawing
+keeps the focus:
+
+- copied: the **equipment type**, the **actuation** and the **size** with its unit;
+- not copied: the **tag** (stamped markers show `#1`, `#2`, … and the **Label** in the equipment bar
+  does not count up), the **quantity** (1) and the **remarks**.
+
+The markers are drawn with the shape chosen in the equipment bar. If there is nothing to repeat yet
+(no item, or the last item has no type), a click places a marker the usual way and opens the
+editor. Pick another type in the equipment bar, or **Select** (`Esc`), to leave Stamp.
 
 ## Find similar symbols
 

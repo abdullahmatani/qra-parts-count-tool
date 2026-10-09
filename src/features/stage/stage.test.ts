@@ -42,7 +42,7 @@ describe('setStageCommand', () => {
     expect(runShortcut({ kind: 'tool', tool: 'circle' })).toBe(true);
     expect(useUiStore.getState().tool).toBe('select');
     expect(toast).toHaveBeenCalledWith(
-      'Circle is used in the parts count.',
+      'Equipment marker is used in the parts count.',
       expect.objectContaining({ action: expect.objectContaining({ label: 'Go to Parts count' }) }),
     );
     // The action asks before counting starts.

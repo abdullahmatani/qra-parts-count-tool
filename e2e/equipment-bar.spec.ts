@@ -61,6 +61,10 @@ async function drag(page: Page, points: [number, number][]) {
 const tool = (page: Page, name: string) =>
   page.getByTestId('toolbar').getByRole('radio', { name, exact: true });
 
+/** The shape pressed in the equipment bar: the one markers are being placed with. */
+const placing = (page: Page) =>
+  page.getByTestId('equipment-bar').locator('[data-testid^="symbol-"][aria-checked="true"]');
+
 interface Saved {
   markers: {
     id: string;
@@ -98,9 +102,14 @@ test('the equipment bar sets the type and shape of new markers; Esc returns to S
     'Flange',
   ]);
 
-  // Choosing a type arms the Circle tool; the next marker is counted as it.
+  // The toolbar holds Select, Stamp and Line run; markers are placed with the bar's shapes.
+  await expect(page.getByTestId('toolbar').getByRole('radio')).toHaveCount(3);
+  await expect(tool(page, 'Line run')).toBeVisible();
+  await expect(placing(page)).toHaveCount(0);
+
+  // Choosing a type arms the remembered shape; the next marker is counted as it.
   await bar.getByRole('radio', { name: 'Valve (automated)' }).click();
-  await expect(tool(page, 'Circle')).toHaveAttribute('aria-checked', 'true');
+  await expect(placing(page)).toHaveAttribute('data-testid', 'symbol-circle');
   await click(page, 0.3, 0.3);
   const editor = page.getByTestId('item-editor');
   await expect(editor.getByRole('combobox', { name: 'Equipment type' })).toHaveText(/Valve/);
@@ -114,6 +123,7 @@ test('the equipment bar sets the type and shape of new markers; Esc returns to S
   await page.getByRole('application').focus();
   await page.keyboard.press('Escape');
   await expect(tool(page, 'Select')).toHaveAttribute('aria-checked', 'true');
+  await expect(placing(page)).toHaveCount(0);
   await expect(page.locator('[data-selected="true"]')).toHaveCount(1);
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-selected="true"]')).toHaveCount(0);
@@ -130,7 +140,7 @@ test('the equipment bar sets the type and shape of new markers; Esc returns to S
   // Shapes: a square, a dot (smaller than a ring) and a free-form outline.
   await bar.getByRole('radio', { name: 'Flange' }).click();
   await bar.getByTestId('symbol-square').click();
-  await expect(tool(page, 'Circle')).toHaveAttribute('aria-checked', 'true');
+  await expect(placing(page)).toHaveAttribute('data-testid', 'symbol-square');
   await click(page, 0.4, 0.3);
   await bar.getByTestId('symbol-dot').click();
   await click(page, 0.5, 0.3);
@@ -196,13 +206,13 @@ test('types that do not fit go in a More menu; the chosen type stays in the bar'
   expect(visible).toBeLessThan(names.length);
   await expect(more).toHaveText(`${names.length - visible} more`);
 
-  // The last type, from the menu: it is chosen, arms the Circle tool and stays in the bar.
+  // The last type, from the menu: it is chosen, arms the shape and stays in the bar.
   await more.click();
   await expect(page.getByTestId('equipment-more-choice')).toHaveCount(names.length - visible);
   await page.getByRole('menuitemradio', { name: names.at(-1) }).click();
   const last = bar.getByRole('radio', { name: names.at(-1) });
   await expect(last).toHaveAttribute('aria-checked', 'true');
-  await expect(tool(page, 'Circle')).toHaveAttribute('aria-checked', 'true');
+  await expect(placing(page)).toHaveCount(1);
 
   // In a narrow window the More button is still whole, inside the bar.
   await page.setViewportSize({ width: 1024, height: 800 });

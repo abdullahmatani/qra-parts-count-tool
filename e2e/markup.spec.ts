@@ -94,11 +94,12 @@ test.describe('markup engine', () => {
     await page.getByRole('application').focus();
 
     // Circle: click places the default size; drag sets the radius.
+    // C arms the equipment bar's shape: a circle unless another was chosen.
     await page.keyboard.press('c');
-    // The toolbar's Circle tool (the equipment bar has a Circle shape too).
-    await expect(
-      page.getByTestId('toolbar').getByRole('radio', { name: 'Circle' }),
-    ).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('equipment-bar').getByTestId('symbol-circle')).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await click(page, 0.3, 0.4);
     await drag(page, [0.5, 0.5], [0.55, 0.5]);
     await expect(markers(page)).toHaveCount(2);
