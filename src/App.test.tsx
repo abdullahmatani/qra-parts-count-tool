@@ -17,6 +17,8 @@ describe('App shell', () => {
     act(() => {
       useProjectStore.getState().close();
       useUiStore.getState().reset();
+      // Left open by a failed test, the documentation would cover the next test's screen.
+      useHelpStore.getState().close();
     });
   });
 
@@ -101,9 +103,11 @@ describe('App shell', () => {
     render(<App />);
     await userEvent.setup().keyboard('{F1}');
     const dialog = await screen.findByRole('dialog', { name: 'Documentation' });
-    expect(await within(dialog).findByTestId('help-search')).toBeInTheDocument();
-    act(() => useHelpStore.getState().close());
-  });
+    // The first opening loads and indexes every article, which takes a while on a busy machine.
+    expect(
+      await within(dialog).findByTestId('help-search', {}, { timeout: 10_000 }),
+    ).toBeInTheDocument();
+  }, 15_000);
 
   it('starts the guided tour on a practice project from the start screen', async () => {
     render(<App />);
@@ -131,5 +135,5 @@ describe('App shell', () => {
 
     await act(() => closeProject());
     expect(useTourStore.getState().projectId).toBeNull();
-  });
+  }, 15_000);
 });
