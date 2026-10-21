@@ -125,6 +125,7 @@ Requirements carry an ID for traceability to the roadmap and test cases; priorit
 | DRW-08 | Text search within PDF drawings (tag numbers, line numbers) highlights hits. | Should |
 | DRW-09 | DWG layer visibility toggles. | Could |
 | DRW-10 | User can also import DXF files and PDF plots of DWG drawings as alternatives to native .dwg. Native .dwg import remains mandatory. | Must |
+| DRW-11 | Drawings can be filed under the units of the plant (plant breakdown structure). The drawing list toggles between all files and an organised view: plant › unit › drawing number. | Should |
 
 ### 4.3 Markers and annotation (ANN)
 
@@ -222,8 +223,9 @@ All project state lives in one versioned JSON file in the working directory; dra
 
 | Entity | Key fields | Relationships |
 | --- | --- | --- |
-| Project | id, name, client, facility, study ref, schemaVersion, settings (ESDV boundary rule, flange convention, pipe length counting on/off, units) | Has drawings, segments, library, template mapping |
-| Drawing | id, fileName, fileHash, fileType (pdf/dwg), page or layout, drawingNo, sheet, title, revision | Has markers and links; linked to many segments |
+| Project | id, name, client, facility, study ref, schemaVersion, settings (ESDV boundary rule, flange convention, pipe length counting on/off, units) | Has drawings, plant units, segments, library, template mapping |
+| Drawing | id, fileName, fileHash, fileType (pdf/dwg), page or layout, drawingNo, sheet, title, revision, unitId? | Has markers and links; linked to many segments; filed under at most one plant unit |
+| Plant unit | id, name | A unit of the plant (the project's facility); drawings are filed under it (DRW-11) |
 | Segment | id, label (e.g. IS-01), description, colour, fluid, phase, pressure, temperature, status, boundingEsdvIds[] | Links to many drawings; has count items, markers, notes |
 | Marker | id, drawingId, segmentId, shape (circle / dashedHighlight), geometry (drawing coordinates), style | Optional 1:1 with a count item |
 | Count item | id, markerId, segmentId, equipmentTypeId, nominalSize, sizeUnit, binId (derived), actuation, quantity, pipeLength? (m), tag, remarks | Belongs to one segment and one marker |
@@ -280,7 +282,8 @@ Moving to the parts count lists what may be unfinished (set-up in no segment, se
 | --- | --- |
 | Start screen | New project, open working directory, recent projects |
 | Project setup | Metadata, template upload, settings (boundary rule, flange convention, pipe length counting, units) |
-| Drawing register | Table of drawings with metadata, segment links, marker counts, revision |
+| Drawing list | All drawings in one list, or organised as the plant breakdown: plant › unit › drawing number (DRW-11) |
+| Drawing register | Table of drawings with metadata, plant unit, segment links, marker counts, revision |
 | Canvas | View, mark up and navigate drawings |
 | Segment panel | Segments stage: segment set-up and linked drawings. Parts count stage: status, counted by, checked by |
 | Count table | Live totals for the active segment; click a cell to highlight items |

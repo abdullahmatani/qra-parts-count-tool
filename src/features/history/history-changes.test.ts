@@ -76,6 +76,17 @@ describe('step summaries', () => {
     expect(describeStep(summary, t)).toBe('Changes 1 segment, project details, project settings');
   });
 
+  it('names the plant units when a step adds one and files a drawing under it', () => {
+    const drawingId = doc().drawingOrder[0]!;
+    store().apply('add unit Unit 100', (d) => {
+      d.plantUnits.push({ id: 'unt_1', name: 'Unit 100' });
+      d.drawings[drawingId]!.unitId = 'unt_1';
+    });
+    const summary = summarizeStep(lastStep(), doc());
+    expect(summary.areas).toEqual(['plantUnits']);
+    expect(describeStep(summary, t)).toBe('Changes 1 drawing, plant units · PEFS-001 / 1');
+  });
+
   it('finds the name of a drawing the step deleted in its patches', () => {
     store().apply('delete drawing', (d) => {
       delete d.drawings[drawingId];

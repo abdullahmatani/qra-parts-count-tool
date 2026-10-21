@@ -116,6 +116,11 @@ The flag on a drawing where a pipe continues on another drawing, such as `TO PEF
 Piping and instrumentation diagram; process engineering flow scheme. The drawings a parts count is
 made on.
 
+## Plant breakdown
+
+How the drawings are organised in the drawing list's organised view: the plant (the project's
+facility), its units, and the drawings filed under each unit.
+
 ## Practice project
 
 The project the guided tour opens in the browser tab. Nothing in it is saved.

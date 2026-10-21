@@ -50,12 +50,46 @@ it in a tab.
   taken off its segments, and its file is removed from `drawings/` unless another page or layout of
   the same file is still a drawing. `Ctrl+Z` brings the drawing, and its file, back.
 
+## Organise drawings by plant unit
+
+A large study has drawings from several units of the plant. The two buttons at the top of the
+drawing list switch between **All files**, every drawing in one list, and **Organised by plant
+unit**, the plant breakdown:
+
+- the **plant** at the top: the project's facility (or the project name when no facility is set);
+- its **units**, in name order (_Unit 20_ before _Unit 100_), each with its number of drawings;
+- under each unit, its **drawings** by drawing number;
+- **Unassigned**, the drawings not filed under a unit yet.
+
+The list remembers the view you chose.
+
+**Add a unit.** Click the folder **+** on the plant row (or **⋯ › Add unit**), type the unit's
+name, for example _Unit 100 Inlet separation_, and press `Enter`. Two units cannot have the same
+name.
+
+**File drawings under a unit.** Drag a drawing onto the unit, or use **⋯ › Move to unit** on the
+drawing and pick the unit; this menu works in both views. **New unit…** in the same menu adds a
+unit and files the drawing under it. To take a drawing out of its unit, choose **Unassigned**, or
+drag it onto the plant or onto **Unassigned**. The drawing register has a **Unit** column too.
+
+**Import straight into a unit.** **⋯ › Import drawings here** on a unit imports drawings as usual
+and files them under that unit.
+
+**Rename or delete a unit.** Use the unit's **⋯** menu (or right-click it; `F2` renames). Deleting
+a unit keeps its drawings: they move to **Unassigned**. **⋯ › Rename plant** on the plant row
+changes the project's facility name.
+
+Click the plant, a unit or **Unassigned** to fold or unfold it. While you type in the filter box,
+everything is unfolded and only the matching drawings are shown; typing a unit's name shows all its
+drawings. Every change can be undone, and the units are saved in the project file.
+
 ## The drawing register
 
-**Project › Drawing register** lists every drawing as a table: drawing number, sheet, title,
-revision, file, sheet size, segments and markers. Metadata is pre-filled from each title block where
-possible; click a cell to correct it. Changes save automatically and can be undone. Each row has
-**Open**, **Delete** and **Replace with a new revision**.
+**Project › Drawing register** lists every drawing as a table: drawing number, sheet, title, plant
+unit, revision, file, sheet size, segments and markers. Metadata is pre-filled from each title
+block where possible; click a cell to correct it, and pick a drawing's unit from its **Unit** cell.
+Changes save automatically and can be undone. Each row has **Open**, **Delete** and **Replace with
+a new revision**.
 
 ## New revisions
 

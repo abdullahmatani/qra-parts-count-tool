@@ -21,6 +21,7 @@ export type ProjectArea =
   | 'library'
   | 'template'
   | 'duplicates'
+  | 'plantUnits'
   | 'drawingOrder'
   | 'segmentOrder';
 
@@ -37,6 +38,7 @@ const AREA_OF: Partial<Record<keyof ProjectDoc, ProjectArea>> = {
   library: 'library',
   templateMapping: 'template',
   acceptedDuplicates: 'duplicates',
+  plantUnits: 'plantUnits',
   drawingOrder: 'drawingOrder',
   segmentOrder: 'segmentOrder',
 };
@@ -48,6 +50,7 @@ const AREA_ORDER: readonly ProjectArea[] = [
   'library',
   'template',
   'duplicates',
+  'plantUnits',
   'drawingOrder',
   'segmentOrder',
 ];

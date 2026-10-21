@@ -12,6 +12,7 @@ describe('preferences', () => {
       cadColorMode: 'monochrome',
       autoAssignSegment: true,
       drawingNamesFromFiles: true,
+      drawingListView: 'all',
     });
     document.documentElement.className = '';
   });
@@ -37,7 +38,14 @@ describe('preferences', () => {
       cadColorMode: 'monochrome',
       autoAssignSegment: true,
       drawingNamesFromFiles: true,
+      drawingListView: 'all',
     });
+  });
+
+  it('remembers whether the drawing list is organised by plant unit (DRW-11)', () => {
+    usePreferences.getState().setDrawingListView('organised');
+    const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
+    expect(stored.state.drawingListView).toBe('organised');
   });
 
   it('assigns equipment to the highlighted segment until it is switched off', () => {

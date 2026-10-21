@@ -79,6 +79,7 @@ export function docToProject(doc: ProjectDoc): Project {
     revision: doc.revision,
     settings: doc.settings,
     drawings: orderedDrawings,
+    plantUnits: doc.plantUnits,
     segments: orderedSegments,
     markers: Object.values(doc.markers),
     items: Object.values(doc.items),

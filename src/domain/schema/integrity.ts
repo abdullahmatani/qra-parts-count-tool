@@ -26,6 +26,7 @@ export function checkIntegrity(project: Project): IntegrityIssue[] {
   const seen = new Map<string, string>();
   const collections: [string, { id: string }[]][] = [
     ['drawing', project.drawings],
+    ['plant unit', project.plantUnits],
     ['segment', project.segments],
     ['marker', project.markers],
     ['item', project.items],
@@ -49,10 +50,36 @@ export function checkIntegrity(project: Project): IntegrityIssue[] {
   }
 
   const drawingIds = new Set(project.drawings.map((d) => d.id));
+  const unitIds = new Set(project.plantUnits.map((u) => u.id));
   const segmentIds = new Set(project.segments.map((s) => s.id));
   const markerById = new Map(project.markers.map((m) => [m.id, m]));
   const typeIds = new Set(project.library.equipmentTypes.map((t) => t.id));
   const binSetIds = new Set(project.library.binSets.map((b) => b.id));
+
+  // Plant unit names should be unique (DRW-11), compared case-insensitively.
+  const unitNames = new Map<string, string>();
+  for (const unit of project.plantUnits) {
+    const key = unit.name.trim().toLowerCase();
+    const other = unitNames.get(key);
+    if (other) {
+      push('warning', 'duplicateUnitName', `Plant unit "${unit.name}" is used twice.`, [
+        other,
+        unit.id,
+      ]);
+    } else {
+      unitNames.set(key, unit.id);
+    }
+  }
+  for (const drawing of project.drawings) {
+    if (drawing.unitId && !unitIds.has(drawing.unitId)) {
+      push(
+        'warning',
+        'danglingUnit',
+        `Drawing ${drawing.drawingNo || drawing.fileName} is filed under a missing plant unit.`,
+        [drawing.id, drawing.unitId],
+      );
+    }
+  }
 
   // Segment labels must be unique (SEG-02), compared case-insensitively.
   const labels = new Map<string, string>();

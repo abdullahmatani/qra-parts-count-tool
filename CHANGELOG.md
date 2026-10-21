@@ -5,6 +5,17 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Drawings organised by plant unit** (DRW-11): two buttons at the top of the drawing list switch
+  between **All files** and **Organised by plant unit**, a plant breakdown with the plant (the
+  project's facility) at the top, its units below in name order, and each unit's drawings by
+  drawing number; drawings not filed yet are under **Unassigned**. Add a unit with the folder
+  **+** on the plant row, then drag drawings onto it or use **⋯ › Move to unit** on a drawing (in
+  either view, with **New unit…** to add one on the way). A unit's menu renames it, deletes it (its
+  drawings become unassigned) or imports drawings straight into it; the drawing register has a
+  **Unit** column. Units fold and unfold, the filter searches unit names too, the list remembers
+  the view, and every change is one undo step. The project file gains `plantUnits` and each
+  drawing a `unitId`; files from earlier builds open unchanged.
+
 - **No duplicate Circle tool while counting**: the toolbar's **Circle** did what the equipment bar's
   shapes already do, so it is gone. While counting the toolbar holds **Select** and **Stamp** (and
   **Line run** when pipe lengths are counted); pick a **shape** in the equipment bar to place

@@ -10,6 +10,7 @@ export type ProjectSettings = z.output<typeof v1.ProjectSettings>;
 export type Units = z.output<typeof v1.Units>;
 export type Drawing = z.output<typeof v1.Drawing>;
 export type DrawingFileType = z.output<typeof v1.DrawingFileType>;
+export type PlantUnit = z.output<typeof v1.PlantUnit>;
 export type Segment = z.output<typeof v1.Segment>;
 export type SegmentStatus = z.output<typeof v1.SegmentStatus>;
 export type ProjectStage = z.output<typeof v1.ProjectStage>;

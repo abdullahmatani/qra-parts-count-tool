@@ -8,6 +8,19 @@ export function drawingDisplayName(
   return drawing.sheet ? `${base} / ${drawing.sheet}` : base;
 }
 
+/** Whether a drawing matches a filter: its number, title, file name, sheet or revision. */
+export function drawingMatches(
+  drawing: Pick<Drawing, 'drawingNo' | 'title' | 'fileName' | 'sheet' | 'revision'>,
+  query: string,
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return [drawing.drawingNo, drawing.title, drawing.fileName, drawing.sheet, drawing.revision]
+    .join(' ')
+    .toLowerCase()
+    .includes(q);
+}
+
 const PAPER_SIZES_MM: [string, number, number][] = [
   ['A0', 841, 1189],
   ['A1', 594, 841],

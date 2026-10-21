@@ -121,6 +121,7 @@
       "library": "equipment library",
       "template": "Excel template mapping",
       "duplicates": "accepted duplicate tags",
+      "plantUnits": "plant units",
       "drawingOrder": "drawing order",
       "segmentOrder": "segment order"
     }
@@ -225,8 +226,12 @@
     "empty": "No drawings yet.",
     "import": "Import drawings",
     "noMatch": "No drawings match.",
+    "view": "Drawing list view",
+    "viewAll": "All files",
+    "viewOrganised": "Organised by plant unit",
     "actions": "Actions for {{name}}",
     "rename": "Rename",
+    "moveTo": "Move to unit",
     "renameLabel": "Drawing number for {{name}}",
     "delete": "Delete…",
     "deleteDialog": {
@@ -247,6 +252,37 @@
       "banner": "This drawing was replaced by a revision with another sheet size. Check that the markers still sit on their symbols, then mark it as reviewed.",
       "done": "Mark as reviewed",
       "history": "mark {{drawing}} as reviewed"
+    }
+  },
+  "plant": {
+    "tree": "Plant breakdown",
+    "actions": "Actions for the plant {{name}}",
+    "rename": "Rename plant",
+    "nameLabel": "Plant name",
+    "addUnit": "Add unit",
+    "newUnit": "New unit…",
+    "unitName": "Unit name",
+    "unitPlaceholder": "e.g. Unit 100",
+    "unitActions": "Actions for {{name}}",
+    "renameUnit": "Rename",
+    "renameUnitLabel": "Unit name for {{name}}",
+    "importHere": "Import drawings here",
+    "deleteUnit": "Delete unit",
+    "unassigned": "Unassigned",
+    "emptyUnit": "No drawings yet. Drag drawings here, or use ⋯ › Move to unit.",
+    "noUnits": "Add units to file the drawings under, then drag drawings onto them.",
+    "drawingCount_one": "{{count}} drawing",
+    "drawingCount_other": "{{count}} drawings",
+    "drawings_one": "{{count}} drawing",
+    "drawings_other": "{{count}} drawings",
+    "nameTaken": "There is already a unit called {{name}}.",
+    "history": {
+      "renamePlant": "rename plant to {{name}}",
+      "add": "add unit {{name}}",
+      "rename": "rename unit to {{name}}",
+      "delete": "delete unit {{name}}",
+      "move": "move {{drawings}} to {{unit}}",
+      "unassign": "move {{drawings}} to Unassigned"
     }
   },
   "segments": {
@@ -626,6 +662,7 @@
       "drawingNo": "Drawing no.",
       "sheet": "Sheet",
       "title": "Title",
+      "unit": "Unit",
       "revision": "Rev",
       "file": "File",
       "size": "Size",
@@ -635,6 +672,7 @@
       "cadPlot": "CAD plot"
     },
     "page": "p. {{page}}",
+    "noUnit": "Unassigned",
     "open": "Open",
     "delete": "Delete {{name}}",
     "empty": "No drawings. Import PDF drawings to start the register.",
