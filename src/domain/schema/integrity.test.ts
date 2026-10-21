@@ -22,6 +22,18 @@ describe('checkIntegrity', () => {
     expect(codes(project)).toContain('duplicateSegmentLabel');
   });
 
+  it('flags duplicate plant unit names and drawings filed under a missing unit (DRW-11)', () => {
+    const project = makePopulatedProject();
+    project.plantUnits = [
+      { id: 'unt_1', name: 'Unit 100' },
+      { id: 'unt_2', name: 'unit 100 ' },
+    ];
+    project.drawings[0]!.unitId = 'unt_1';
+    expect(codes(project)).toEqual(['duplicateUnitName']);
+    project.drawings[0]!.unitId = 'unt_missing';
+    expect(codes(project)).toContain('danglingUnit');
+  });
+
   it('flags markers on missing drawings and items without markers', () => {
     const project = makePopulatedProject();
     project.markers[0]!.drawingId = 'drw_missing';

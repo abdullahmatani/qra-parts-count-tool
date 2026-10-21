@@ -33,6 +33,7 @@ export function loadDemoProject(): void {
     size: { width: 2384, height: 1684 },
     importedAt: project.createdAt,
     needsReview: false,
+    unitId: null,
   }));
   const segments: Segment[] = ['IS-01', 'IS-02', 'IS-03'].map((label, i) => ({
     id: newId('seg'),

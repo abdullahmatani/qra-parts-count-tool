@@ -20,10 +20,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { updateDrawing, type DrawingMetadata } from '@/domain/actions/drawings';
 import { drawingDisplayName, paperSizeName } from '@/domain/drawings';
 import { segmentAppearance } from '@/domain/palette';
-import type { Drawing, Segment } from '@/domain/schema/types';
+import { sortedUnits } from '@/domain/plant';
+import type { Drawing, PlantUnit, Segment } from '@/domain/schema/types';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/store/project-store';
 import {
@@ -34,13 +42,19 @@ import {
 import { useUiStore } from '@/store/ui-store';
 import { requestDeleteDrawing } from './drawing-commands';
 import { openDrawingImport } from './import-actions';
+import { moveDrawingsToUnitCommand } from './plant-commands';
 import { ReplaceRevisionDialog } from './ReplaceRevisionDialog';
 
 type TextField = 'drawingNo' | 'sheet' | 'title' | 'revision';
 
+/** Select value of "no unit": Radix Select items cannot have an empty value. */
+const NO_UNIT = 'none';
+const EMPTY: never[] = [];
+
 interface Row {
   drawing: Drawing;
   order: number;
+  unit: PlantUnit | undefined;
   segments: Segment[];
   markers: number;
 }
@@ -93,6 +107,47 @@ function EditableCell({
   );
 }
 
+/** The plant unit a drawing is filed under (DRW-11), chosen from a list. */
+function UnitCell({
+  drawing,
+  units,
+  readOnly,
+}: {
+  drawing: Drawing;
+  units: readonly PlantUnit[];
+  readOnly: boolean;
+}) {
+  const { t } = useTranslation();
+  const known = units.some((u) => u.id === drawing.unitId);
+  return (
+    <Select
+      value={known ? drawing.unitId! : NO_UNIT}
+      disabled={readOnly}
+      onValueChange={(value) =>
+        moveDrawingsToUnitCommand([drawing.id], value === NO_UNIT ? null : value)
+      }
+    >
+      <SelectTrigger
+        size="sm"
+        aria-label={`${t('register.columns.unit')} ${drawingDisplayName(drawing)}`}
+        className="h-7 w-full border-transparent px-1.5 shadow-none hover:border-input"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {units.map((unit) => (
+          <SelectItem key={unit.id} value={unit.id}>
+            {unit.name}
+          </SelectItem>
+        ))}
+        <SelectItem value={NO_UNIT}>
+          <span className="text-muted-foreground italic">{t('register.noUnit')}</span>
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
 /** Drawing register: table of drawings with editable metadata (FDS section 6, DRW-04). */
 export function DrawingRegisterDialog() {
   const { t } = useTranslation();
@@ -102,6 +157,8 @@ export function DrawingRegisterDialog() {
   const readOnly = useProjectStore((s) => s.readOnly);
   const drawings = useOrderedDrawings();
   const segments = useOrderedSegments();
+  const units = useProjectStore((s) => s.doc?.plantUnits) ?? EMPTY;
+  const unitChoices = useMemo(() => sortedUnits(units), [units]);
   const markerCounts = useMarkerCountsByDrawing();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState('');
@@ -112,10 +169,11 @@ export function DrawingRegisterDialog() {
       drawings.map((drawing, index) => ({
         drawing,
         order: index + 1,
+        unit: units.find((u) => u.id === drawing.unitId),
         segments: segments.filter((s) => s.drawingIds.includes(drawing.id)),
         markers: markerCounts.get(drawing.id) ?? 0,
       })),
-    [drawings, segments, markerCounts],
+    [drawings, units, segments, markerCounts],
   );
 
   const columns = useMemo<ColumnDef<Row>[]>(
@@ -147,6 +205,15 @@ export function DrawingRegisterDialog() {
           <EditableCell drawing={row.original.drawing} field="title" readOnly={readOnly} />
         ),
         size: 260,
+      },
+      {
+        id: 'unit',
+        header: t('register.columns.unit'),
+        accessorFn: (r) => r.unit?.name ?? '',
+        cell: ({ row }) => (
+          <UnitCell drawing={row.original.drawing} units={unitChoices} readOnly={readOnly} />
+        ),
+        size: 150,
       },
       {
         id: 'revision',
@@ -294,7 +361,7 @@ export function DrawingRegisterDialog() {
         size: 108,
       },
     ],
-    [t, readOnly, openDrawing, openDialog],
+    [t, readOnly, unitChoices, openDrawing, openDialog],
   );
 
   const table = useReactTable({

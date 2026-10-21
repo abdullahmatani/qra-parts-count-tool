@@ -7,11 +7,16 @@ export type DrawingMetadata = Pick<
   'drawingNo' | 'sheet' | 'title' | 'revision' | 'isCadPlot'
 >;
 
-/** Adds imported drawings to the register, keeping their order (DRW-01, DRW-03). */
+/**
+ * Adds imported drawings to the register, keeping their order (DRW-01,
+ * DRW-03). A drawing filed under a plant unit that is gone (deleted while it
+ * was imported) is left unassigned.
+ */
 export function addDrawings(doc: ProjectDoc, drawings: readonly Drawing[]): void {
   for (const drawing of drawings) {
     if (doc.drawings[drawing.id]) continue;
-    doc.drawings[drawing.id] = drawing;
+    const unitKnown = !drawing.unitId || doc.plantUnits.some((u) => u.id === drawing.unitId);
+    doc.drawings[drawing.id] = unitKnown ? drawing : { ...drawing, unitId: null };
     doc.drawingOrder.push(drawing.id);
   }
 }

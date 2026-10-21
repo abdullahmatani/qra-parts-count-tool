@@ -180,10 +180,32 @@ export const Drawing = z
     importedAt: Timestamp,
     /** DRW-07: set when a revision replacement changed the page size. */
     needsReview: z.boolean().default(false),
+    /** DRW-11: the plant unit the drawing is filed under; null leaves it unassigned. */
+    unitId: Id.nullable().default(null),
   })
   .meta({
     id: 'Drawing',
     description: 'One drawing: a PDF page or a DWG/DXF layout copied into drawings/ (DRW-01..04).',
+  });
+
+// ---------------------------------------------------------------------------
+// Plant breakdown (DRW-11)
+// ---------------------------------------------------------------------------
+
+/**
+ * A unit of the plant (the project's facility), e.g. "Unit 100 Gas
+ * compression". The drawing list can show the drawings organised by unit:
+ * plant, then unit, then drawing.
+ */
+export const PlantUnit = z
+  .object({
+    id: Id,
+    /** Unique name, compared case-insensitively. */
+    name: z.string().min(1).max(200),
+  })
+  .meta({
+    id: 'PlantUnit',
+    description: 'A unit of the plant that drawings are filed under (DRW-11).',
   });
 
 // ---------------------------------------------------------------------------
@@ -692,6 +714,8 @@ export const ProjectV1 = z.object({
   revision: z.number().int().nonnegative().default(0),
   settings: ProjectSettings,
   drawings: z.array(Drawing).default([]),
+  /** DRW-11: the units of the plant breakdown, in the order they were added. */
+  plantUnits: z.array(PlantUnit).default([]),
   segments: z.array(Segment).default([]),
   markers: z.array(Marker).default([]),
   items: z.array(CountItem).default([]),

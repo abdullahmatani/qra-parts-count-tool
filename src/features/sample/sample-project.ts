@@ -56,6 +56,7 @@ function addSampleDrawings(doc: ProjectDoc, file: { hash: string }, now: Date): 
       size: { width: SHEET.width, height: SHEET.height },
       importedAt: now.toISOString(),
       needsReview: false,
+      unitId: null,
     };
     doc.drawings[drawing.id] = drawing;
     doc.drawingOrder.push(drawing.id);

@@ -49,6 +49,7 @@ export function makeDrawing(overrides: Partial<Drawing> = {}): Drawing {
     size: { width: 2384, height: 1684 },
     importedAt: FIXED_NOW.toISOString(),
     needsReview: false,
+    unitId: null,
     ...overrides,
   };
 }

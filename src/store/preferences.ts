@@ -6,6 +6,8 @@ export type ThemePreference = 'system' | 'light' | 'dark';
 export type Density = 'compact' | 'comfortable';
 /** How DWG/DXF drawings are coloured: like a monochrome plot, or with their CAD colours. */
 export type CadColorMode = 'monochrome' | 'color';
+/** How the drawing list shows the drawings: one flat list, or organised by plant unit (DRW-11). */
+export type DrawingListView = 'all' | 'organised';
 
 /**
  * Per-user interface preferences. These are stored in the browser (localStorage)
@@ -29,12 +31,14 @@ export interface PreferencesState {
    * instead of the drawing number read from its title block.
    */
   drawingNamesFromFiles: boolean;
+  drawingListView: DrawingListView;
   setTheme: (theme: ThemePreference) => void;
   setCadColorMode: (mode: CadColorMode) => void;
   setDensity: (density: Density) => void;
   setInitials: (initials: string) => void;
   setAutoAssignSegment: (autoAssignSegment: boolean) => void;
   setDrawingNamesFromFiles: (drawingNamesFromFiles: boolean) => void;
+  setDrawingListView: (drawingListView: DrawingListView) => void;
 }
 
 export const usePreferences = create<PreferencesState>()(
@@ -46,12 +50,14 @@ export const usePreferences = create<PreferencesState>()(
       cadColorMode: 'monochrome',
       autoAssignSegment: true,
       drawingNamesFromFiles: true,
+      drawingListView: 'all',
       setTheme: (theme) => set({ theme }),
       setCadColorMode: (cadColorMode) => set({ cadColorMode }),
       setDensity: (density) => set({ density }),
       setInitials: (initials) => set({ initials: initials.trim().slice(0, 8) }),
       setAutoAssignSegment: (autoAssignSegment) => set({ autoAssignSegment }),
       setDrawingNamesFromFiles: (drawingNamesFromFiles) => set({ drawingNamesFromFiles }),
+      setDrawingListView: (drawingListView) => set({ drawingListView }),
     }),
     {
       name: 'qrapc.preferences',
@@ -64,6 +70,7 @@ export const usePreferences = create<PreferencesState>()(
         cadColorMode,
         autoAssignSegment,
         drawingNamesFromFiles,
+        drawingListView,
       }) => ({
         theme,
         density,
@@ -71,6 +78,7 @@ export const usePreferences = create<PreferencesState>()(
         cadColorMode,
         autoAssignSegment,
         drawingNamesFromFiles,
+        drawingListView,
       }),
     },
   ),

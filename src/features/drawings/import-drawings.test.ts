@@ -89,6 +89,20 @@ describe('drawing import (DRW-01, DRW-03, DRW-04)', () => {
     ]);
   });
 
+  it('files the new drawings under the plant unit they are imported into (DRW-11)', async () => {
+    useProjectStore
+      .getState()
+      .apply('add unit', (d) => void d.plantUnits.push({ id: 'unt_1', name: 'Unit 100' }));
+    await importDrawingFiles([file('PEFS-2000.pdf')], undefined, { ...deps(2), unitId: 'unt_1' });
+    await importDrawingFiles([file('PEFS-3000.pdf')], undefined, deps(1));
+    const doc = useProjectStore.getState().doc!;
+    expect(doc.drawingOrder.map((id) => doc.drawings[id]!.unitId)).toEqual([
+      'unt_1',
+      'unt_1',
+      null,
+    ]);
+  });
+
   it('skips a file whose content was already imported', async () => {
     await importDrawingFiles([file('a.pdf', 'same')], undefined, deps(1));
     const report = await importDrawingFiles([file('renamed.pdf', 'same')], undefined, deps(1));

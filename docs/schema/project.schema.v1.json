@@ -92,6 +92,13 @@
         "$ref": "#/$defs/Drawing"
       }
     },
+    "plantUnits": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PlantUnit"
+      }
+    },
     "segments": {
       "default": [],
       "type": "array",
@@ -333,6 +340,19 @@
         "needsReview": {
           "default": false,
           "type": "boolean"
+        },
+        "unitId": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -344,6 +364,26 @@
         "importedAt"
       ],
       "description": "One drawing: a PDF page or a DWG/DXF layout copied into drawings/ (DRW-01..04)."
+    },
+    "PlantUnit": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "description": "A unit of the plant that drawings are filed under (DRW-11)."
     },
     "Segment": {
       "type": "object",

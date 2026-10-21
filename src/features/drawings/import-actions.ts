@@ -7,7 +7,7 @@ import { inspectPdf } from './pdf-inspect';
 import { useSpacePicker } from './space-picker-store';
 
 /** Production dependencies: PDF.js inspection, the CAD workers and the space picker. */
-async function importDeps(): Promise<ImportDeps> {
+async function importDeps(unitId: string | null): Promise<ImportDeps> {
   const [client, cache] = await Promise.all([
     import('@/features/cad/cad-client'),
     import('@/features/cad/cad-cache'),
@@ -16,6 +16,7 @@ async function importDeps(): Promise<ImportDeps> {
     inspect: inspectPdf,
     now: () => new Date(),
     nameFromFile: usePreferences.getState().drawingNamesFromFiles,
+    unitId,
     chooseSpaces: (candidates) => useSpacePicker.getState().ask(candidates),
     cad: {
       available: client.isDwgReaderAvailable,
@@ -29,8 +30,14 @@ async function importDeps(): Promise<ImportDeps> {
 
 const t = i18n.t.bind(i18n);
 
-/** Imports files with progress and a summary toast; opens the first new drawing. */
-export async function importWithFeedback(files: readonly File[]): Promise<void> {
+/**
+ * Imports files with progress and a summary toast; opens the first new
+ * drawing. With a plant unit, the new drawings are filed under it (DRW-11).
+ */
+export async function importWithFeedback(
+  files: readonly File[],
+  unitId: string | null = null,
+): Promise<void> {
   if (files.length === 0) return;
   const toastId = toast.loading(t('import.progress', { done: 0, total: files.length, name: '' }));
   try {
@@ -42,7 +49,7 @@ export async function importWithFeedback(files: readonly File[]): Promise<void> 
           { id: toastId },
         );
       },
-      await importDeps(),
+      await importDeps(unitId),
     );
     const drawings = report.drawingIds.length;
     const lines = report.skipped.map((skip) =>
@@ -66,14 +73,23 @@ export async function importWithFeedback(files: readonly File[]): Promise<void> 
   }
 }
 
-/** Opens the browser file picker for drawings (must be called from a user gesture). */
-export function openDrawingImport(): void {
+function pickAndImport(unitId: string | null): void {
   const input = document.createElement('input');
   input.type = 'file';
   input.multiple = true;
   input.accept = IMPORTABLE_EXTENSIONS.join(',');
   input.addEventListener('change', () => {
-    void importWithFeedback(input.files ? [...input.files] : []);
+    void importWithFeedback(input.files ? [...input.files] : [], unitId);
   });
   input.click();
+}
+
+/** Opens the browser file picker for drawings (must be called from a user gesture). */
+export function openDrawingImport(): void {
+  pickAndImport(null);
+}
+
+/** Opens the file picker for drawings to file under a plant unit (DRW-11). */
+export function openDrawingImportIntoUnit(unitId: string): void {
+  pickAndImport(unitId);
 }

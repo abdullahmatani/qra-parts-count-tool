@@ -60,6 +60,8 @@ export interface ImportDeps {
   now: () => Date;
   /** Name drawings after their files instead of the title block's drawing number and sheet. */
   nameFromFile: boolean;
+  /** DRW-11: the plant unit new drawings are filed under; unassigned when absent. */
+  unitId?: string | null;
 }
 
 function extensionOf(name: string): string {
@@ -187,6 +189,7 @@ export async function importDrawingFiles(
             size: page.size,
             importedAt,
             needsReview: false,
+            unitId: deps.unitId ?? null,
           });
         }
         report.imported.push({ fileName: file.name, pages: pages.length });
@@ -287,6 +290,7 @@ export async function importDrawingFiles(
             size: { width: list.width, height: list.height },
             importedAt,
             needsReview: false,
+            unitId: deps.unitId ?? null,
           });
         }
         report.imported.push({ fileName: pending.file.name, pages: spaces.length });
