@@ -4,11 +4,13 @@
  * template changes. Sheet copies (one per segment) are exact copies of the
  * master's XML, and external links, protected ranges, data validation, named
  * ranges, custom XML and document properties all pass through untouched.
- * Excel is asked to recalculate on opening, as the formulas' cached results
- * predate the new inputs.
+ * Formulas on a written sheet that use only its own cells store their new
+ * results (lib/xlsx/formula-values), and Excel is asked to recalculate on
+ * opening for any whose stored result predates the new inputs.
  */
 import type { CellValue, ExcelPlan, ExtraSheet } from '@/domain/export/excel-plan';
 import { FormulaCellError, newSheetXml, writeCells, type XlsxCellWrite } from '@/lib/xlsx/cells';
+import { refreshFormulaValues } from '@/lib/xlsx/formula-values';
 import {
   CONTENT_TYPES,
   REL_TYPES,
@@ -472,7 +474,8 @@ export async function writeWorkbook(
   }
   for (const [part, writes] of bySheet) {
     try {
-      pkg.write(part, writeCells(pkg.read(part), writes));
+      // The sheet's own results store their new values, for viewers that do not recalculate.
+      pkg.write(part, refreshFormulaValues(writeCells(pkg.read(part), writes)));
     } catch (error) {
       if (error instanceof FormulaCellError) {
         const sheet = book.sheets.find((s) => s.part === part)?.name ?? part;

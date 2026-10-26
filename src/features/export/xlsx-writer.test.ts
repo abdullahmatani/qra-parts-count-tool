@@ -327,8 +327,9 @@ describe('XML-level Excel writer (EXP-02)', () => {
       '<c r="B4" s="1" t="inlineStr"><is><t xml:space="preserve">IS-01</t></is></c>',
     );
     expect(is01).toContain('<c r="B9" s="1"><v>42.5</v></c>');
+    // The hidden formula on C22 stores its new result for viewers that do not recalculate.
     expect(is01).toContain(
-      '<c r="C22" s="2"><v>3</v></c><c r="D22" s="2"/><c r="H22"><f>C22*2</f><v>0</v></c>',
+      '<c r="C22" s="2"><v>3</v></c><c r="D22" s="2"/><c r="H22"><f>C22*2</f><v>6</v></c>',
     );
     expect(is01).toContain('<t xml:space="preserve">Note &lt;1&gt; &amp; &quot;2&quot;</t>');
     expect(is02).toContain(

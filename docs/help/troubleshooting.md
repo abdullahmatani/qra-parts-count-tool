@@ -18,7 +18,7 @@ What to do when something does not work as expected, and answers to common quest
 | Find similar finds nothing                              | Lower the similarity, or ring the symbol with a larger circle. It works best on clean drawings and one symbol type at a time. |
 | A circle went to the wrong segment                      | It was placed on another segment's highlighting. Move it, or pick the segment in the panel.                                   |
 | A PDF is reported as encrypted on export                | Ask for an unprotected copy of the drawing; password-protected PDFs cannot be annotated.                                      |
-| Excel shows old results in the A2.1 sheet               | Open the file in Excel, which recalculates on opening. In LibreOffice, set recalculation on file load to **Always**.          |
+| Excel shows old results in the A2.1 sheet               | Exports from this version save the results worked out. For an older export, open it in Excel and click **Enable Editing**.    |
 | Save shows an error                                     | The folder may be read-only or full. The app keeps retrying; your edits stay in the open tab.                                 |
 | Something went wrong after an edit                      | **Undo** (`Ctrl+Z`), or restore a snapshot from **Project › Backups**.                                                        |
 | The app shows an old version                            | Click **Update** in the header when it appears, or reload the page while online.                                              |

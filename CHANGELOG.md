@@ -5,6 +5,15 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Results saved worked out in the Excel export**: the results at the top of each filled sheet,
+  such as the A2.1 **Freq/yr** row under the hole sizes, are now saved with the values worked out
+  from that segment's counts, not the template's old ones. They used to read 0 (or the template's
+  last results) until Excel recalculated, so a file opened in Protected View, previewed in Outlook,
+  Teams or on a phone, or read by another program showed the wrong figures. Formulas, number formats
+  and everything else in the template are unchanged, and Excel still recalculates on opening.
+  Formulas that use other sheets, other files or functions other than SUM are left for Excel to
+  recalculate as before.
+
 - **Drawings organised by plant unit** (DRW-11): two buttons at the top of the drawing list switch
   between **All files** and **Organised by plant unit**, a plant breakdown with the plant (the
   project's facility) at the top, its units below in name order, and each unit's drawings by

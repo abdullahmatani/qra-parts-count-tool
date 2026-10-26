@@ -326,7 +326,7 @@ The user supplies the Excel layout; the tool never imposes one. A mapping, built
 **Template handling**
 
 - The tool preserves the template's formatting, formulas, named ranges and other sheets; it writes values only into mapped cells.
-- Formulas in the template (e.g. leak frequency × count) recalculate when the user opens the file in Excel.
+- Formulas in the template (e.g. leak frequency × count) recalculate when the user opens the file in Excel. Formulas on a filled sheet that use only that sheet's cells (arithmetic and SUM) are also saved with their new results, so the results read correctly where Excel does not recalculate (Protected View, file previews, other programs).
 - Macro-enabled templates (.xlsm) are out of scope for v1; the tool asks for an .xlsx copy.
 - The mapping can be exported and reused for other projects with the same client template.
 

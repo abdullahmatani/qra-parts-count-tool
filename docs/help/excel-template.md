@@ -6,7 +6,9 @@ reuse it with the same client template.
 
 The template is copied into `templates/` and never changed: every export writes a filled copy.
 Only the mapped cells are written, so formatting, formulas, sheet protection, links and named
-ranges stay as they are, and Excel recalculates the results when the file is opened.
+ranges stay as they are. The results on each filled sheet (such as the A2.1 **Freq/yr** row) are
+saved already worked out, so they show correctly in Excel's Protected View, in file previews and in
+other programs; Excel also recalculates everything when the file is opened.
 
 ## Map a template
 
@@ -68,8 +70,10 @@ The starter library of a new project matches the sheet's equipment rows and size
 projects get the missing A2.1 types added when the mapping is applied; finer bins (for example
 3"–6" and 6"–11") are added together into the A2.1 row that contains them.
 
-In LibreOffice, set **Tools › Options › LibreOffice Calc › Formula › Recalculation on file load** to
-**Always** so the results rows are recalculated.
+The **Results** rows at the top of each segment's sheet (hole sizes 2, 7, 22, 70 and 150 mm and
+the leak frequency per year for each) keep the template's formulas and number format, and are saved
+with the values worked out from that segment's counts, so they read correctly as soon as the file is
+opened.
 
 ## No template yet?
 

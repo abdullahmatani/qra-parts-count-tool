@@ -59,14 +59,14 @@ export function cellXml(ref: string, value: XlsxValue, style: string | null): st
   return `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${xmlText(value)}</t></is></c>`;
 }
 
-interface CellSpan {
+export interface CellSpan {
   column: number;
   start: number;
   end: number;
   xml: string;
 }
 
-interface RowSpan {
+export interface RowSpan {
   row: number;
   start: number;
   end: number;
@@ -74,7 +74,8 @@ interface RowSpan {
   inner: string | null;
 }
 
-function rowsOf(sheetData: string): RowSpan[] {
+/** The rows of a sheet's `<sheetData>` content, with their offsets in it. */
+export function rowsOf(sheetData: string): RowSpan[] {
   const rows: RowSpan[] = [];
   let last = 0;
   for (const m of sheetData.matchAll(/<row\b([^>]*?)(\/>|>([\s\S]*?)<\/row>)/g)) {
@@ -93,7 +94,8 @@ function rowsOf(sheetData: string): RowSpan[] {
   return rows;
 }
 
-function cellsOf(inner: string, row: number): CellSpan[] {
+/** The cells of a row's content, with their offsets in it. */
+export function cellsOf(inner: string, row: number): CellSpan[] {
   const cells: CellSpan[] = [];
   let last = 0;
   for (const m of inner.matchAll(/<c\b[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g)) {
