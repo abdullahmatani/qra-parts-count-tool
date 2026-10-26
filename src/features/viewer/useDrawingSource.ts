@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Drawing } from '@/domain/schema/types';
+import { DISPLAY_LIST_VERSION } from '@/features/cad/display-list';
 import { isNotFound } from '@/lib/fs/types';
 import { getWorkingDirectory } from '@/services/session';
 import { usePreferences } from '@/store/preferences';
@@ -42,10 +43,11 @@ export function useDrawingSource(drawing: Drawing | null): SourceState {
     const dir = getWorkingDirectory();
     (async () => {
       if (!dir) throw new Error('No working directory is open');
+      // A CAD preview is redrawn when its display list changes (e.g. a reader learns to draw more).
       const cachePath = previewCachePath(
         drawing,
         PREVIEW_MAX_DIMENSION,
-        drawing.fileType === 'pdf' ? '' : cadColorMode,
+        drawing.fileType === 'pdf' ? '' : `${cadColorMode}-d${DISPLAY_LIST_VERSION}`,
       );
       // Previews with hidden layers are not cached: the cache holds the full drawing.
       const [source, cached] = await Promise.all([

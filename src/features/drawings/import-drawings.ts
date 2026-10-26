@@ -11,7 +11,12 @@ import type { ProjectDoc } from '@/domain/model';
 import type { Drawing } from '@/domain/schema/types';
 import { guessTitleBlock, type TextItem, type TitleBlockGuess } from '@/domain/title-block';
 import type { CadHandle } from '@/features/cad/cad-client';
-import { displayListText, type DisplayList, type SpaceInfo } from '@/features/cad/display-list';
+import {
+  displayListText,
+  type DisplayList,
+  type MissingContent,
+  type SpaceInfo,
+} from '@/features/cad/display-list';
 import { MODEL_SPACE } from '@/features/cad/model';
 import type { FsDirHandle } from '@/lib/fs/types';
 import { sha256Hex } from '@/lib/hash';
@@ -28,6 +33,8 @@ export type SkipReason = 'duplicate' | 'unsupported' | 'failed' | 'dwgUnavailabl
 export interface ImportReport {
   imported: { fileName: string; pages: number }[];
   skipped: { fileName: string; reason: SkipReason; detail?: string }[];
+  /** Imported CAD layouts with content that cannot be drawn, to tell the user (DRW-02). */
+  incomplete: { fileName: string; space: string; missing: MissingContent }[];
   drawingIds: string[];
 }
 
@@ -137,7 +144,7 @@ export async function importDrawingFiles(
   const imported = importedSheets(doc);
   // The same content twice in one import is imported once.
   const seen = new Set<string>();
-  const report: ImportReport = { imported: [], skipped: [], drawingIds: [] };
+  const report: ImportReport = { imported: [], skipped: [], incomplete: [], drawingIds: [] };
   const created: Drawing[] = [];
   const pendingCad: PendingCad[] = [];
 
@@ -292,6 +299,9 @@ export async function importDrawingFiles(
             needsReview: false,
             unitId: deps.unitId ?? null,
           });
+          if (list.missing) {
+            report.incomplete.push({ fileName: pending.file.name, space, missing: list.missing });
+          }
         }
         report.imported.push({ fileName: pending.file.name, pages: spaces.length });
       } catch (error) {

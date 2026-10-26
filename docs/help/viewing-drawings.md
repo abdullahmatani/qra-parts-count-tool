@@ -51,6 +51,13 @@ one drawing.
   text. Untick one to hide it, for example a title-block or grid layer that hides symbols; **Show
   all** brings every layer back. Hidden layers apply to this browser session only; exported PDFs
   always show every layer.
+- **Items not shown**: a few kinds of CAD content cannot be drawn yet, for example multileaders,
+  tables, embedded OLE objects, raster images, PDF underlays, external references (xrefs) and
+  objects from add-on applications such as AutoCAD P&ID. When a drawing has any, a **1 item not
+  shown** (or **3 items not shown**) button appears at its top right, and the import summary says
+  so too. Click it for the list. Those items are missing from the drawing and from its PDF export,
+  so check those areas against the original drawing or a PDF plot before you count, or import the
+  PDF plot of the sheet as well.
 
 ## Marker labels and links
 

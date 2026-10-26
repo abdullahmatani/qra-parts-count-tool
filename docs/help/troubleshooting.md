@@ -11,6 +11,7 @@ What to do when something does not work as expected, and answers to common quest
 | The browser asks again for access to a recent project   | Browsers forget folder permissions after a while. Confirm access to the folder; nothing is lost.                              |
 | "The drawing file is missing from the drawings folder"  | The file in `drawings/` was moved or renamed. Put it back, or re-import it.                                                   |
 | A DWG will not import                                   | Import a DXF saved from the same drawing, or a PDF plot of it.                                                                |
+| Something on a DWG or DXF drawing is missing            | See **items not shown** at the top right of the drawing; compare those areas with a PDF plot, or import the plot.             |
 | Find text finds nothing on a PDF                        | The PDF is a scan without a text layer. Ask for a plotted PDF, or search another drawing.                                     |
 | The Highlighter cuts across instead of following a pipe | Zoom in where lines run close together, or hold `Alt` to paint freely.                                                        |
 | Auto trace is greyed out                                | Place an ESDV, an end flange or a drawing link on the drawing first: the trace runs out to them.                              |

@@ -23,6 +23,7 @@ import {
   type CadDocument,
   type CadEntity,
   type CadStyle,
+  type CadVertex,
   type Vec2,
 } from '../model';
 import { arcPoints, bulgePoints, ellipsePoints, splinePoints } from '../geometry';
@@ -91,6 +92,18 @@ function textFrom(
     vAlign,
     text: content,
   };
+}
+
+type WidthVertex = Point & { bulge?: number; startWidth?: number; endWidth?: number };
+
+/** A polyline vertex with its segment widths, falling back to the polyline's own. */
+function vertexOf(v: WidthVertex, startWidth: number, endWidth: number): CadVertex {
+  const vertex: CadVertex = { x: v.x, y: v.y, bulge: v.bulge ?? 0 };
+  const start = v.startWidth ?? startWidth;
+  const end = v.endWidth ?? endWidth;
+  if (start > 0) vertex.startWidth = start;
+  if (end > 0) vertex.endWidth = end;
+  return vertex;
 }
 
 function hatchLoops(entity: DwgHatchEntity, tolerance: number): Vec2[][] {
@@ -162,7 +175,107 @@ interface ConvertContext {
   tolerance: number;
 }
 
+/** Counts an entity that cannot be drawn and keeps its place with a placeholder. */
+function unsupported(style: CadStyle, name: string, ctx: ConvertContext): CadEntity {
+  ctx.unsupported[name] = (ctx.unsupported[name] ?? 0) + 1;
+  return { ...style, type: 'unsupported', name };
+}
+
+/**
+ * An entity LibreDWG's converter leaves out of its database altogether (such
+ * as TRACE, MINSERT, PDF underlays and objects of add-on applications), found
+ * by scanning the file's objects in the reader worker.
+ */
+export interface SkippedEntity {
+  /** DXF type name, e.g. TRACE or ACAD_PROXY_ENTITY. */
+  type: string;
+  /** Handle of the block record (space or block) that owns it. */
+  owner: string;
+  layer: string;
+}
+
+const norm360 = (angle: number): number => ((angle % 360) + 360) % 360;
+
+/** True when an extrusion is (0, 0, -1): OCS x runs along world -x. */
+function isMirrored(extrusion: unknown): boolean {
+  const n = extrusion as { x?: number; y?: number; z?: number } | undefined;
+  return (n?.z ?? 1) < 0 && Math.abs(n?.x ?? 0) < 1 / 64 && Math.abs(n?.y ?? 0) < 1 / 64;
+}
+
+/** Entity types whose coordinates are in the entity's own coordinate system (OCS). */
+const OCS_TYPES = new Set([
+  'ARC',
+  'CIRCLE',
+  'ELLIPSE',
+  'LWPOLYLINE',
+  'POLYLINE2D',
+  'TEXT',
+  'INSERT',
+  'SOLID',
+  'TRACE',
+  'HATCH',
+]);
+
+/**
+ * Mirrors an entity read in a (0, 0, -1) OCS into world coordinates, as the
+ * DXF reader does: such entities (mirrored geometry often has them) would
+ * otherwise land on the far side of the y axis, outside their sheet.
+ */
+function mirrorOcs(entity: CadEntity): void {
+  switch (entity.type) {
+    case 'circle':
+      entity.center[0] = -entity.center[0];
+      return;
+    case 'arc':
+      entity.center[0] = -entity.center[0];
+      [entity.startAngle, entity.endAngle] = [
+        norm360(180 - entity.endAngle),
+        norm360(180 - entity.startAngle),
+      ];
+      return;
+    case 'ellipse':
+      // Centre and axis are in WCS; only the direction of the parameter reverses.
+      [entity.startParam, entity.endParam] = [-entity.endParam, -entity.startParam];
+      return;
+    case 'polyline':
+      for (const v of entity.vertices) {
+        v.x = -v.x;
+        v.bulge = -v.bulge;
+      }
+      return;
+    case 'text':
+      // Mirrored text: x negated, and the text's own x axis mirrored (negative width).
+      entity.position[0] = -entity.position[0];
+      if (entity.alignPoint) entity.alignPoint[0] = -entity.alignPoint[0];
+      entity.rotation = -entity.rotation;
+      entity.widthFactor = -entity.widthFactor;
+      return;
+    case 'insert':
+      // With M the x mirror, M·(p + R(θ)·(o + S·q)) = M·p + R(−θ)·(M·o + M·S·q).
+      entity.position[0] = -entity.position[0];
+      entity.rotation = -entity.rotation;
+      entity.scale[0] = -entity.scale[0];
+      entity.columnSpacing = -entity.columnSpacing;
+      return;
+    case 'solid':
+      for (const p of entity.points) p[0] = -p[0];
+      return;
+    case 'hatch':
+      for (const loop of entity.loops) for (const p of loop) p[0] = -p[0];
+      return;
+    default:
+      return;
+  }
+}
+
 function convertEntity(entity: DwgEntity, ctx: ConvertContext): CadEntity | null {
+  const converted = convertShape(entity, ctx);
+  const extrusion = (entity as unknown as { extrusionDirection?: unknown }).extrusionDirection;
+  if (converted && OCS_TYPES.has(entity.type) && isMirrored(extrusion)) mirrorOcs(converted);
+  return converted;
+}
+
+function convertShape(entity: DwgEntity, ctx: ConvertContext): CadEntity | null {
   if (entity.isVisible === false) return null;
   const style: CadStyle = {
     layer: entity.layer || '0',
@@ -181,31 +294,40 @@ function convertEntity(entity: DwgEntity, ctx: ConvertContext): CadEntity | null
         end: v2(e.endPoint as Point),
       };
     case 'LWPOLYLINE': {
-      const vertices = (e.vertices as { x: number; y: number; bulge?: number }[]) ?? [];
+      const vertices = (e.vertices as WidthVertex[]) ?? [];
+      // A constant width overrides the per-vertex widths (as DXF group 43 does 40/41).
+      const constant = (e.constantWidth as number | undefined) ?? 0;
       return {
         ...style,
         type: 'polyline',
         closed: ((e.flag as number) & 1) === 1,
-        vertices: vertices.map((v) => ({ x: v.x, y: v.y, bulge: v.bulge ?? 0 })),
+        vertices: vertices.map((v) =>
+          constant > 0
+            ? vertexOf({ x: v.x, y: v.y, bulge: v.bulge }, constant, constant)
+            : vertexOf(v, 0, 0),
+        ),
       };
     }
     case 'POLYLINE2D':
     case 'POLYLINE3D': {
       const flag = (e.flag as number) ?? 0;
       if (flag & 64 || flag & 16) {
-        ctx.unsupported[`${entity.type} mesh`] = (ctx.unsupported[`${entity.type} mesh`] ?? 0) + 1;
-        return null;
+        return unsupported(style, 'POLYLINE (mesh)', ctx);
       }
-      const vertices = (
-        (e.vertices as { x: number; y: number; bulge?: number; flag?: number }[]) ?? []
-      )
+      const vertices = ((e.vertices as (WidthVertex & { flag?: number })[]) ?? [])
         // Spline frame control points are not part of the drawn curve.
         .filter((v) => ((v.flag ?? 0) & 16) === 0);
+      // 3D polylines have no width; a 2D polyline's own widths are the defaults of its vertices.
+      const is2d = entity.type === 'POLYLINE2D';
+      const startWidth = is2d ? ((e.startWidth as number | undefined) ?? 0) : 0;
+      const endWidth = is2d ? ((e.endWidth as number | undefined) ?? 0) : 0;
       return {
         ...style,
         type: 'polyline',
         closed: (flag & 1) === 1,
-        vertices: vertices.map((v) => ({ x: v.x, y: v.y, bulge: v.bulge ?? 0 })),
+        vertices: vertices.map((v) =>
+          is2d ? vertexOf(v, startWidth, endWidth) : { x: v.x, y: v.y, bulge: v.bulge ?? 0 },
+        ),
       };
     }
     case 'CIRCLE':
@@ -271,6 +393,7 @@ function convertEntity(entity: DwgEntity, ctx: ConvertContext): CadEntity | null
       for (const attrib of insert.attribs ?? []) {
         const a = attrib as unknown as Record<string, unknown> & DwgEntity;
         if (((a.flags as number) ?? 0) & 1) continue; // invisible attribute
+        const base = (a.text as DwgTextBase & { text?: string }) ?? {};
         const text = textFrom(
           {
             layer: a.layer || '0',
@@ -278,8 +401,9 @@ function convertEntity(entity: DwgEntity, ctx: ConvertContext): CadEntity | null
             lineType: lineTypeOf(a.lineType),
             lineWeight: lineWeightToMm(a.lineweight, ctx.fromDwg),
           },
-          (a.text as DwgTextBase & { text?: string }) ?? {},
+          base,
         );
+        if (text && isMirrored(base.extrusionDirection)) mirrorOcs(text);
         if (text) attributes.push(text);
       }
       return {
@@ -335,7 +459,10 @@ function convertEntity(entity: DwgEntity, ctx: ConvertContext): CadEntity | null
       };
     }
     case 'DIMENSION':
-      return e.name ? { ...style, type: 'dimension', block: e.name as string } : null;
+      // A dimension is drawn from its block; without one there is nothing to draw.
+      return e.name
+        ? { ...style, type: 'dimension', block: e.name as string }
+        : unsupported(style, 'DIMENSION', ctx);
     case 'LEADER':
       return {
         ...style,
@@ -364,8 +491,7 @@ function convertEntity(entity: DwgEntity, ctx: ConvertContext): CadEntity | null
     case 'ATTDEF':
       return null;
     default:
-      ctx.unsupported[entity.type] = (ctx.unsupported[entity.type] ?? 0) + 1;
-      return null;
+      return unsupported(style, entity.type, ctx);
   }
 }
 
@@ -390,10 +516,16 @@ export function markOverallViewport(entities: CadEntity[]): CadEntity[] {
   return entities;
 }
 
-/** Converts a LibreDWG database to the neutral model. */
+/**
+ * Converts a LibreDWG database to the neutral model. `skipped` lists the
+ * entities LibreDWG left out of the database; each is kept as a placeholder
+ * in its space or block, so the sheets that show it report it as missing.
+ */
 export function convertDwgDatabase(
   db: DwgDatabase,
-  options: { fromDwg: boolean; version?: string } = { fromDwg: true },
+  options: { fromDwg: boolean; version?: string; skipped?: readonly SkippedEntity[] } = {
+    fromDwg: true,
+  },
 ): CadDocument {
   const doc = emptyCadDocument(options.fromDwg ? 'libredwg-dwg' : 'libredwg-dxf');
   doc.version = options.version ?? '';
@@ -433,6 +565,23 @@ export function convertDwgDatabase(
     if (pattern.length > 1) doc.lineTypes[lt.name] = { name: lt.name, pattern };
   }
 
+  const skippedByOwner = new Map<string, CadEntity[]>();
+  for (const skipped of options.skipped ?? []) {
+    const placeholder = unsupported(
+      { layer: skipped.layer || '0', color: BY_LAYER },
+      skipped.type,
+      ctx,
+    );
+    const owned = skippedByOwner.get(skipped.owner);
+    if (owned) owned.push(placeholder);
+    else skippedByOwner.set(skipped.owner, [placeholder]);
+  }
+  /** The converted entities of a block record, with the placeholders of those LibreDWG skipped. */
+  const convertOwned = (entities: readonly DwgEntity[], owner: string | undefined) => [
+    ...convertAll(entities, ctx),
+    ...((owner && skippedByOwner.get(owner)) || []),
+  ];
+
   const blockRecords = db.tables.BLOCK_RECORD?.entries ?? [];
   const byHandle = new Map(blockRecords.map((record) => [record.handle, record] as const));
   let modelRecordHandle: string | null = null;
@@ -446,7 +595,9 @@ export function convertDwgDatabase(
     doc.blocks[record.name] = {
       name: record.name,
       base: v2(record.basePoint),
-      entities: convertAll(record.entities ?? [], ctx),
+      entities: convertOwned(record.entities ?? [], record.handle),
+      // Flag 4 is an external reference, 8 an overlaid one; their content is not in this file.
+      ...((record.flags ?? 0) & (4 | 8) ? { external: true } : {}),
     };
   }
 
@@ -454,7 +605,10 @@ export function convertDwgDatabase(
   const modelEntities = db.entities.filter(
     (entity) => !modelRecordHandle || entity.ownerBlockRecordSoftId === modelRecordHandle,
   );
-  doc.modelSpace = convertAll(modelEntities.length ? modelEntities : db.entities, ctx);
+  doc.modelSpace = convertOwned(
+    modelEntities.length ? modelEntities : db.entities,
+    modelRecordHandle ?? undefined,
+  );
 
   // Paper-space layouts: the entities of each layout's block record.
   for (const layout of db.objects.LAYOUT ?? []) {
@@ -468,7 +622,7 @@ export function convertDwgDatabase(
     doc.layouts.push({
       name: layout.layoutName,
       tabOrder: layout.tabOrder,
-      entities: markOverallViewport(convertAll(entities, ctx)),
+      entities: markOverallViewport(convertOwned(entities, layout.paperSpaceTableId)),
       limits:
         min && max && max.x > min.x && max.y > min.y ? { min: v2(min), max: v2(max) } : undefined,
     });

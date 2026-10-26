@@ -292,8 +292,9 @@ folder copies the whole study.
   fresh instance for each file, and is loaded only when a `.dwg` is imported.
 - Both produce one neutral model. Each model space or layout can be imported as a drawing; its
   display list is cached gzipped in `cache/cad/`, so a DWG is parsed once.
-- Entities the readers cannot show (for example MULTILEADER and tables) are listed in the spike
-  report. For such drawings, import the PDF plot instead; it is flagged as a CAD plot.
+- Entities the readers cannot show (for example MULTILEADER, tables, xrefs and add-on objects) are
+  never dropped silently: the import summary and an **items not shown** notice on the drawing list
+  them. For such drawings, import the PDF plot as well; it is flagged as a CAD plot.
 
 The selection is documented in [`docs/spikes/dwg-renderer.md`](docs/spikes/dwg-renderer.md).
 

@@ -1,4 +1,4 @@
-import type { DwgDatabase } from '@mlightcad/libredwg-web';
+import type { DwgDatabase, DwgEntity } from '@mlightcad/libredwg-web';
 import { describe, expect, it } from 'vitest';
 import { buildDisplayList } from '../display-list';
 import { convertDwgDatabase, markOverallViewport } from './convert-libredwg';
@@ -76,17 +76,188 @@ function database(): DwgDatabase {
   } as unknown as DwgDatabase;
 }
 
+/** The minimal database with only the given model-space entities. */
+function modelSpace(entities: Record<string, unknown>[]): DwgDatabase {
+  const db = database();
+  db.entities = entities.map(
+    (entity, i) =>
+      ({ ...base, handle: `B${i}`, ownerBlockRecordSoftId: '1F', ...entity }) as DwgEntity,
+  );
+  return db;
+}
+
 describe('convertDwgDatabase', () => {
   it('converts model-space entities, with angles in degrees', () => {
     const doc = convertDwgDatabase(database());
     expect(doc.units).toBe(4);
-    expect(doc.modelSpace.map((e) => e.type)).toEqual(['line', 'arc']);
+    expect(doc.modelSpace.map((e) => e.type)).toEqual(['line', 'arc', 'unsupported']);
     const arc = doc.modelSpace[1];
     expect(arc?.type === 'arc' && [arc.startAngle, arc.endAngle]).toEqual([0, 90]);
   });
 
-  it('reports entities it cannot convert', () => {
-    expect(convertDwgDatabase(database()).unsupported).toEqual({ MULTILEADER: 1 });
+  it('reports entities it cannot convert and keeps their place', () => {
+    const doc = convertDwgDatabase(database());
+    expect(doc.unsupported).toEqual({ MULTILEADER: 1 });
+    expect(doc.modelSpace[2]).toMatchObject({ type: 'unsupported', name: 'MULTILEADER' });
+  });
+
+  it('places the entities LibreDWG skipped in their space or block', () => {
+    const db = database();
+    db.tables.BLOCK_RECORD.entries.push(
+      ...([
+        { handle: '60', name: 'VALVE', basePoint: { x: 0, y: 0 }, flags: 64, entities: [] },
+        { handle: '61', name: 'BORDER', basePoint: { x: 0, y: 0 }, flags: 4 | 64, entities: [] },
+      ] as unknown as DwgDatabase['tables']['BLOCK_RECORD']['entries']),
+    );
+    const doc = convertDwgDatabase(db, {
+      fromDwg: true,
+      skipped: [
+        { type: 'TRACE', owner: '1F', layer: 'PIPE' },
+        { type: 'ACAD_PROXY_ENTITY', owner: '60', layer: '0' },
+        { type: 'PDFUNDERLAY', owner: '50', layer: '0' },
+        { type: 'MINSERT', owner: '', layer: '0' },
+      ],
+    });
+    expect(doc.modelSpace.at(-1)).toMatchObject({
+      type: 'unsupported',
+      name: 'TRACE',
+      layer: 'PIPE',
+    });
+    expect(doc.blocks.VALVE).toMatchObject({
+      entities: [{ type: 'unsupported', name: 'ACAD_PROXY_ENTITY' }],
+    });
+    expect(doc.blocks.VALVE!.external).toBeUndefined();
+    expect(doc.blocks.BORDER!.external).toBe(true);
+    expect(doc.layouts[0]!.entities.at(-1)).toMatchObject({ name: 'PDFUNDERLAY' });
+    // Every one is counted for the file, even one whose owner is unknown.
+    expect(doc.unsupported).toEqual({
+      MULTILEADER: 1,
+      TRACE: 1,
+      ACAD_PROXY_ENTITY: 1,
+      PDFUNDERLAY: 1,
+      MINSERT: 1,
+    });
+  });
+
+  it('keeps polyline widths, so tapered arrowheads and thick lines are drawn', () => {
+    const doc = convertDwgDatabase(
+      modelSpace([
+        {
+          type: 'LWPOLYLINE',
+          flag: 0,
+          constantWidth: 0,
+          vertices: [
+            { x: 0, y: 0, bulge: 0, startWidth: 0, endWidth: 0 },
+            { x: 40, y: 0, bulge: 0, startWidth: 3, endWidth: 0 },
+            { x: 46, y: 0, bulge: 0 },
+          ],
+        },
+        {
+          type: 'LWPOLYLINE',
+          flag: 0,
+          constantWidth: 1.5,
+          vertices: [
+            { x: 0, y: 0, bulge: 0 },
+            { x: 0, y: 40, bulge: 0 },
+          ],
+        },
+        {
+          type: 'POLYLINE2D',
+          flag: 0,
+          startWidth: 0.5,
+          endWidth: 0.5,
+          vertices: [
+            { x: 0, y: 0, bulge: 0, startWidth: 2, endWidth: 0, flag: 0 },
+            { x: 10, y: 0, bulge: 0, flag: 0 },
+          ],
+        },
+      ]),
+    );
+    const vertices = doc.modelSpace.map((e) => (e.type === 'polyline' ? e.vertices : null));
+    expect(vertices).toEqual([
+      [
+        { x: 0, y: 0, bulge: 0 },
+        { x: 40, y: 0, bulge: 0, startWidth: 3 },
+        { x: 46, y: 0, bulge: 0 },
+      ],
+      [
+        { x: 0, y: 0, bulge: 0, startWidth: 1.5, endWidth: 1.5 },
+        { x: 0, y: 40, bulge: 0, startWidth: 1.5, endWidth: 1.5 },
+      ],
+      [
+        { x: 0, y: 0, bulge: 0, startWidth: 2 },
+        { x: 10, y: 0, bulge: 0, startWidth: 0.5, endWidth: 0.5 },
+      ],
+    ]);
+  });
+
+  it('mirrors entities with a (0, 0, -1) extrusion into world coordinates', () => {
+    const down = { x: 0, y: 0, z: -1 };
+    const [arc, polyline, insert, plain] = convertDwgDatabase(
+      modelSpace([
+        {
+          type: 'ARC',
+          center: { x: 5, y: 1, z: 0 },
+          radius: 1,
+          startAngle: 0,
+          endAngle: Math.PI / 2,
+          extrusionDirection: down,
+        },
+        {
+          type: 'LWPOLYLINE',
+          flag: 0,
+          vertices: [
+            { x: 1, y: 2, bulge: 0.5 },
+            { x: 3, y: 4, bulge: 0 },
+          ],
+          extrusionDirection: down,
+        },
+        {
+          type: 'INSERT',
+          name: 'B',
+          insertionPoint: { x: 2, y: 3, z: 0 },
+          xScale: 1,
+          yScale: 1,
+          rotation: Math.PI / 6,
+          extrusionDirection: down,
+          attribs: [
+            {
+              ...base,
+              type: 'ATTRIB',
+              flags: 0,
+              text: {
+                text: 'TAG',
+                startPoint: { x: 4, y: 3 },
+                textHeight: 2,
+                rotation: 0,
+                extrusionDirection: down,
+              },
+            },
+          ],
+        },
+        // LibreDWG reports a polyline without a stored extrusion as (0, 0, 0).
+        {
+          type: 'LWPOLYLINE',
+          flag: 0,
+          vertices: [{ x: 1, y: 2, bulge: 0 }],
+          extrusionDirection: { x: 0, y: 0, z: 0 },
+        },
+      ]),
+    ).modelSpace;
+    expect(arc).toMatchObject({ center: [-5, 1], startAngle: 90, endAngle: 180 });
+    expect(polyline).toMatchObject({
+      vertices: [
+        { x: -1, y: 2, bulge: -0.5 },
+        { x: -3, y: 4, bulge: -0 },
+      ],
+    });
+    expect(insert).toMatchObject({ position: [-2, 3], scale: [-1, 1] });
+    expect(insert?.type === 'insert' && insert.rotation).toBeCloseTo(-30, 9);
+    expect(insert?.type === 'insert' && insert.attributes[0]).toMatchObject({
+      position: [-4, 3],
+      widthFactor: -1,
+    });
+    expect(plain).toMatchObject({ vertices: [{ x: 1, y: 2 }] });
   });
 
   it('reads layers, including hidden ones', () => {

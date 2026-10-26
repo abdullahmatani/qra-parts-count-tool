@@ -7,11 +7,12 @@
  *   LTYPE (dash pattern) and BLOCK_RECORD (handle → name, used for layouts).
  * - BLOCKS: block definitions. The *Model_Space and *Paper_Space* containers are
  *   not exposed as blocks; their entities go to model space and the layouts.
- * - ENTITIES: LINE, LWPOLYLINE, POLYLINE (2D and 3D; meshes are skipped), CIRCLE,
- *   ARC, ELLIPSE, SPLINE, TEXT, MTEXT, INSERT with ATTRIBs, SOLID, TRACE, HATCH
- *   (boundaries flattened to point loops), POINT, VIEWPORT, DIMENSION, LEADER and
- *   WIPEOUT. Entities with 67 = 1 are paper space. Other types are counted in
- *   `unsupported`.
+ * - ENTITIES: LINE, LWPOLYLINE and POLYLINE (2D, with widths, and 3D; meshes
+ *   are not drawn), CIRCLE, ARC, ELLIPSE, SPLINE, TEXT, MTEXT, INSERT with
+ *   ATTRIBs, SOLID, TRACE, HATCH (boundaries flattened to point loops), POINT,
+ *   VIEWPORT, DIMENSION, LEADER and WIPEOUT. Entities with 67 = 1 are paper
+ *   space. Other types are counted in `unsupported` and kept as `unsupported`
+ *   placeholders, so the sheets that show them can report them as missing.
  * - OBJECTS: LAYOUT (name, tab order, limits and paper-space block record).
  *
  * Entities whose extrusion is (0, 0, -1), as mirrored geometry often has, are
@@ -443,8 +444,13 @@ interface Context {
 
 type Emit = (entity: CadEntity, paper: boolean, layout: string | undefined) => void;
 
-function countUnsupported(ctx: Context, type: string): void {
+/**
+ * Counts an entity that cannot be drawn and returns a placeholder for it, so
+ * the sheets that show it can report it as missing. `st` holds its groups.
+ */
+function unsupported(ctx: Context, st: StyleState, type: string): CadEntity {
   ctx.doc.unsupported[type] = (ctx.doc.unsupported[type] ?? 0) + 1;
+  return { ...st.toStyle(), type: 'unsupported', name: type };
 }
 
 // ---- sections --------------------------------------------------------------
@@ -592,11 +598,13 @@ function readBlocks(r: GroupReader, ctx: Context): void {
     let altName = '';
     let owner = '';
     let inGroup = false;
+    let flags = 0;
     const base: Vec2 = [0, 0];
     for (let i = start + 1; i < end; i += 1) {
       const code = r.codes[i];
       if (code === 2 && !name) name = r.str(i);
       else if (code === 3 && !altName) altName = r.str(i);
+      else if (code === 70) flags = r.int(i);
       else if (code === 10) base[0] = r.num(i);
       else if (code === 20) base[1] = r.num(i);
       else if (code === 102) inGroup = r.str(i).startsWith('{');
@@ -616,6 +624,8 @@ function readBlocks(r: GroupReader, ctx: Context): void {
       ctx.paperBlocks.push({ name, owner, entities });
     } else {
       ctx.doc.blocks[name] = { name, base, entities };
+      // Flag 4 is an external reference, 8 an overlaid one; their content is not in this file.
+      if (flags & (4 | 8)) ctx.doc.blocks[name].external = true;
     }
   }
 }
@@ -753,8 +763,8 @@ function readEntity(
     case 'DIMENSION':
     case 'ARC_DIMENSION':
     case 'LARGE_RADIAL_DIMENSION':
-      entity = readDimension(r, start, end, st);
-      if (!entity) countUnsupported(ctx, type);
+      // A dimension is drawn from its block; without one there is nothing to draw.
+      entity = readDimension(r, start, end, st) ?? unsupported(ctx, st, type);
       break;
     case 'LEADER':
       entity = readLeader(r, start, end, st);
@@ -776,8 +786,9 @@ function readEntity(
       // POLYLINE, which reads them; here their parent is missing.
       return;
     default:
-      countUnsupported(ctx, type);
-      return;
+      for (let i = start + 1; i < end; i += 1) st.read(r, i, r.codes[i]!);
+      entity = unsupported(ctx, st, type);
+      break;
   }
   if (entity && !st.invisible) emit(entity, st.paper, st.layout);
 }
@@ -868,6 +879,7 @@ function readLwPolyline(
   const vertices: CadVertex[] = [];
   let last: CadVertex | undefined;
   let flags = 0;
+  let constantWidth = 0;
   for (let i = start + 1; i < end; i += 1) {
     const code = r.codes[i]!;
     if (code === 10) {
@@ -877,12 +889,40 @@ function readLwPolyline(
       if (last) last.y = r.num(i);
     } else if (code === 42) {
       if (last) last.bulge = r.num(i);
-    } else if (code === 70) flags = r.int(i);
+    } else if (code === 40) {
+      if (last) last.startWidth = r.num(i);
+    } else if (code === 41) {
+      if (last) last.endWidth = r.num(i);
+    } else if (code === 43) constantWidth = r.num(i);
+    else if (code === 70) flags = r.int(i);
     else st.read(r, i, code);
   }
   if (vertices.length === 0) return null;
+  // A constant width (43) overrides the per-vertex widths (40/41).
+  if (constantWidth > 0) applyWidths(vertices, constantWidth, constantWidth, true);
+  else applyWidths(vertices, 0, 0);
   if (st.mirrored) mirrorVertices(vertices);
   return { ...st.toStyle(), type: 'polyline', vertices, closed: (flags & 1) !== 0 };
+}
+
+/**
+ * Fills in the vertex widths that were not written from the polyline's
+ * (all of them with `override`), dropping zeros.
+ */
+function applyWidths(
+  vertices: CadVertex[],
+  startWidth: number,
+  endWidth: number,
+  override = false,
+): void {
+  for (const v of vertices) {
+    const start = override ? startWidth : (v.startWidth ?? startWidth);
+    const end = override ? endWidth : (v.endWidth ?? endWidth);
+    if (start > 0) v.startWidth = start;
+    else delete v.startWidth;
+    if (end > 0) v.endWidth = end;
+    else delete v.endWidth;
+  }
 }
 
 function mirrorVertices(vertices: CadVertex[]): void {
@@ -896,9 +936,13 @@ function mirrorVertices(vertices: CadVertex[]): void {
 function readPolyline(r: GroupReader, ctx: Context, start: number, end: number, emit: Emit): void {
   const st = ctx.style;
   let flags = 0;
+  let startWidth = 0;
+  let endWidth = 0;
   for (let i = start + 1; i < end; i += 1) {
     const code = r.codes[i]!;
     if (code === 70) flags = r.int(i);
+    else if (code === 40) startWidth = r.num(i);
+    else if (code === 41) endWidth = r.num(i);
     else st.read(r, i, code);
   }
   const vertices: CadVertex[] = [];
@@ -913,6 +957,8 @@ function readPolyline(r: GroupReader, ctx: Context, start: number, end: number, 
       if (code === 10) vertex.x = r.num(i);
       else if (code === 20) vertex.y = r.num(i);
       else if (code === 42) vertex.bulge = r.num(i);
+      else if (code === 40) vertex.startWidth = r.num(i);
+      else if (code === 41) vertex.endWidth = r.num(i);
       else if (code === 70) vertexFlags = r.int(i);
     }
     // Spline frame control points are not on the curve.
@@ -921,10 +967,14 @@ function readPolyline(r: GroupReader, ctx: Context, start: number, end: number, 
   if (r.at('SEQEND')) r.pos = r.nextRecord(r.pos + 1);
 
   if (flags & (16 | 64)) {
-    countUnsupported(ctx, 'POLYLINE (mesh)');
+    const mesh = unsupported(ctx, st, 'POLYLINE (mesh)');
+    if (!st.invisible) emit(mesh, st.paper, st.layout);
     return;
   }
   if (vertices.length === 0 || st.invisible) return;
+  // 3D polylines have no width; a 2D polyline's widths (40/41) are its vertices' defaults.
+  if (flags & 8) applyWidths(vertices, 0, 0);
+  else applyWidths(vertices, startWidth, endWidth);
   // 3D polyline vertices are in WCS, 2D ones in OCS.
   if ((flags & 8) === 0 && st.mirrored) mirrorVertices(vertices);
   const closed = (flags & 1) !== 0;

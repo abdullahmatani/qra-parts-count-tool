@@ -1,4 +1,5 @@
 import type { Size2D } from '@/domain/schema/types';
+import type { MissingContent } from '@/features/cad/display-list';
 import type { ViewState } from './view-transform';
 
 export interface RenderRequest {
@@ -31,6 +32,8 @@ export interface DrawingSource {
    * so the first full-resolution render is quick.
    */
   prepare?(): void;
+  /** Content of the drawing that cannot be drawn (CAD drawings), so the user can be told. */
+  readonly missing?: MissingContent;
   dispose(): void;
 }
 
