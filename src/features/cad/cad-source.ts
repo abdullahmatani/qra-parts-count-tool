@@ -8,7 +8,7 @@ import type { Size2D } from '@/domain/schema/types';
 import type { DrawingSource, RenderRequest, RenderTask } from '@/features/viewer/drawing-source';
 import { BASE_SCALE, viewMatrix, visibleDrawingRect } from '@/features/viewer/view-transform';
 import { rgbToCss } from './aci';
-import type { DisplayGroup, DisplayList, TextRun } from './display-list';
+import type { DisplayGroup, DisplayList, MissingContent, TextRun } from './display-list';
 
 import type { CadColorMode } from '@/store/preferences';
 
@@ -22,7 +22,15 @@ const TEXT_FONT = 'Arial, "Helvetica Neue", Helvetica, sans-serif';
 
 interface PreparedGroup {
   clip: Path2D | null;
-  fills: { color: string; alpha: number; path: Path2D; layer: string }[];
+  fills: {
+    color: string;
+    alpha: number;
+    /** Shapes with holes (hatch islands), filled even-odd. */
+    holed: Path2D;
+    /** Single-loop shapes, all wound the same way and filled non-zero, so overlaps stay filled. */
+    simple: Path2D;
+    layer: string;
+  }[];
   strokes: { color: string; width: number; dash: number[] | null; path: Path2D; layer: string }[];
   texts: TextRun[];
 }
@@ -52,18 +60,50 @@ function pathFrom(paths: number[][], close = false): Path2D {
   return path;
 }
 
+/** Twice the signed area of a flat loop (positive when counter-clockwise, y up). */
+function signedArea(coords: readonly number[]): number {
+  let area = 0;
+  for (let i = 0; i < coords.length; i += 2) {
+    const j = (i + 2) % coords.length;
+    area += coords[i]! * coords[j + 1]! - coords[j]! * coords[i + 1]!;
+  }
+  return area;
+}
+
+/** Adds a closed loop to `path`, always wound the same way round. */
+function addWoundLoop(path: Path2D, coords: readonly number[]): void {
+  if (coords.length < 6) return;
+  const n = coords.length / 2;
+  const reverse = signedArea(coords) < 0;
+  for (let k = 0; k < n; k += 1) {
+    const i = (reverse ? n - 1 - k : k) * 2;
+    if (k === 0) path.moveTo(coords[i]!, coords[i + 1]!);
+    else path.lineTo(coords[i]!, coords[i + 1]!);
+  }
+  path.closePath();
+}
+
 function prepare(group: DisplayGroup, mode: CadColorMode): PreparedGroup {
   return {
     clip: group.clip ? pathFrom([group.clip], true) : null,
-    fills: group.fills.map((fill) => ({
-      color: fill.color === 0xffffff ? '#ffffff' : displayColor(fill.color, mode),
-      alpha: fill.alpha,
-      layer: fill.layer ?? '',
-      path: fill.shapes.reduce((path, loops) => {
-        path.addPath(pathFrom(loops, true));
-        return path;
-      }, new Path2D()),
-    })),
+    fills: group.fills.map((fill) => {
+      // Filling every shape of a batch even-odd in one path would leave a hole
+      // wherever two shapes overlap (a wide polyline's segments at a corner,
+      // a solid over a hatch), so only shapes with holes are filled that way.
+      const holed = new Path2D();
+      const simple = new Path2D();
+      for (const loops of fill.shapes) {
+        if (loops.length === 1) addWoundLoop(simple, loops[0]!);
+        else holed.addPath(pathFrom(loops, true));
+      }
+      return {
+        color: fill.color === 0xffffff ? '#ffffff' : displayColor(fill.color, mode),
+        alpha: fill.alpha,
+        layer: fill.layer ?? '',
+        holed,
+        simple,
+      };
+    }),
     strokes: group.strokes.map((batch) => ({
       color: displayColor(batch.color, mode),
       width: batch.width,
@@ -99,6 +139,11 @@ export class CadDrawingSource implements DrawingSource {
     return this.list.layers ?? [];
   }
 
+  /** What the drawing has but cannot show (DRW-02). */
+  get missing(): MissingContent | undefined {
+    return this.list.missing;
+  }
+
   private groups(): PreparedGroup[] {
     this.prepared ??= this.list.groups.map((group) => prepare(group, this.mode));
     return this.prepared;
@@ -122,7 +167,8 @@ export class CadDrawingSource implements DrawingSource {
         if (this.hidden.has(fill.layer)) continue;
         ctx.globalAlpha = fill.alpha;
         ctx.fillStyle = fill.color;
-        ctx.fill(fill.path, 'evenodd');
+        ctx.fill(fill.holed, 'evenodd');
+        ctx.fill(fill.simple, 'nonzero');
       }
       ctx.globalAlpha = 1;
       for (const stroke of group.strokes) {

@@ -244,20 +244,49 @@ describe('parseDxf: entities', () => {
     expect(entities).toEqual([{ layer: '0', color: BY_LAYER, type: 'point', position: [3, 4] }]);
   });
 
-  it('reads LWPOLYLINE vertices, bulges and the closed flag', () => {
+  it('reads LWPOLYLINE vertices, bulges, widths and the closed flag', () => {
     const polyline = only(
       parseEntities(`
         0 LWPOLYLINE | 8 P | 90 3 | 70 1 | 43 0
         10 0 | 20 0
-        10 10 | 20 0 | 40 1 | 41 1 | 42 1
+        10 10 | 20 0 | 40 3 | 41 0 | 42 1
         10 10 | 20 10`),
       'polyline',
     );
     expect(polyline.closed).toBe(true);
     expect(polyline.vertices).toEqual([
       { x: 0, y: 0, bulge: 0 },
-      { x: 10, y: 0, bulge: 1 },
+      { x: 10, y: 0, bulge: 1, startWidth: 3 },
       { x: 10, y: 10, bulge: 0 },
+    ]);
+  });
+
+  it('gives every LWPOLYLINE segment its constant width, over vertex widths', () => {
+    const polyline = only(
+      parseEntities(`
+        0 LWPOLYLINE | 90 2 | 70 0 | 43 1.5
+        10 0 | 20 0 | 40 3 | 41 0
+        10 10 | 20 0`),
+      'polyline',
+    );
+    expect(polyline.vertices).toEqual([
+      { x: 0, y: 0, bulge: 0, startWidth: 1.5, endWidth: 1.5 },
+      { x: 10, y: 0, bulge: 0, startWidth: 1.5, endWidth: 1.5 },
+    ]);
+  });
+
+  it('reads POLYLINE widths, with the polyline widths as the vertex defaults', () => {
+    const polyline = only(
+      parseEntities(`
+        0 POLYLINE | 66 1 | 10 0 | 20 0 | 30 0 | 70 0 | 40 0.5 | 41 0.5
+        0 VERTEX | 10 0 | 20 0 | 40 2 | 41 0
+        0 VERTEX | 10 10 | 20 0
+        0 SEQEND`),
+      'polyline',
+    );
+    expect(polyline.vertices).toEqual([
+      { x: 0, y: 0, bulge: 0, startWidth: 2 },
+      { x: 10, y: 0, bulge: 0, startWidth: 0.5, endWidth: 0.5 },
     ]);
   });
 
@@ -277,7 +306,8 @@ describe('parseDxf: entities', () => {
           0 LINE | 10 0 | 20 0 | 11 1 | 21 1`,
       }),
     );
-    expect(doc.modelSpace.map((e) => e.type)).toEqual(['polyline', 'line']);
+    expect(doc.modelSpace.map((e) => e.type)).toEqual(['polyline', 'unsupported', 'line']);
+    expect(doc.modelSpace[1]).toMatchObject({ name: 'POLYLINE (mesh)' });
     expect(doc.modelSpace[0]).toEqual({
       layer: 'P',
       color: BY_LAYER,
@@ -500,19 +530,39 @@ describe('parseDxf: entities', () => {
     });
   });
 
-  it('counts unsupported entities and carries on', () => {
+  it('counts unsupported entities, keeps their place and carries on', () => {
     const doc = parseDxf(
       file({
         ENTITIES: `
           0 3DFACE | 10 0 | 20 0 | 11 1 | 21 0 | 12 1 | 22 1
-          0 MLINE | 2 STANDARD | 10 0 | 20 0
+          0 MLINE | 8 PIPE | 2 STANDARD | 10 0 | 20 0
           0 3DFACE | 10 0 | 20 0
+          0 MULTILEADER | 8 NOTES | 67 1
+          0 OLE2FRAME | 60 1
           0 ATTDEF | 10 0 | 20 0 | 1 default | 2 TAG
+          0 DIMENSION | 10 0 | 20 0
           0 LINE | 10 0 | 20 0 | 11 1 | 21 1`,
       }),
     );
-    expect(doc.modelSpace.map((e) => e.type)).toEqual(['line']);
-    expect(doc.unsupported).toEqual({ '3DFACE': 2, MLINE: 1 });
+    expect(doc.modelSpace.map((e) => (e.type === 'unsupported' ? e.name : e.type))).toEqual([
+      '3DFACE',
+      'MLINE',
+      '3DFACE',
+      'DIMENSION',
+      'line',
+    ]);
+    expect(doc.modelSpace[1]).toMatchObject({ layer: 'PIPE' });
+    // Paper-space entities go to the layout; invisible ones are only counted.
+    expect(doc.layouts[0]!.entities).toEqual([
+      { layer: 'NOTES', color: BY_LAYER, type: 'unsupported', name: 'MULTILEADER' },
+    ]);
+    expect(doc.unsupported).toEqual({
+      '3DFACE': 2,
+      MLINE: 1,
+      MULTILEADER: 1,
+      OLE2FRAME: 1,
+      DIMENSION: 1,
+    });
   });
 
   it('mirrors entities with a (0, 0, -1) extrusion into world coordinates', () => {
@@ -624,12 +674,17 @@ describe('parseDxf: blocks and layouts', () => {
           0 LINE | 10 0 | 20 0 | 11 2 | 21 0
           0 ATTDEF | 10 0 | 20 0 | 40 1 | 1 | 3 Tag? | 2 TAG | 70 0
           0 CIRCLE | 62 0 | 10 1 | 20 0 | 40 1
+          0 ENDBLK | 8 0
+          0 BLOCK | 8 0 | 2 BORDER | 70 4 | 10 0 | 20 0 | 3 BORDER | 1 ..\\BORDER.dwg
           0 ENDBLK | 8 0`,
       }),
     );
-    expect(Object.keys(doc.blocks)).toEqual(['VALVE']);
+    expect(Object.keys(doc.blocks)).toEqual(['VALVE', 'BORDER']);
     expect(doc.blocks.VALVE!.base).toEqual([1, 2]);
     expect(doc.blocks.VALVE!.entities.map((e) => e.type)).toEqual(['line', 'circle']);
+    expect(doc.blocks.VALVE!.external).toBeUndefined();
+    // An external reference: its drawing is another file.
+    expect(doc.blocks.BORDER).toMatchObject({ entities: [], external: true });
     expect(doc.modelSpace).toEqual([]);
     expect(doc.layouts).toEqual([]);
   });

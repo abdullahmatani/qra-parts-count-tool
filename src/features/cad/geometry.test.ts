@@ -5,13 +5,18 @@ import {
   bulgePoints,
   circlePoints,
   ellipsePoints,
+  hasPolylineWidth,
   polylinePoints,
   segmentsFor,
   splinePoints,
+  widePolyline,
 } from './geometry';
+import type { Vec2 } from './model';
 import { decodePercentCodes, mtextToLines } from './text-codes';
 
 const close = (a: number, b: number) => expect(a).toBeCloseTo(b, 6);
+const near = (points: Vec2[], x: number, y: number) =>
+  points.some(([px, py]) => Math.abs(px - x) < 1e-9 && Math.abs(py - y) < 1e-9);
 
 describe('CAD geometry', () => {
   it('chooses segment counts from the chord tolerance', () => {
@@ -54,6 +59,93 @@ describe('CAD geometry', () => {
       [10, 10],
       [0, 0],
     ]);
+  });
+
+  it('draws a tapered polyline segment as a filled arrowhead and the rest as a line', () => {
+    const { shapes, runs } = widePolyline(
+      [
+        { x: 0, y: 0, bulge: 0 },
+        { x: 10, y: 0, bulge: 0, startWidth: 2, endWidth: 0 },
+        { x: 12, y: 0, bulge: 0 },
+      ],
+      false,
+      0.01,
+      0.1,
+    );
+    expect(runs).toEqual([
+      [
+        [0, 0],
+        [10, 0],
+      ],
+    ]);
+    expect(shapes).toEqual([
+      [
+        [10, 1],
+        [12, 0],
+        [12, 0],
+        [10, -1],
+      ],
+    ]);
+  });
+
+  it('mitres the corners of a wide closed polyline', () => {
+    const { shapes, runs } = widePolyline(
+      [
+        { x: 0, y: 0, bulge: 0, startWidth: 2, endWidth: 2 },
+        { x: 10, y: 0, bulge: 0, startWidth: 2, endWidth: 2 },
+        { x: 10, y: 10, bulge: 0, startWidth: 2, endWidth: 2 },
+        { x: 0, y: 10, bulge: 0, startWidth: 2, endWidth: 2 },
+      ],
+      true,
+      0.01,
+      0.1,
+    );
+    expect(runs).toEqual([]);
+    // Four sides and four corners.
+    expect(shapes).toHaveLength(8);
+    const xs = shapes.flat().map((p) => p[0]);
+    const ys = shapes.flat().map((p) => p[1]);
+    // The outer corners reach (-1, -1) and (11, 11): mitred, not cut off.
+    expect([Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]).toEqual([
+      -1, 11, -1, 11,
+    ]);
+    expect(shapes.some((shape) => near(shape, 11, -1) && near(shape, 10, 0))).toBe(true);
+  });
+
+  it('keeps an arc segment band at its width from the arc', () => {
+    const { shapes } = widePolyline(
+      [
+        { x: 0, y: 0, bulge: 1, startWidth: 0.5, endWidth: 0.5 },
+        { x: 2, y: 0, bulge: 0 },
+      ],
+      false,
+      0.001,
+      0,
+    );
+    expect(shapes).toHaveLength(1);
+    for (const [x, y] of shapes[0]!) {
+      const r = Math.hypot(x - 1, y);
+      expect(Math.min(Math.abs(r - 1.25), Math.abs(r - 0.75))).toBeLessThan(1e-9);
+    }
+  });
+
+  it('leaves widths no wider than the line weight as lines', () => {
+    const vertices = [
+      { x: 0, y: 0, bulge: 0, startWidth: 0.1, endWidth: 0.1 },
+      { x: 5, y: 0, bulge: 0 },
+      { x: 5, y: 0, bulge: 0 },
+    ];
+    expect(hasPolylineWidth(vertices)).toBe(true);
+    expect(hasPolylineWidth([{ x: 0, y: 0, bulge: 0 }])).toBe(false);
+    expect(widePolyline(vertices, false, 0.01, 0.2)).toEqual({
+      shapes: [],
+      runs: [
+        [
+          [0, 0],
+          [5, 0],
+        ],
+      ],
+    });
   });
 
   it('tessellates rotated ellipses', () => {

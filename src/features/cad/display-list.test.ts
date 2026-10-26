@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDisplayList, displayListText, listSpaces } from './display-list';
+import { buildDisplayList, displayListText, listSpaces, missingCount } from './display-list';
 import { emptyCadDocument, type CadDocument, type CadEntity } from './model';
 
 const MM = 72 / 25.4;
@@ -163,6 +163,148 @@ describe('CAD display list (DRW-02)', () => {
     expect(circle!.length / 2).toBeGreaterThan(30);
     expect(arc!.length / 2).toBeGreaterThan(5);
     expect(poly!.length / 2).toBeGreaterThan(5);
+  });
+
+  it('fills wide polyline segments, so arrowheads and thick lines show', () => {
+    const list = buildDisplayList(
+      doc([
+        {
+          ...base,
+          type: 'polyline',
+          closed: false,
+          vertices: [
+            { x: 0, y: 0, bulge: 0 },
+            { x: 90, y: 0, bulge: 0, startWidth: 3, endWidth: 0 },
+            { x: 100, y: 0, bulge: 0 },
+          ],
+        },
+        {
+          ...base,
+          type: 'polyline',
+          closed: false,
+          vertices: [
+            { x: 100, y: -20, bulge: 0, startWidth: 1.5, endWidth: 1.5 },
+            { x: 100, y: 20, bulge: 0 },
+          ],
+        },
+      ]),
+      'Model',
+    );
+    // The shaft is a line; the head and the thick line are filled.
+    expect(strokes(list).flatMap((b) => b.paths)).toHaveLength(1);
+    const shapes = list.groups[0]!.fills.flatMap((f) => f.shapes);
+    expect(shapes).toHaveLength(2);
+    const [head, thick] = shapes.map((shape) => shape[0]!);
+    const extent = (loop: number[], axis: 0 | 1) => {
+      const values = loop.filter((_, i) => i % 2 === axis);
+      return (Math.max(...values) - Math.min(...values)) / MM;
+    };
+    expect(extent(head!, 1)).toBeCloseTo(3, 1); // 3 mm across its base
+    expect(extent(head!, 0)).toBeCloseTo(10, 1);
+    expect(extent(thick!, 0)).toBeCloseTo(1.5, 1);
+  });
+
+  it('reports what a sheet cannot show: entities, external references and missing blocks', () => {
+    const insert = (block: string): CadEntity => ({
+      ...base,
+      type: 'insert',
+      block,
+      position: [0, 0],
+      scale: [1, 1],
+      rotation: 0,
+      columns: 1,
+      rows: 1,
+      columnSpacing: 0,
+      rowSpacing: 0,
+      attributes: [],
+    });
+    const list = buildDisplayList(
+      doc(
+        [
+          { ...base, type: 'line', start: [0, 0], end: [10, 0] },
+          { ...base, type: 'unsupported', name: 'MULTILEADER' },
+          // Not shown in CAD either: hidden layers are not missing anything.
+          { ...base, layer: 'HIDDEN', type: 'unsupported', name: 'OLE2FRAME' },
+          insert('TAG'),
+          insert('TAG'),
+          insert('BORDER'),
+          insert('BOUND'),
+          insert('GONE'),
+          { ...base, type: 'dimension', block: '*D9' },
+        ],
+        {
+          blocks: {
+            TAG: {
+              name: 'TAG',
+              base: [0, 0],
+              entities: [{ ...base, type: 'unsupported', name: 'TRACE' }],
+            },
+            BORDER: { name: 'BORDER', base: [0, 0], entities: [], external: true },
+            // An external reference whose drawing was copied in is drawn, so nothing is missing.
+            BOUND: {
+              name: 'BOUND',
+              base: [0, 0],
+              entities: [{ ...base, type: 'line', start: [0, 0], end: [5, 5] }],
+              external: true,
+            },
+          },
+        },
+      ),
+      'Model',
+    );
+    expect(list.missing).toEqual({
+      entities: { MULTILEADER: 1, TRACE: 2, DIMENSION: 1 },
+      xrefs: ['BORDER'],
+      blocks: ['GONE'],
+    });
+    expect(missingCount(list.missing)).toBe(6);
+    expect(listSpaces(doc([{ ...base, type: 'unsupported', name: 'TRACE' }]))[0]).toMatchObject({
+      entities: 0,
+    });
+    // A sheet with everything drawn has no report.
+    const complete = buildDisplayList(
+      doc([{ ...base, type: 'line', start: [0, 0], end: [1, 1] }]),
+      'Model',
+    );
+    expect(complete.missing).toBeUndefined();
+    expect(missingCount(complete.missing)).toBe(0);
+  });
+
+  it('counts model space seen through several viewports once', () => {
+    const viewport = (id: number, frozenLayers: string[] = []): CadEntity => ({
+      ...base,
+      type: 'viewport',
+      id,
+      center: [100, 100],
+      width: 100,
+      height: 100,
+      viewCenter: [0, 0],
+      viewHeight: 100,
+      twist: 0,
+      frozenLayers,
+      on: true,
+    });
+    const cad = doc(
+      [
+        { ...base, type: 'unsupported', name: 'TRACE' },
+        { ...base, layer: 'PIPE', type: 'unsupported', name: 'MLINE' },
+      ],
+      {
+        layouts: [
+          {
+            name: 'Sheet',
+            tabOrder: 1,
+            entities: [
+              viewport(1),
+              viewport(2),
+              viewport(3, ['PIPE']),
+              { ...base, type: 'unsupported', name: 'TRACE' },
+            ],
+          },
+        ],
+      },
+    );
+    expect(buildDisplayList(cad, 'Sheet').missing!.entities).toEqual({ TRACE: 2, MLINE: 1 });
   });
 
   it('fills solids and hatches; tints pattern hatches', () => {

@@ -5,6 +5,22 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Arrowheads and thick lines in DWG and DXF drawings** (DRW-02): polyline widths are now drawn, so
+  arrows made from a polyline that tapers to a point show their filled head, and lines drawn as
+  wide polylines show at their real thickness, with square ends and mitred corners as in AutoCAD.
+  Before, both came out as thin lines. Native DWG drawings also place mirrored geometry (entities
+  with a (0, 0, −1) extrusion) where it belongs, as DXF drawings already did. Where filled shapes
+  overlap, the overlap now stays filled instead of showing white. DWG and DXF drawings imported
+  earlier are redrawn the next time they are opened.
+
+- **Nothing goes missing from a CAD drawing unnoticed** (DRW-02): content the viewer cannot draw,
+  such as multileaders, tables, OLE objects, raster images, PDF underlays, traces, external
+  references (xrefs), blocks missing from the file and objects of add-on applications (AutoCAD P&ID,
+  Plant 3D), is counted where it appears. The import summary names it for each layout, and the
+  drawing shows an **items not shown** button at its top right that lists it, so it can be checked
+  against the original or a PDF plot before counting. Entities on hidden or frozen layers are not
+  counted, since they are not shown in CAD either.
+
 - **Drawings organised by plant unit** (DRW-11): two buttons at the top of the drawing list switch
   between **All files** and **Organised by plant unit**, a plant breakdown with the plant (the
   project's facility) at the top, its units below in name order, and each unit's drawings by

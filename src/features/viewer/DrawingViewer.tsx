@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Size2D } from '@/domain/schema/types';
+import { MissingContentNotice } from '@/features/cad/MissingContentNotice';
 import { useElementSize } from '@/hooks/useElementSize';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
@@ -196,6 +197,7 @@ export function DrawingViewer({
               onNavigate={(centre) => updateView((v) => ({ ...v, ...centre }))}
             />
           )}
+          <MissingContentNotice missing={ready.source.missing} />
         </>
       )}
     </div>

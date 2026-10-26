@@ -651,7 +651,10 @@
       "failed": "{{name}}: could not be read ({{detail}}).",
       "dwgUnavailable": "{{name}}: this build has no native DWG reader. Import the DXF or a PDF plot instead.",
       "noSpaces": "{{name}}: no layout was chosen."
-    }
+    },
+    "incomplete_one": "{{name}} ({{space}}): {{count}} item cannot be shown: {{list}}.",
+    "incomplete_other": "{{name}} ({{space}}): {{count}} items cannot be shown: {{list}}.",
+    "incompleteHint": "Open the drawing and choose “not shown” at its top right for details."
   },
   "register": {
     "title": "Drawing register",
@@ -1365,6 +1368,48 @@
     "none": "No layers with content.",
     "unnamed": "(no layer)",
     "hint": "Hidden layers are not drawn in this session. Exports always show every layer."
+  },
+  "cadMissing": {
+    "button_one": "{{count}} item not shown",
+    "button_other": "{{count}} items not shown",
+    "title": "Not shown on this drawing",
+    "intro": "The CAD file has content the viewer cannot draw, so it is missing here and from PDF exports of this drawing. Check these against the original drawing or a PDF plot before you count.",
+    "entity": "{{count}} × {{name}}",
+    "xref": "External reference {{name}}: a separate drawing file, not part of this one",
+    "block": "Block {{name}}: used on the drawing but not defined in the file",
+    "hint": "To work from the complete sheet, import a PDF plot of it as well.",
+    "types": {
+      "3DFACE": "3D face",
+      "3DSOLID": "3D solid",
+      "ACAD_PROXY_ENTITY": "Proxy object from another application",
+      "ACAD_TABLE": "Table",
+      "ARC_DIMENSION": "Arc length dimension",
+      "ARCALIGNEDTEXT": "Arc-aligned text",
+      "BODY": "3D body",
+      "DGNUNDERLAY": "DGN underlay",
+      "DIMENSION": "Dimension",
+      "DWFUNDERLAY": "DWF underlay",
+      "HELIX": "Helix",
+      "IMAGE": "Raster image",
+      "LARGE_RADIAL_DIMENSION": "Jogged radius dimension",
+      "MESH": "Mesh",
+      "MINSERT": "Block array",
+      "MLINE": "Multiline",
+      "MULTILEADER": "Multileader",
+      "OLE2FRAME": "Embedded OLE object",
+      "OLEFRAME": "Embedded OLE object",
+      "PDFUNDERLAY": "PDF underlay",
+      "POLYLINE (mesh)": "Polygon mesh",
+      "RAY": "Ray",
+      "REGION": "Region",
+      "SECTION": "Section plane",
+      "SECTIONOBJECT": "Section plane",
+      "SHAPE": "Shape",
+      "TABLE": "Table",
+      "TOLERANCE": "Geometric tolerance",
+      "TRACE": "Trace",
+      "XLINE": "Construction line"
+    }
   },
   "assist": {
     "find": "Find similar symbols",

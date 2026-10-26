@@ -243,6 +243,35 @@ describe('CAD import (DRW-02, DRW-10)', () => {
     expect(cached).toEqual(['Model']);
     expect(closed).toEqual([7]);
     expect(dir.tree()).toContain('drawings/PEFS-9001.dxf');
+    expect(report.incomplete).toEqual([]);
+  });
+
+  it('reports the imported layouts with content that cannot be shown', async () => {
+    const report = await importDrawingFiles([file('PEFS-9001.dwg', 'dwg content')], undefined, {
+      ...deps(1),
+      cad: {
+        ...cad(),
+        build: async (_handle, space) => {
+          const doc = cadDoc();
+          doc.modelSpace.push({
+            layer: '0',
+            color: { kind: 'byLayer' },
+            type: 'unsupported',
+            name: 'MULTILEADER',
+          });
+          return buildDisplayList(doc, space);
+        },
+      },
+      chooseSpaces: async () => [['Model']],
+    });
+    expect(report.drawingIds).toHaveLength(1);
+    expect(report.incomplete).toEqual([
+      {
+        fileName: 'PEFS-9001.dwg',
+        space: 'Model',
+        missing: { entities: { MULTILEADER: 1 }, xrefs: [], blocks: [] },
+      },
+    ]);
   });
 
   it('skips a CAD file when no space is chosen, without copying it', async () => {

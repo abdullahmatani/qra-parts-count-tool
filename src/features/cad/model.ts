@@ -38,6 +38,13 @@ export interface CadVertex {
   y: number;
   /** Arc bulge to the next vertex (tan of a quarter of the included angle). */
   bulge: number;
+  /**
+   * Polyline width at this vertex and at the next one, in world units, for the
+   * segment to the next vertex. Absent means 0: a plain line drawn with its
+   * line weight. A tapered segment (e.g. 3 to 0) is how arrowheads are drawn.
+   */
+  startWidth?: number;
+  endWidth?: number;
 }
 
 export type CadEntity = CadStyle &
@@ -124,6 +131,12 @@ export type CadEntity = CadStyle &
     | { type: 'dimension'; block: string }
     | { type: 'leader'; points: Vec2[]; arrow: boolean }
     | { type: 'wipeout'; points: Vec2[] }
+    /**
+     * An entity the reader met but cannot draw, kept where it was so the
+     * display list can tell the user what each sheet is missing (`name` is
+     * its type, e.g. MULTILEADER).
+     */
+    | { type: 'unsupported'; name: string }
   );
 
 export type CadEntityType = CadEntity['type'];
@@ -147,6 +160,8 @@ export interface CadBlock {
   name: string;
   base: Vec2;
   entities: CadEntity[];
+  /** An external reference (xref): its content is another drawing file, not this one. */
+  external?: boolean;
 }
 
 export interface CadLayout {
@@ -182,7 +197,10 @@ export interface CadDocument {
   modelSpace: CadEntity[];
   /** Paper-space layouts (not including "Model"). */
   layouts: CadLayout[];
-  /** Entity types the reader met but could not represent, with counts. */
+  /**
+   * Entity types the reader met but could not represent, with counts, for the
+   * whole file. Each is also kept as an `unsupported` entity where it was.
+   */
   unsupported: Record<string, number>;
 }
 

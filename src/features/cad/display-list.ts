@@ -6,7 +6,15 @@
  * is cached in the working directory's `cache/` folder (DRW-02).
  */
 import { colorToRgb } from './aci';
-import { arcPoints, circlePoints, ellipsePoints, polylinePoints, splinePoints } from './geometry';
+import {
+  arcPoints,
+  circlePoints,
+  ellipsePoints,
+  hasPolylineWidth,
+  polylinePoints,
+  splinePoints,
+  widePolyline,
+} from './geometry';
 import {
   INSUNITS,
   MODEL_SPACE,
@@ -18,8 +26,11 @@ import {
 } from './model';
 import { decodePercentCodes, mtextToLines } from './text-codes';
 
-/** Bumped when the format changes, so cached lists are rebuilt (2: layers, DRW-09). */
-export const DISPLAY_LIST_VERSION = 2;
+/**
+ * Bumped when the format or the drawing changes, so cached lists are rebuilt
+ * (2: layers, DRW-09; 3: polyline widths, mirrored DWG entities, missing content).
+ */
+export const DISPLAY_LIST_VERSION = 3;
 
 /** Default line weight (0.25 mm) in points. */
 const DEFAULT_WEIGHT_PT = (0.25 * 72) / 25.4;
@@ -76,6 +87,16 @@ export interface DisplayGroup {
   texts: TextRun[];
 }
 
+/** What a space should show but cannot, so the user can be told (DRW-02). */
+export interface MissingContent {
+  /** Entities that cannot be drawn, by type, with how many the sheet shows. */
+  entities: Record<string, number>;
+  /** External references (xrefs) on the sheet: their drawings are other files. */
+  xrefs: string[];
+  /** Blocks referenced on the sheet but not defined in the file. */
+  blocks: string[];
+}
+
 export interface DisplayList {
   version: number;
   space: string;
@@ -84,7 +105,16 @@ export interface DisplayList {
   groups: DisplayGroup[];
   /** Layers with something drawn, sorted (DRW-09). */
   layers?: string[];
+  /** Absent when everything on the sheet was drawn. */
+  missing?: MissingContent;
   stats: { paths: number; segments: number; fills: number; texts: number; blocks: number };
+}
+
+/** How many things a sheet is missing (entities, external references and blocks). */
+export function missingCount(missing: MissingContent | undefined): number {
+  if (!missing) return 0;
+  const entities = Object.values(missing.entities).reduce((sum, n) => sum + n, 0);
+  return entities + missing.xrefs.length + missing.blocks.length;
 }
 
 export interface SpaceInfo {
@@ -93,15 +123,19 @@ export interface SpaceInfo {
   viewports: number;
 }
 
+/** Entities that draw something (not placeholders for ones that cannot be drawn). */
+const drawable = (entities: readonly CadEntity[]) =>
+  entities.filter((e) => e.type !== 'unsupported').length;
+
 /** Model space plus every paper-space layout, with entity counts (for the layout picker). */
 export function listSpaces(doc: CadDocument): SpaceInfo[] {
   const spaces: SpaceInfo[] = [
-    { name: MODEL_SPACE, entities: doc.modelSpace.length, viewports: 0 },
+    { name: MODEL_SPACE, entities: drawable(doc.modelSpace), viewports: 0 },
   ];
   for (const layout of doc.layouts) {
     spaces.push({
       name: layout.name,
-      entities: layout.entities.length,
+      entities: drawable(layout.entities),
       viewports: layout.entities.filter((e) => e.type === 'viewport' && e.id !== 1).length,
     });
   }
@@ -303,6 +337,15 @@ export function buildDisplayList(
   const tolerancePt = options.tolerancePt ?? TOLERANCE_PT;
   const out = new Collector();
 
+  // What cannot be drawn (DRW-02). Entities are counted per pass, so model
+  // space seen through several viewports is not counted once for each.
+  let missingEntities: Record<string, number> = {};
+  const xrefs = new Set<string>();
+  const missingBlocks = new Set<string>();
+  const noteMissing = (name: string) => {
+    missingEntities[name] = (missingEntities[name] ?? 0) + 1;
+  };
+
   const layerOf = (name: string): CadLayer | undefined => layers.get(name.toUpperCase());
 
   function resolveStyle(entity: CadEntity, ctx: Context): { style: Style; layer: string } | null {
@@ -380,9 +423,19 @@ export function buildDisplayList(
       case 'line':
         out.stroke(style, map(ctx, [entity.start, entity.end]));
         return;
-      case 'polyline':
-        out.stroke(style, map(ctx, polylinePoints(entity.vertices, entity.closed, tol)));
+      case 'polyline': {
+        if (!hasPolylineWidth(entity.vertices)) {
+          out.stroke(style, map(ctx, polylinePoints(entity.vertices, entity.closed, tol)));
+          return;
+        }
+        // Segments no wider than the line weight stay lines, so a very thin
+        // width never draws fainter than the line would.
+        const lineWidth = style.width / (unitPt * linearScale(ctx.m));
+        const wide = widePolyline(entity.vertices, entity.closed, tol, lineWidth);
+        for (const run of wide.runs) out.stroke(style, map(ctx, run));
+        for (const shape of wide.shapes) out.fill(style.color, 1, [map(ctx, shape)]);
         return;
+      }
       case 'circle':
         out.stroke(style, map(ctx, circlePoints(entity.center, entity.radius, tol)));
         return;
@@ -534,9 +587,19 @@ export function buildDisplayList(
         });
         return;
       }
+      case 'unsupported':
+        noteMissing(entity.name);
+        return;
       case 'dimension':
       case 'insert': {
         const block = blocks.get(entity.block.toUpperCase());
+        if (!block) {
+          if (entity.type === 'dimension') noteMissing('DIMENSION');
+          else missingBlocks.add(entity.block);
+        } else if (block.external && block.entities.length === 0) {
+          // An external reference's drawing is another file, unless it was copied in.
+          xrefs.add(block.name);
+        }
         if (block && ctx.depth < MAX_BLOCK_DEPTH) {
           const child = (m: Affine): Context => ({
             m,
@@ -618,8 +681,11 @@ export function buildDisplayList(
     const entities = layout!.entities;
     for (const entity of entities)
       if (entity.type !== 'viewport') emit(entity, rootContext(IDENTITY));
+    const onPaper = missingEntities;
+    const inViewports: Record<string, number> = {};
     for (const vp of entities) {
       if (vp.type !== 'viewport' || vp.id === 1 || !vp.on || !(vp.viewHeight > 0)) continue;
+      missingEntities = {};
       // Model point → paper: centre + k · R(twist) · (p − viewCentre).
       const k = vp.height / vp.viewHeight;
       const m = multiply(
@@ -644,6 +710,13 @@ export function buildDisplayList(
       const frozen = new Set(vp.frozenLayers.map((name) => name.toUpperCase()));
       for (const entity of doc.modelSpace) emit(entity, rootContext(m, frozen));
       out.newGroup(null);
+      for (const [name, n] of Object.entries(missingEntities)) {
+        inViewports[name] = Math.max(inViewports[name] ?? 0, n);
+      }
+    }
+    missingEntities = onPaper;
+    for (const [name, n] of Object.entries(inViewports)) {
+      missingEntities[name] = (missingEntities[name] ?? 0) + n;
     }
     const lim = layout!.limits;
     if (lim && lim.max[0] > lim.min[0] && lim.max[1] > lim.min[1]) limits = lim;
@@ -713,6 +786,11 @@ export function buildDisplayList(
       })),
     }));
 
+  const missing: MissingContent = {
+    entities: missingEntities,
+    xrefs: [...xrefs].sort((a, b) => a.localeCompare(b)),
+    blocks: [...missingBlocks].sort((a, b) => a.localeCompare(b)),
+  };
   return {
     version: DISPLAY_LIST_VERSION,
     space,
@@ -720,6 +798,7 @@ export function buildDisplayList(
     height: round(worldH * s + 2 * margin),
     groups,
     layers: [...out.layers].sort((a, b) => a.localeCompare(b)),
+    ...(missingCount(missing) > 0 ? { missing } : {}),
     stats: out.stats,
   };
 }

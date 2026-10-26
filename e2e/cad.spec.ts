@@ -4,6 +4,9 @@ import { createProject, importDrawings, setDrawingNamesFromFiles } from './helpe
 
 const DWG_FIXTURE = 'PEFS-4001.dwg';
 const hasDwgFixture = existsSync(new URL(`./fixtures/${DWG_FIXTURE}`, import.meta.url));
+// PEFS-4001 plus a tapered arrow, a thick polyline and a TRACE (scripts/generate-dwg-feature-fixture.mjs).
+const FEATURE_FIXTURE = 'PEFS-4001_features.dwg';
+const hasFeatureFixture = existsSync(new URL(`./fixtures/${FEATURE_FIXTURE}`, import.meta.url));
 
 test.describe('CAD drawings (DRW-02, DRW-10)', () => {
   test('imports a DXF, reads its title block, renders it and caches the display list', async ({
@@ -95,6 +98,37 @@ test.describe('CAD drawings (DRW-02, DRW-10)', () => {
     await expect
       .poll(async () => JSON.parse(await app.readText(dir, 'project.qrapc.json')).drawings[0])
       .toMatchObject({ fileType: 'dwg', layout: 'Model', drawingNo: 'PEFS-4001', revision: 'B' });
+    // Everything in this file is drawn, so there is nothing to warn about.
+    await expect(page.getByTestId('missing-content')).toHaveCount(0);
+    await app.removeDirectory(dir);
+  });
+
+  test('tells the user what a DWG has that cannot be shown', async ({ app }) => {
+    test.skip(
+      !hasFeatureFixture,
+      `e2e/fixtures/${FEATURE_FIXTURE} missing (see scripts/generate-dwg-feature-fixture.mjs)`,
+    );
+    const dir = `cad-dwg-missing-${test.info().project.name}`;
+    await app.open();
+    await app.removeDirectory(dir);
+    await app.pickDirectory(dir);
+    await createProject(app.page, { name: 'DWG features' });
+    const page = app.page;
+
+    await importDrawings(page, [FEATURE_FIXTURE]);
+    const picker = page.getByRole('dialog', { name: 'Choose drawings to import' });
+    await picker.getByRole('button', { name: /Import 1 drawing/ }).click();
+    // The import summary names it…
+    await expect(
+      page.getByText(`${FEATURE_FIXTURE} (Model): 1 item cannot be shown: 1 × Trace.`),
+    ).toBeVisible({ timeout: 30_000 });
+    // …and so does the drawing, for as long as it is open.
+    const notice = page.getByTestId('missing-content');
+    await expect(notice).toHaveText('1 item not shown');
+    await notice.click();
+    const details = page.getByTestId('missing-content-details');
+    await expect(details).toContainText('Not shown on this drawing');
+    await expect(details).toContainText('1 × Trace');
     await app.removeDirectory(dir);
   });
 

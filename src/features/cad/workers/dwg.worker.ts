@@ -11,7 +11,8 @@
  */
 import { LibreDwg, Dwg_File_Type, createModule } from '@mlightcad/libredwg-web';
 import wasmUrl from 'libredwg-wasm?url';
-import { convertDwgDatabase } from '../dwg/convert-libredwg';
+import { convertDwgDatabase, type SkippedEntity } from '../dwg/convert-libredwg';
+import { findSkippedEntities } from '../dwg/skipped-entities';
 import { serveCadWorker } from './worker-core';
 
 async function readDwg(bytes: ArrayBuffer, fileType: 'dwg' | 'dxf') {
@@ -21,7 +22,16 @@ async function readDwg(bytes: ArrayBuffer, fileType: 'dwg' | 'dxf') {
   if (!data) throw new Error('LibreDWG could not read this file.');
   try {
     const db = lib.convert(data);
-    return convertDwgDatabase(db, { fromDwg: fileType !== 'dxf' });
+    const layerNames = new Map(db.tables.LAYER.entries.map((l) => [l.handle, l.name] as const));
+    // Entities LibreDWG leaves out are reported to the user as missing, not lost
+    // silently. The scan only adds that report: a file it fails on still opens.
+    let skipped: SkippedEntity[] = [];
+    try {
+      skipped = findSkippedEntities(module, data, layerNames);
+    } catch (error) {
+      console.warn('Could not scan the DWG for entities LibreDWG skips', error);
+    }
+    return convertDwgDatabase(db, { fromDwg: fileType !== 'dxf', skipped });
   } finally {
     lib.dwg_free(data);
   }
