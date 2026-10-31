@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { segmentAppearance } from '@/domain/palette';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore, type Tool } from '@/store/ui-store';
+import { FillSizesButton, IdentifyButton } from '@/features/assist/AssistButtons';
 import { HistoryMenu } from '@/features/history/HistoryMenu';
 import { MarkerFilterMenu } from '@/features/markup/MarkerFilters';
 import { useSearchStore } from '@/features/search/search-store';
@@ -19,8 +20,10 @@ import { TOOLS } from './tools';
 /**
  * Markup toolbar, with the tools of the stage: segment set-up while defining
  * segments; Select and Stamp (and line runs) while counting, where equipment
- * markers are placed with the equipment bar's shapes. The active segment's
- * colour tints the toolbar so the user always sees where new markers go (FDS section 6).
+ * markers are placed with the equipment bar's shapes, and Identify and Fill
+ * sizes find equipment and read sizes from the line numbers. The active
+ * segment's colour tints the toolbar so the user always sees where new
+ * markers go (FDS section 6).
  */
 export function Toolbar() {
   const { t } = useTranslation();
@@ -166,6 +169,14 @@ export function Toolbar() {
       >
         <Search />
       </Button>
+
+      {stage === 'count' && (
+        <>
+          <Separator orientation="vertical" className="mx-1 h-5!" />
+          <IdentifyButton />
+          <FillSizesButton />
+        </>
+      )}
 
       <div
         className="ms-auto flex min-w-0 items-center gap-2 ps-2 text-xs whitespace-nowrap text-muted-foreground"

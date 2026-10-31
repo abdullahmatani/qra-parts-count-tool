@@ -229,8 +229,11 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'sizes',
     stage: 'count',
     targets: ['[data-testid="item-editor"]', '[data-testid="marker-inspector"]'],
-    done: ({ doc }) =>
-      new Set(itemsOf(doc, 'valve', true).map((item) => item.nominalSize)).size >= 2,
+    // Every valve has a size: the one whose line has no line number was entered by hand.
+    done: ({ doc }) => {
+      const valves = itemsOf(doc, 'valve');
+      return valves.length >= 3 && valves.every((item) => item.nominalSize !== null);
+    },
     help: { articleId: 'counting', sectionId: 'editing-markers' },
   },
   {

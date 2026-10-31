@@ -251,7 +251,8 @@ function barrierBounds(shape: BarrierShape): { x0: number; y0: number; x1: numbe
 // The graph of the centre lines
 // ---------------------------------------------------------------------------
 
-interface Arm {
+/** Where a run of line leaves a node. */
+export interface Arm {
   edge: number;
   /** Which end of the edge is at the node: 0 its start, 1 its end. */
   end: 0 | 1;
@@ -263,7 +264,8 @@ interface Node {
   arms: Arm[];
 }
 
-interface Edge {
+/** A run of line between two nodes. */
+export interface Edge {
   /** Pixel indices from node `a` to node `b`, both ends included. */
   pixels: number[];
   a: number;
@@ -607,6 +609,69 @@ export class TraceGraph {
 
   private nodeAt(edge: Edge, end: 0 | 1): number {
     return end === 0 ? edge.a : edge.b;
+  }
+
+  // -------------------------------------------------------------------------
+  // Reading the graph, for tools that walk along one line (line sizes)
+  // -------------------------------------------------------------------------
+
+  /** Whether pixel `p` is on a centre line, once cut at the boundaries. */
+  isLine(p: number): boolean {
+    return this.skeleton[p] === 1;
+  }
+
+  /** The run of line through centre-line pixel `p`; undefined at a junction or line end. */
+  edgeAt(p: number): number | undefined {
+    return this.edgeOf.get(p);
+  }
+
+  /** A run of line: its pixels from node `a` to node `b`, and its length in pixels. */
+  edge(e: number): Readonly<Edge> {
+    return this.edges[e]!;
+  }
+
+  /** A junction or line end, and the runs that leave it. */
+  node(n: number): { readonly x: number; readonly y: number; readonly arms: readonly Arm[] } {
+    return this.nodes[n]!;
+  }
+
+  /** The line ends: nodes with one run. */
+  lineEnds(): number[] {
+    const out: number[] = [];
+    this.nodes.forEach((node, n) => {
+      if (node.arms.length === 1) out.push(n);
+    });
+    return out;
+  }
+
+  /** The unit direction `arm` (one of node `n`'s) leaves the node in. */
+  armDirection(n: number, arm: Arm): XY {
+    return this.direction(this.nodes[n]!, arm);
+  }
+
+  /**
+   * Where the line along `arm` (one of node `n`'s) runs straight on through
+   * the node: over a crossing (with the bridge of a crossing at a slant), or
+   * along the one arm in line with it, as along the run of a tee. Null where
+   * it does not run straight on, as up the stem of a tee into the run.
+   */
+  straightOn(n: number, arm: Arm): Arm[] | null {
+    const over = this.crossing(n)?.get(arm);
+    if (over) return over;
+    const node = this.nodes[n]!;
+    const d = this.direction(node, arm);
+    let best: Arm | null = null;
+    let bestDot = STRAIGHT;
+    for (const other of node.arms) {
+      if (other === arm) continue;
+      const e = this.direction(node, other);
+      const dot = d.x * e.x + d.y * e.y;
+      if (dot <= bestDot) {
+        best = other;
+        bestDot = dot;
+      }
+    }
+    return best ? [best] : null;
   }
 
   /** Line ends within `reach` pixels of each boundary: the pipes that leave it. */

@@ -17,6 +17,8 @@ What to do when something does not work as expected, and answers to common quest
 | Auto trace is greyed out                                | Place an ESDV, an end flange or a drawing link on the drawing first: the trace runs out to them.                              |
 | Auto trace paints too much                              | It follows lines into text or symbols that touch the pipe. `Ctrl+Z` undoes the whole trace; or delete the stray strokes.      |
 | Find similar finds nothing                              | Lower the similarity, or ring the symbol with a larger circle. It works best on clean drawings and one symbol type at a time. |
+| Identify is greyed out                                  | Count one symbol of each type first, on any drawing: Identify looks for symbols like the counted ones.                        |
+| Accepted items show **Size pending**                    | No line number was found on their line, or the labels either side disagree. Enter the size in the item editor.                |
 | A circle went to the wrong segment                      | It was placed on another segment's highlighting. Move it, or pick the segment in the panel.                                   |
 | A PDF is reported as encrypted on export                | Ask for an unprotected copy of the drawing; password-protected PDFs cannot be annotated.                                      |
 | Excel shows old results in the A2.1 sheet               | Open the file in Excel, which recalculates on opening. In LibreOffice, set recalculation on file load to **Always**.          |

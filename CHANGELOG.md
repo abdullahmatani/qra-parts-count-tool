@@ -5,6 +5,31 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Identify equipment, sized from the line numbers** (roadmap #59, #60, CNT-01): **Identify** in
+  the toolbar (while counting) searches the open drawing for every kind of equipment counted so far,
+  at once: each type and actuation counted on the drawing, and kinds counted only on other drawings
+  from up to three of them, so one counted example of each kind does for the next sheet too.
+  Examples of one type that look different (a gate and a ball valve) are each searched for, and
+  where two kinds match one symbol the closer match is offered. Suggestions are reviewed in the
+  usual bar, which now names the type of each.
+
+  Every suggestion, from Identify or **Find similar symbols**, now takes the size of the line it sits
+  on instead of the example's size: the drawing's line numbers (`6"-P-1001-A1A`,
+  `1-1/2"-HC-2003-B1`, `DN150-P-1001`, `150-P-1001-A1` on DN projects) and sizes written alone
+  (`3/4"`, `2" DRAIN`) are tied to the pipe they are written along, and from each symbol the pipe
+  is followed along its line (over crossings, along the run of tees, across valves, flanges and
+  ESDVs, over breaks in the line, but not into branches or through equipment) to the first label
+  each way. The bar shows the size, and the line number it came from is outlined on the drawing.
+  Where the size cannot be read (no line number on the line, or labels either side that disagree,
+  as at a reducer), it is left **empty and pending** for the user: the bar says **Size pending**,
+  **Accept all** says how many are pending, and accepted items without a size are flagged as
+  incomplete until it is entered. Small-bore connections and instruments take only a size written
+  beside them, and equipment that needs no size gets none. Accepting waits until the sizes are read.
+
+  **Fill sizes**, beside **Identify**, does the same for items counted by hand: every counted item
+  on the drawing with no size takes the size of its line, as one undo step, never changing a size
+  that was entered; **Show pending** selects those still without one.
+
 - **Arrowheads and thick lines in DWG and DXF drawings** (DRW-02): polyline widths are now drawn, so
   arrows made from a polyline that tapers to a point show their filled head, and lines drawn as
   wide polylines show at their real thickness, with square ends and mitred corners as in AutoCAD.
