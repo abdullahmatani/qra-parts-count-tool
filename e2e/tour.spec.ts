@@ -178,14 +178,15 @@ test('walks through one complete parts count on the practice project', async ({ 
   }
   await bar.getByRole('button', { name: 'Close suggestions' }).click();
 
+  // Sizes come from the line numbers; HV-105's drain has none, so its size is pending.
   await atStep('sizes');
   await key(page, '0');
-  await clickDrawing(page, 790, 150);
-  await expect(page.getByTestId('item-editor').getByLabel('Size', { exact: true })).toHaveValue(
-    '8"',
-  );
   const size = page.getByTestId('item-editor').getByLabel('Size', { exact: true });
-  await size.fill('6');
+  await clickDrawing(page, 790, 150);
+  await expect(size).toHaveValue('6"');
+  await clickDrawing(page, 620, 420);
+  await expect(size).toHaveValue('');
+  await size.fill('2');
   await size.press('Enter');
 
   await atStep('countTable');

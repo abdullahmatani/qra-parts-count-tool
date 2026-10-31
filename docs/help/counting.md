@@ -81,18 +81,68 @@ To find the rest of a symbol, select one counted marker (say a gate valve) and c
 symbols** in the right pane. The drawing is searched for symbols that look like the one the marker
 rings, at any quarter turn; symbols that already have a marker are skipped.
 
-Candidates appear as dashed violet rings, and a bar at the top of the drawing steps through them:
+Candidates appear as dashed violet rings, and a bar at the top of the drawing steps through them,
+with how similar each one is and the **size** it will be counted at, read from the line number on
+its pipe (see [Sizes from line numbers](#sizes-from-line-numbers)):
 
-- **Accept** turns the candidate in focus into a marker with the example's type, actuation and size
-  (in the segment of the highlighting under it, or the active segment);
+- **Accept** turns the candidate in focus into a marker with the example's type and actuation, at
+  the size read from its line (in the segment of the highlighting under it, or the active segment);
 - **Reject** drops it;
-- **Accept all** takes every candidate shown.
+- **Accept all** takes every candidate shown, as one step, and says how many took a size from the
+  line numbers and how many are pending a size.
 
 The **similarity** setting (90 % down to 60 %) trades missed symbols against false ones. Nothing is
-counted until you accept it, and suggestions are never saved or exported. Check the sizes of
-accepted items, as line sizes vary. It works best on clean PDF and CAD drawings and on one symbol
-type at a time. If the marker is too small on the sheet to match, ring the symbol with a larger
-circle and try again.
+counted until you accept it, and suggestions are never saved or exported. It works best on clean
+PDF and CAD drawings. If the marker is too small on the sheet to match, ring the symbol with a
+larger circle and try again.
+
+## Identify equipment
+
+**Identify** in the toolbar does the same for every kind of equipment at once. It
+searches the open drawing for symbols like the ones you have counted, of every type: each kind
+(type and actuation) counted on the drawing, and kinds you have counted only on other drawings, from
+up to three of them (drawings of the same file type first). So count one symbol of each kind on the
+first sheet, and Identify finds them on the next. Symbols of one kind that look different (a gate
+valve and a ball valve both counted as **Valve**) are each searched for.
+
+Suggestions are reviewed in the same bar, which names the type each one would be counted as. Where
+two kinds match the same symbol, the closer match is offered. Identify finds only symbols drawn at
+the same scale as the examples, so examples on sheets of another size may find nothing.
+
+## Sizes from line numbers
+
+A P&ID names each line with a line number that starts with its size, such as `6"-P-1001-A1A`,
+`1-1/2"-HC-2003-B1` or `DN150-P-1001`, and marks some small lines with a size alone (`3/4"`). Find
+similar symbols, Identify and **Fill sizes** read these to size what they count:
+
+1. Each line number is tied to the pipe it is written along: the nearest straight run of line beside
+   it that runs the same way as the text.
+2. From each symbol, the pipe is followed both ways along the one line: straight on over crossings
+   and along the run of a tee, across the valves, flanges and ESDVs on it, and over small breaks in
+   the line. It does not turn into a branch, climb out of a branch into the line it comes off, or
+   go through a vessel, pump or other equipment.
+3. The first line number met each way gives the size. A size written on its own close beside the
+   symbol (a 2" valve on a 6" line) is taken instead.
+
+The bar shows the size of the suggestion in focus; the line number it came from is outlined on the
+drawing. When the size cannot be read, it is left **empty, pending for you to enter**, and the bar
+says **Size pending**:
+
+- no line number was found on the symbol's line (an unlabelled drain or vent, a scanned drawing with
+  no text, a line number written on another drawing);
+- the line numbers either side disagree, as beside a reducer (both are outlined, in amber).
+
+An accepted item with no size has an amber outline and is counted in the status bar's warnings and
+the pre-export check until you enter it, like any item without a size.
+
+Only valves, flanges and pipe take the size of their line. Small-bore connections and instruments
+take a size only from a size written beside them (their line is not theirs), and equipment that
+needs no size (vessels, pumps) gets none.
+
+**Fill sizes**, beside it in the toolbar, does this for items you counted by hand: every
+counted item on the open drawing that has no size takes the size of its line, as one undo step.
+Sizes you entered are never changed. The button shows how many items have no size; afterwards
+**Show pending** selects those still without one.
 
 ## Tags and duplicates
 

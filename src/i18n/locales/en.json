@@ -1413,11 +1413,26 @@
   },
   "assist": {
     "find": "Find similar symbols",
-    "findHint": "Searches this drawing for symbols that look like the one this marker rings. Nothing is counted until you accept a suggestion.",
+    "findHint": "Searches this drawing for symbols that look like the one this marker rings, and reads each one's size from its line number. Nothing is counted until you accept a suggestion.",
+    "identify": "Identify",
+    "identifyHint": "Finds the symbols on this drawing that look like ones you have counted, of every type, and reads each one's size from its line number. Nothing is counted until you accept a suggestion.",
+    "identifyNeedsExample": "Count one symbol of each type first, on any drawing: Identify then finds the rest, on every drawing.",
     "title": "Similar symbols",
+    "identifyTitle": "Identify equipment",
     "searching": "Searching the drawing…",
+    "progress": "Searching… {{done}} of {{total}} symbols",
     "position": "{{index}} of {{count}}",
     "score": "{{score}}% similar",
+    "sizes": {
+      "reading": "Reading line size…",
+      "found": "{{size}}",
+      "foundHint": "Size from the line number {{text}}",
+      "pending": "Size pending",
+      "noneHint": "No line number was found on this symbol's line: the size is left empty, for you to enter after accepting.",
+      "conflictHint": "The labels on this symbol's line disagree ({{labels}}), as beside a reducer: the size is left empty, for you to enter after accepting.",
+      "summary": "Sizes: {{sized}} read from line numbers, {{pending}} pending for you to enter.",
+      "failed": "Line sizes could not be read: {{message}}"
+    },
     "similarity": "Similarity",
     "atLeast": "{{score}}% or more",
     "accept": "Accept",
@@ -1427,13 +1442,30 @@
     "previous": "Previous suggestion",
     "next": "Next suggestion",
     "close": "Close suggestions",
+    "accepted_one": "Accepted {{count}} suggestion.",
+    "accepted_other": "Accepted {{count}} suggestions.",
     "none": "No similar symbols found. Try a lower similarity.",
     "history_one": "add {{count}} suggested marker",
     "history_other": "add {{count}} suggested markers",
     "errors": {
       "render": "The drawing could not be rendered for matching.",
-      "tooSmall": "The marker is too small on this sheet to match. Ring the symbol with a larger circle and try again."
+      "tooSmall": "The marker is too small on this sheet to match. Ring the symbol with a larger circle and try again.",
+      "noExamples": "Nothing to look for yet: count one symbol of each type first, then identify the rest."
     }
+  },
+  "lineSizes": {
+    "button": "Fill sizes",
+    "hint": "Fills in the sizes of the counted items on this drawing that have none, from the drawing's line numbers. Sizes you entered are kept. An item whose line size cannot be read stays empty, pending for you to enter.",
+    "nothingToFill": "Every counted item on this drawing that needs a size has one.",
+    "history_one": "fill {{count}} size from line numbers",
+    "history_other": "fill {{count}} sizes from line numbers",
+    "filled_one": "Size filled for {{count}} item from the line numbers ({{sizes}}).",
+    "filled_other": "Sizes filled for {{count}} items from the line numbers ({{sizes}}).",
+    "noneFound": "No line size could be read for the items without a size.",
+    "pending_one": "{{count}} item is pending a size: its line size could not be read.",
+    "pending_other": "{{count}} items are pending a size: their line size could not be read.",
+    "showPending": "Show pending",
+    "failed": "Sizes could not be read: {{message}}"
   },
   "help": {
     "title": "Documentation",
@@ -1547,11 +1579,11 @@
       },
       "findSimilar": {
         "title": "Find similar symbols",
-        "body": "Let the app find the other valves. Pick **Select** (`V`), click the HV-101 circle, then **Find similar symbols** in the right pane. Step through the violet rings: **Accept** the valves of IS-01 (HV-102, HV-104 and HV-105) and **Reject** HV-103, which is beyond ESDV-102."
+        "body": "Let the app find the other valves. Pick **Select** (`V`), click the HV-101 circle, then **Find similar symbols** in the right pane. The bar shows the size of each one, read from the line number on its pipe. Step through them: **Accept** the valves of IS-01 (HV-102, HV-104 and HV-105) and **Reject** HV-103, which is beyond ESDV-102."
       },
       "sizes": {
         "title": "Check the sizes",
-        "body": "Accepted valves take the example’s size, 8\". Press `0` to see the whole sheet, then click each one and correct its size in the item editor: **HV-102** is 6\", **HV-104** is 4\" and **HV-105** is 2\". `Shift`+click selects several markers, to edit them together."
+        "body": "Accepted valves take their size from the line numbers: **HV-102** is 6\" and **HV-104** is 4\". The drain under the separator has no line number, so **HV-105** has no size yet: it is pending, with an amber outline. Press `0` to see the whole sheet, click HV-105 and enter its size, 2\", in the item editor. (**Fill sizes** in the toolbar reads the line sizes of items counted by hand.)"
       },
       "countTable": {
         "title": "Read the count table",

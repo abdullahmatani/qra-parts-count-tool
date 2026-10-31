@@ -6,9 +6,11 @@ import {
   inkFromRgba,
   inkImage,
   matchExample,
+  matchExamples,
   removeLongLines,
   rotateInk,
   suppressOverlaps,
+  templateSimilarity,
   type InkImage,
   type SymbolMatch,
 } from './symbol-match';
@@ -165,5 +167,77 @@ describe('symbol matching (roadmap #59)', () => {
     const elapsed = performance.now() - started;
     expect(matches).toHaveLength(40);
     expect(elapsed).toBeLessThan(4000);
+  });
+});
+
+describe('identifying several kinds of symbol at once (roadmap #59)', () => {
+  /** A flange: two short bars across a horizontal pipe. */
+  function flange(image: InkImage, x: number, y: number): void {
+    paint(
+      image,
+      (px, py) =>
+        (Math.abs(px - (x - 3)) < 1.5 && Math.abs(py - y) < 10) ||
+        (Math.abs(px - (x + 3)) < 1.5 && Math.abs(py - y) < 10) ||
+        (Math.abs(py - y) < 1 && Math.abs(px - x) < 22),
+    );
+  }
+
+  function sheet() {
+    const image = inkImage(480, 200);
+    for (const x of [50, 170, 290]) valve(image, x, 50);
+    for (const x of [110, 230, 350]) flange(image, x, 150);
+    return image;
+  }
+  const box = (x: number, y: number) => ({ x: x - 18, y: y - 18, width: 36, height: 36 });
+
+  it('finds each kind as its own example, once per symbol', () => {
+    const matches = matchExamples(
+      sheet(),
+      [
+        { id: 'valve', group: 'Valve', box: box(50, 50) },
+        { id: 'flange', group: 'Flange', box: box(110, 150) },
+      ],
+      { minScore: 0.75 },
+    );
+    const of = (id: string) => matches.filter((m) => m.exampleId === id);
+    for (const x of [50, 170, 290]) expect(near(of('valve'), x, 50)).toBe(true);
+    for (const x of [110, 230, 350]) expect(near(of('flange'), x, 150)).toBe(true);
+    expect(matches).toHaveLength(6);
+  });
+
+  it('searches once for examples of one kind that look alike', () => {
+    const progress: number[] = [];
+    const matches = matchExamples(
+      sheet(),
+      [
+        { id: 'a', group: 'Valve', box: box(50, 50) },
+        { id: 'b', group: 'Valve', box: box(170, 50) },
+      ],
+      { minScore: 0.75 },
+      (done) => progress.push(done),
+    );
+    expect(new Set(matches.map((m) => m.exampleId))).toEqual(new Set(['a']));
+    expect(matches).toHaveLength(3);
+    expect(progress).toEqual([1, 2]);
+  });
+
+  it('takes an example cut from another sheet', () => {
+    const other = inkImage(120, 120);
+    valve(other, 60, 60);
+    const matches = matchExamples(
+      sheet(),
+      [{ id: 'elsewhere', group: 'Valve', box: box(60, 60), image: other }],
+      { minScore: 0.75 },
+    );
+    for (const x of [50, 170, 290]) expect(near(matches, x, 50)).toBe(true);
+    expect(matches).toHaveLength(3);
+  });
+
+  it('tells alike templates from different ones', () => {
+    const image = sheet();
+    const clean = removeLongLines(image, 36);
+    const cut = (x: number, y: number) => cropInk(clean, x - 18, y - 18, 36, 36);
+    expect(templateSimilarity(cut(50, 50), cut(170, 50))).toBeGreaterThan(0.95);
+    expect(templateSimilarity(cut(50, 50), cut(110, 150))).toBeLessThan(0.6);
   });
 });

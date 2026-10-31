@@ -83,7 +83,7 @@ async function renderFor(drawing: Drawing, scale: number): Promise<TraceRequest[
 }
 
 /** Runs a trace, rendering the sheet only when the worker does not hold it already. */
-async function run(
+export async function runOnSheet(
   drawing: Drawing,
   scale: number,
   barriers: TraceBarrier[],
@@ -225,7 +225,7 @@ export async function autoTraceSegment(drawingId: string): Promise<boolean> {
       sides,
       minLength: 3 * width * scale,
     };
-    const result = await run(drawing, scale, barriers, task, (width / 2) * scale);
+    const result = await runOnSheet(drawing, scale, barriers, task, (width / 2) * scale);
     const now = useProjectStore.getState().doc ?? doc;
     const paths = result.regions.flatMap((r) => toDrawing(r.paths, scale));
     const strokes = strokesFor(paths, width, strokesOf(now, drawingId, segment.id));
@@ -281,7 +281,7 @@ export async function autoTraceAt(
       point: { x: point.x * scale, y: point.y * scale },
       radius: Math.max(2, CLICK_REACH * unitsPerPixel * scale),
     };
-    const result = await run(drawing, scale, barriers, task, (width / 2) * scale);
+    const result = await runOnSheet(drawing, scale, barriers, task, (width / 2) * scale);
     if (!result.regions.length) {
       toast(t('autoTrace.noLine'));
       return true;
