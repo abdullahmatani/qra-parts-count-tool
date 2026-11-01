@@ -347,23 +347,50 @@ export function coarseFactor(template: InkImage): number {
 }
 
 /**
+ * An image ready to search: its blurred copy and window sums, made once for
+ * every template searched for in it.
+ */
+export class SearchImage {
+  readonly image: InkImage;
+  readonly integral: Integral;
+  readonly fine: InkImage;
+  readonly fineIntegral: Integral;
+  private readonly coarse = new Map<number, InkImage>();
+
+  constructor(image: InkImage) {
+    this.image = image;
+    // Blurred images find candidates; the final score compares the sharp shapes,
+    // so a blob of about the right size in about the right place does not pass.
+    this.integral = new Integral(image);
+    this.fine = blur(image);
+    this.fineIntegral = new Integral(this.fine);
+  }
+
+  /** The blurred image in blocks of `factor` × `factor` pixels. */
+  coarseAt(factor: number): InkImage {
+    let coarse = this.coarse.get(factor);
+    if (!coarse) {
+      coarse = downsample(this.fine, factor);
+      this.coarse.set(factor, coarse);
+    }
+    return coarse;
+  }
+}
+
+/**
  * Where `template` appears in `image`: every match scoring at least
  * `minScore`, best first, overlapping matches merged. Includes the template's
  * own place if it was cut from the image.
  */
 export function findMatches(
-  image: InkImage,
+  image: InkImage | SearchImage,
   template: InkImage,
   options: MatchOptions,
 ): SymbolMatch[] {
+  const search = image instanceof SearchImage ? image : new SearchImage(image);
   const rotations = options.rotations ?? [0, 90, 180, 270];
   const factor = coarseFactor(template);
-  // Blurred images find candidates; the final score compares the sharp shapes,
-  // so a blob of about the right size in about the right place does not pass.
-  const sharpIntegral = new Integral(image);
-  const fineImage = blur(image);
-  const fineIntegral = new Integral(fineImage);
-  const coarseImage = downsample(fineImage, factor);
+  const coarseImage = search.coarseAt(factor);
   const matches: SymbolMatch[] = [];
   for (const rotation of rotations) {
     const turned = rotateInk(template, rotation);
@@ -375,15 +402,15 @@ export function findMatches(
     const peaks = coarsePeaks(coarseImage, coarse, Math.max(0.2, options.minScore - COARSE_SLACK));
     for (const peak of peaks) {
       const near = refine(
-        fineImage,
-        fineIntegral,
+        search.fine,
+        search.fineIntegral,
         fine,
         peak.x * factor,
         peak.y * factor,
         factor + 1,
       );
       if (near.score < options.minScore) continue;
-      const best = refine(image, sharpIntegral, sharp, near.x, near.y, 1);
+      const best = refine(search.image, search.integral, sharp, near.x, near.y, 1);
       if (best.score >= options.minScore) {
         matches.push({
           x: best.x,
@@ -412,4 +439,97 @@ export function matchExample(
   const clean = removeLongLines(image, Math.ceil(Math.max(box.width, box.height)));
   const template = cropInk(clean, box.x, box.y, box.width, box.height);
   return findMatches(clean, template, options);
+}
+
+// ---------------------------------------------------------------------------
+// Several examples at once
+// ---------------------------------------------------------------------------
+
+/** An example symbol to search for, and what its matches count as. */
+export interface Example {
+  id: string;
+  /** Examples of one group (an equipment type) that look alike are searched for once. */
+  group: string;
+  /** The symbol in image pixels: of the searched image, or of `image` when given. */
+  box: Box;
+  /** The example cut from another drawing, with some of the sheet around it. */
+  image?: InkImage;
+}
+
+export interface ExampleMatch extends SymbolMatch {
+  exampleId: string;
+}
+
+/** Examples this alike (NCC at their best shift and turn) are the same symbol. */
+const SAME_SYMBOL = 0.85;
+/** Examples whose sizes differ by less than this share one cleaned image. */
+const SIZE_STEP = 1.2;
+
+/** How alike two templates are, at their best quarter turn and a shift of a few pixels. */
+export function templateSimilarity(a: InkImage, b: InkImage): number {
+  const pad = 3;
+  const padded = inkImage(a.width + 2 * pad, a.height + 2 * pad);
+  for (let y = 0; y < a.height; y += 1) {
+    padded.data.set(
+      a.data.subarray(y * a.width, (y + 1) * a.width),
+      (y + pad) * padded.width + pad,
+    );
+  }
+  const integral = new Integral(padded);
+  let best = 0;
+  for (const rotation of [0, 90, 180, 270] as const) {
+    const t = new Template(rotateInk(b, rotation));
+    if (t.norm < 1e-6 || t.width > padded.width || t.height > padded.height) continue;
+    for (let y = 0; y <= padded.height - t.height; y += 1) {
+      for (let x = 0; x <= padded.width - t.width; x += 1) {
+        best = Math.max(best, scoreAt(padded, integral, t, x, y));
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * Where any of several examples appears in `image`, each matched as by
+ * `matchExample`. An example that looks like one of its group already
+ * searched for (two gate valves) is skipped, and where the matches of
+ * different examples overlap, the best one stands, so each symbol is offered
+ * once, as the type it looks most like. `onProgress` hears after each example.
+ */
+export function matchExamples(
+  image: InkImage,
+  examples: readonly Example[],
+  options: MatchOptions,
+  onProgress?: (done: number, total: number) => void,
+): ExampleMatch[] {
+  const sizeOf = (e: Example) => Math.ceil(Math.max(e.box.width, e.box.height));
+  // Smallest first, so examples of about one size share the cleaned image.
+  const order = [...examples].sort((a, b) => sizeOf(a) - sizeOf(b));
+  let prepared: { minLength: number; clean: InkImage; search: SearchImage } | null = null;
+  const used: { group: string; template: InkImage }[] = [];
+  const all: ExampleMatch[] = [];
+  order.forEach((example, i) => {
+    const size = sizeOf(example);
+    if (!prepared || size > prepared.minLength * SIZE_STEP) {
+      prepared = null; // Let the last one go first: sheets are large.
+      const clean = removeLongLines(image, size);
+      prepared = { minLength: size, clean, search: new SearchImage(clean) };
+    }
+    const source = example.image
+      ? removeLongLines(example.image, prepared.minLength)
+      : prepared.clean;
+    const { x, y, width, height } = example.box;
+    const template = cropInk(source, x, y, width, height);
+    const seen = used.some(
+      (u) => u.group === example.group && templateSimilarity(u.template, template) >= SAME_SYMBOL,
+    );
+    if (!seen && template.width > 0 && template.height > 0) {
+      used.push({ group: example.group, template });
+      for (const m of findMatches(prepared.search, template, options)) {
+        all.push({ ...m, exampleId: example.id });
+      }
+    }
+    onProgress?.(i + 1, order.length);
+  });
+  return suppressOverlaps(all, options.occupied).slice(0, options.maxMatches ?? 300);
 }

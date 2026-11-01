@@ -28,7 +28,8 @@ In about fifteen minutes you will:
 6. Highlight the segment with **Auto trace**, and outline the separator with a dashed zone.
 7. Start the parts count.
 8. Count valves and flanges with the equipment bar and Stamp.
-9. Let **Find similar symbols** find the rest of the valves.
+9. Let **Find similar symbols** find the rest of the valves, sized from the line numbers, and enter
+   the one size that is pending.
 10. Read the count table, add a note for the checker and mark the segment as counted.
 11. Run the pre-export check and export.
 

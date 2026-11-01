@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 /**
- * Runs the auto trace off the main thread. The thinned sheet is kept for the
- * next trace on the same drawing, and the graph for the same boundaries, so a
- * trace after the first one comes back at once.
+ * Runs the auto trace, and reads line sizes, off the main thread. The thinned
+ * sheet is kept for the next trace on the same drawing, and the graph for the
+ * same boundaries, so a trace after the first one comes back at once.
  */
 import {
   TraceGraph,
@@ -11,6 +11,7 @@ import {
   type TraceRegion,
   type TraceSheet,
 } from '@/domain/markup/auto-trace';
+import { readLineSizes } from '@/domain/markup/line-sizes';
 import type { TraceRequest, TraceResponse, TracedRegion } from './auto-trace-protocol';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -35,6 +36,13 @@ function run(request: TraceRequest): TraceResponse {
     reached: region.reached,
     length: region.length,
   });
+  if (task.kind === 'sizes') {
+    const sizes = readLineSizes(g, task.labels, task.symbols, {
+      inline: new Set(task.inline),
+      ownOnly: new Set(task.ownOnly),
+    });
+    return { id, ok: true, regions: [], undecided: [], sizes: [...sizes] };
+  }
   if (task.kind === 'point') {
     const seeds = g.edgesNear(task.point, task.radius);
     return { id, ok: true, regions: seeds.length ? [out(g.trace(seeds))] : [], undecided: [] };

@@ -98,6 +98,12 @@ the parts count.
 A part that can leak and is counted: a valve, flange, small-bore connection, pump seal, vessel and
 so on.
 
+## Line number
+
+The label of a line on a P&ID, which starts with its nominal size, such as `6"-P-1001-A1A`. Find
+similar symbols, Identify and Fill sizes read sizes from them. See
+[Sizes from line numbers](counting.md#sizes-from-line-numbers).
+
 ## Marker
 
 Anything placed on a drawing: a circle round a leak source, an ESDV, an end flange, a highlighter

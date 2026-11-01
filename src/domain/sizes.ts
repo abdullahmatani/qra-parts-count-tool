@@ -51,6 +51,11 @@ const DN_TO_NPS: Readonly<Record<number, number>> = {
   1200: 48,
 };
 
+/** Whether `value` is a standard DN size (DN6 … DN1200). */
+export function isStandardDn(value: number): boolean {
+  return value in DN_TO_NPS;
+}
+
 /** Size in inches, for binning. Non-standard DN values use DN / 25. */
 export function sizeInInches(size: NominalSize): number {
   if (size.unit === 'in') return size.value;

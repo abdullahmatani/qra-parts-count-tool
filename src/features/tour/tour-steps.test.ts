@@ -215,12 +215,13 @@ describe('tour steps', () => {
       count('flange', 220, 8);
       count('flange', 340, 8);
     });
-    let accepted = '';
+    // Accepted valves take their line's size; the drain valve's line has none.
+    let pending = '';
     expectDone('findSimilar', () => {
-      accepted = count('valve', 790, 8);
-      count('valve', 640, 8);
+      count('valve', 790, 6);
+      pending = count('valve', 620, null);
     });
-    expectDone('sizes', () => updateItem(doc, accepted, { nominalSize: 6 }));
+    expectDone('sizes', () => updateItem(doc, pending, { nominalSize: 2 }));
     expectDone('countTable', () => (ctx.highlighted = [first]));
     expectDone('note', () =>
       addNote(doc, { segmentId: segment, author: 'QRA', text: 'V-100 is one vessel' }, now),

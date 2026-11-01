@@ -82,6 +82,34 @@ What this does **not** show yet: behaviour on the client's real PEFS/P&IDs (scan
 drawings, several symbol variants). Re-run the e2e checks and a manual trial on the client's
 sample drawings when they arrive, and adjust the default similarity if needed.
 
+## Identify equipment and line sizes (after 2.1.0)
+
+Two steps on from the prototype, still without a trained model:
+
+- **Identify equipment** searches a sheet for every kind of symbol counted so far (one template per
+  type and actuation, more where examples of one type look different), in one worker run
+  (`matchExamples`): the sheet is cleaned and prepared once and every template searched in it;
+  templates of a kind that score 85 % or more against one already used are skipped, and where
+  matches of different kinds overlap, the best stands. Kinds not counted on the sheet take
+  examples from up to three other drawings, rendered at the same scale and cut with a margin of
+  their own sheet (`src/domain/symbol-examples.ts`).
+- **Line sizes** replace the example's size. Line numbers and size labels are read from the
+  drawing text (`src/domain/line-labels.ts`) and pinned to the pipe they are written along; from
+  each suggestion the pipe is followed along its line on the auto trace's centre-line graph, to the
+  first label each way (`src/domain/markup/line-sizes.ts`). No label, or labels that disagree,
+  leave the size empty for the user rather than guess.
+
+| Sheet                       | Example(s)                           | Symbols to find              | Found and sized                                            | Wrong sizes | Time  |
+| --------------------------- | ------------------------------------ | ---------------------------- | ---------------------------------------------------------- | ----------- | ----- |
+| Sample PEFS-S-001 (PDF, A3) | Every kind counted on the sheet      | HV-102, F-3, HV-104, HV-105  | 4 of 4: 6", 6", 4"; HV-105 (drain, no line number) pending | 0           | 1.5 s |
+| Sample PEFS-S-002 (PDF, A3) | Flange counted on PEFS-S-001 only    | F-4                          | 1 of 1, 6"                                                 | 0           | —     |
+| CAD PEFS-4001 (DXF, A1)     | One gate valve, ringed on its symbol | 23 valves on 12 lines, 2"–7" | 23 of 23, all sized                                        | 0           | 1.4 s |
+| CAD PEFS-4001 (DXF, A1)     | The same, ringed 6 mm off its centre | 23                           | 23 found; 19 sized, 4 pending (the rings sit off the pipe) | 0           | 1.4 s |
+
+Times are from the click to the sizes on screen. What this does not show yet: line numbers
+written on a leader away from the line, sheets whose text is outlined or scanned (no text: every
+size is pending), and dense client drawings.
+
 ## Limits and next steps
 
 - Matches only what looks like the example: a gate valve example finds gate valves, not globe or
@@ -89,7 +117,9 @@ sample drawings when they arrive, and adjust the default similarity if needed.
 - Scanned drawings with skew, noise or varying line weight will score lower; lower the similarity
   and review more carefully.
 - Symbols drawn at another scale are not found (the match is at one scale).
-- The size copied from the example is usually wrong for some matches (line sizes vary): check the
-  sizes of accepted items, for example with bulk edit.
+- Sizes come from the line numbers (after 2.1.0). A line number on a leader, or one on another
+  drawing, is not found, and the size is left pending; a reducer drawn without a size callout is
+  not seen, so a symbol beyond it can take the size of the line before it. Check sizes against the
+  drawing as part of the review.
 - Next: block references for DWG/DXF (B); multi-scale matching; a trained detector (A) once a
   labelled set of client drawings is available.

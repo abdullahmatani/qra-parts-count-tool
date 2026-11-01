@@ -66,6 +66,22 @@ test('suggests symbols like a counted one for review (roadmap #59, #60)', async 
   // Suggestions are not markers until accepted.
   await expect(markers).toHaveCount(15);
 
+  // Each is sized from the line number on its pipe (CNT-01): HV-104 is on the
+  // 4" line; HV-105's drain has no line number, so its size is pending.
+  await expect(page.locator('[data-testid="suggestion"][data-size="reading"]')).toHaveCount(0, {
+    timeout: 20_000,
+  });
+  const sizes = await page.getByTestId('suggestion').evaluateAll((els) =>
+    els.map((el) => ({
+      x: Number(el.dataset.cx),
+      y: Number(el.dataset.cy),
+      size: el.dataset.size,
+      value: el.dataset.sizeValue,
+    })),
+  );
+  expect(sizes.find((p) => near([p], 640, 560))).toMatchObject({ size: 'found', value: '4"' });
+  expect(sizes.find((p) => near([p], 620, 420))).toMatchObject({ size: 'none' });
+
   // Step through, reject one, accept one.
   const total = centres.length;
   await bar.getByRole('button', { name: 'Next suggestion' }).click();
@@ -88,13 +104,22 @@ test('suggests symbols like a counted one for review (roadmap #59, #60)', async 
   await expect(markers).toHaveCount(17);
   await expect(bar.getByTestId('suggestion-status')).toHaveText(/No similar symbols found/);
 
-  // An accepted suggestion carries the example's item: a manual 8" valve.
+  // Accepted suggestions are valves like the example, at the size of their line;
+  // HV-105, whose line size could not be read, is left without one, flagged.
+  await page.getByRole('application').focus();
+  await page.keyboard.press('0');
+  await clickDrawing(page, 640, 560);
   await expect(inspector).toContainText('Valve');
-  await expect(inspector.getByLabel('Size', { exact: true })).toHaveValue('8"');
+  await expect(inspector.getByLabel('Size', { exact: true })).toHaveValue('4"');
+  await clickDrawing(page, 620, 420);
+  await expect(inspector).toContainText('Valve');
+  await expect(inspector.getByLabel('Size', { exact: true })).toHaveValue('');
+  await expect(inspector).toContainText('Incomplete item');
 
   // Each acceptance is its own undo step.
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(markers).toHaveCount(16);
+  await expect(bar.getByTestId('suggestion-status')).toHaveText(/No similar symbols found/);
   await bar.getByRole('button', { name: 'Close suggestions' }).click();
   await expect(bar).toBeHidden();
   await app.removeDirectory(dir);
@@ -138,6 +163,22 @@ test('suggests every other gate valve on a DXF sheet (roadmap #59, #60)', async 
   await expect(bar.getByTestId('suggestion-status')).toHaveText('1 of 23');
   const columns = (await suggestionCentres(page)).map((p) => Math.round(p.x / mm));
   expect(columns.every((x) => Math.abs(x - 120) <= 2 || Math.abs(x - 450) <= 2)).toBe(true);
+
+  // Sizes from the line number at the start of each row: 2" to 7" (CNT-01).
+  // This ring sits a little off its valve, so a few are left pending, but no
+  // size read is wrong.
+  await expect(page.locator('[data-testid="suggestion"][data-size="reading"]')).toHaveCount(0, {
+    timeout: 20_000,
+  });
+  const read = await page
+    .getByTestId('suggestion')
+    .evaluateAll((els) =>
+      els.map((el) => ({ y: Number(el.dataset.cy), value: el.dataset.sizeValue ?? null })),
+    );
+  const rowSize = (y: number) => `${2 + (Math.round((594 - y / mm - 110) / 38) % 6)}"`;
+  const found = read.filter((r) => r.value !== null);
+  expect(found.length).toBeGreaterThanOrEqual(15);
+  expect(found.filter((r) => r.value !== rowSize(r.y))).toEqual([]);
 
   // Accept all of them in one step.
   const markers = page.getByTestId('marker');

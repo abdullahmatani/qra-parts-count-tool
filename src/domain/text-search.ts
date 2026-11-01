@@ -12,6 +12,8 @@ export interface TextBox {
   y: number;
   width: number;
   height: number;
+  /** Text running up or down the sheet (turned a quarter turn), when known. */
+  vertical?: boolean;
 }
 
 /** Hyphens, dashes and minus signs, which drawings use interchangeably in tags. */

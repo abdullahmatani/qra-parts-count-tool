@@ -348,21 +348,30 @@ export function setHighlighterPenCommand(ids: readonly string[], pen: Highlighte
   );
 }
 
+/** An accepted symbol suggestion: where its marker goes, how it is drawn and what it counts. */
+export interface SuggestedPlacement {
+  geometry: CircleGeometry;
+  symbol: Exclude<MarkerSymbol, 'freeform'>;
+  defaults: ItemDefaults;
+}
+
 /**
  * Roadmap #60: markers for accepted symbol suggestions, each with a count item
- * from `defaults`, in the active segment (or the segment whose highlighting it
- * is on, as `placeMarker`), as one undo step. Returns their ids.
+ * from its `defaults`, in the active segment (or the segment whose
+ * highlighting it is on, as `placeMarker`), as one undo step. Returns their ids.
  */
 export function placeSuggestedMarkers(
   drawingId: string,
-  geometries: readonly CircleGeometry[],
-  defaults: ItemDefaults,
-  symbol: Exclude<MarkerSymbol, 'freeform'> = 'circle',
+  placements: readonly SuggestedPlacement[],
 ): string[] {
   const doc = useProjectStore.getState().doc;
-  if (!doc?.drawings[drawingId] || geometries.length === 0) return [];
-  const segmentIds = placementSegments(doc, drawingId, geometries);
-  const markers: Marker[] = geometries.map((geometry, i) => ({
+  if (!doc?.drawings[drawingId] || placements.length === 0) return [];
+  const segmentIds = placementSegments(
+    doc,
+    drawingId,
+    placements.map((p) => p.geometry),
+  );
+  const markers: Marker[] = placements.map(({ geometry, symbol }, i) => ({
     id: newId('mkr'),
     drawingId,
     segmentId: segmentIds[i]!,
@@ -373,10 +382,10 @@ export function placeSuggestedMarkers(
     endFlange: null,
   }));
   const done = apply(t('assist.history', { count: markers.length }), (draft) => {
-    for (const marker of markers) {
+    markers.forEach((marker, i) => {
       addMarker(draft, marker);
-      addItem(draft, marker.id, defaults);
-    }
+      addItem(draft, marker.id, placements[i]!.defaults);
+    });
   });
   if (!done) return [];
   useUiStore.getState().setSelection(markers.map((m) => m.id));

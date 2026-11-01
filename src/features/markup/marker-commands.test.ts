@@ -281,10 +281,13 @@ describe('marker commands', () => {
       // Off the highlighting it goes to the active segment.
       const off = placeMarker(drawingId, { ...onPipe, cy: 700 })!;
       expect(project().doc!.markers[off]!.segmentId).toBe(segmentId);
-      const [accepted] = placeSuggestedMarkers(drawingId, [onPipe], {
-        equipmentTypeId: null,
-        actuation: null,
-      });
+      const [accepted] = placeSuggestedMarkers(drawingId, [
+        {
+          geometry: onPipe,
+          symbol: 'circle',
+          defaults: { equipmentTypeId: null, actuation: null },
+        },
+      ]);
       expect(project().doc!.markers[accepted!]!.segmentId).toBe(other);
     });
 

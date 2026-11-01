@@ -1,11 +1,17 @@
 /** Messages between the main thread and the auto trace worker. */
+import type { SizeLabel } from '@/domain/line-labels';
 import type { BoundarySides, TraceBarrier } from '@/domain/markup/auto-trace';
 import type { XY } from '@/domain/markup/geometry';
+import type { LineSizeReading } from '@/domain/markup/line-sizes';
 
-/** Trace a segment out from its own boundaries, or the line work from a point. */
+/**
+ * Trace a segment out from its own boundaries, or the line work from a point;
+ * or read the line size of symbols (barriers) from size labels (in pixels).
+ */
 export type TraceTask =
   | { kind: 'segment'; segmentId: string; sides: BoundarySides[]; minLength: number }
-  | { kind: 'point'; point: XY; radius: number };
+  | { kind: 'point'; point: XY; radius: number }
+  | { kind: 'sizes'; labels: SizeLabel[]; symbols: string[]; inline: string[]; ownOnly: string[] };
 
 export interface TraceRequest {
   id: number;
@@ -28,7 +34,14 @@ export interface TracedRegion {
 }
 
 export type TraceResponse =
-  | { id: number; ok: true; regions: TracedRegion[]; undecided: TracedRegion[] }
+  | {
+      id: number;
+      ok: true;
+      regions: TracedRegion[];
+      undecided: TracedRegion[];
+      /** For a `sizes` task: each symbol's reading. */
+      sizes?: [string, LineSizeReading][];
+    }
   | { id: number; ok: false; error: string; needsImage?: boolean };
 
 let worker: Worker | null = null;

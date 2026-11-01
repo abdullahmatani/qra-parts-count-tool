@@ -40,7 +40,14 @@ export function cadRunBox(run: TextRun): TextBox {
   const ys = corners.map((p) => p[1]!);
   const x = Math.min(...xs);
   const y = Math.min(...ys);
-  return { text: run.text, x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+  return {
+    text: run.text,
+    x,
+    y,
+    width: Math.max(...xs) - x,
+    height: Math.max(...ys) - y,
+    vertical: Math.abs(run.b) > Math.abs(run.a),
+  };
 }
 
 export function displayListBoxes(list: DisplayList): TextBox[] {

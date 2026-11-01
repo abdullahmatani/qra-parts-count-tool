@@ -17,7 +17,8 @@ export interface TraceBoundaries {
   links: string[];
 }
 
-function shapeOf(geometry: MarkerGeometry, scale: number): BarrierShape | null {
+/** Where a circle or double-line marker is on the sheet, at `scale` pixels per drawing unit. */
+export function barrierShape(geometry: MarkerGeometry, scale: number): BarrierShape | null {
   if (geometry.type === 'circle') {
     return {
       type: 'disc',
@@ -52,7 +53,7 @@ export function traceBoundaries(
   const links: string[] = [];
   for (const marker of Object.values(doc.markers)) {
     if (marker.drawingId !== drawingId || !isBoundaryMarker(marker)) continue;
-    const shape = shapeOf(marker.geometry, scale);
+    const shape = barrierShape(marker.geometry, scale);
     if (!shape) continue;
     barriers.push({ id: marker.id, shape });
     if (marker.esdv) {

@@ -89,7 +89,17 @@ export class PdfPageSource implements DrawingSource {
       const ys = corners.map((p) => p[1]);
       const x = Math.min(...xs);
       const y = Math.min(...ys);
-      boxes.push({ text: item.str, x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y });
+      // The run's baseline direction on the displayed page.
+      const [along0, along1] = [corners[0]!, corners[1]!];
+      const vertical = Math.abs(along1[1] - along0[1]) > Math.abs(along1[0] - along0[0]);
+      boxes.push({
+        text: item.str,
+        x,
+        y,
+        width: Math.max(...xs) - x,
+        height: Math.max(...ys) - y,
+        vertical,
+      });
     }
     return boxes;
   }
