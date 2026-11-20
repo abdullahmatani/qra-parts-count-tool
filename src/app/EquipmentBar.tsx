@@ -17,6 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   ANY_EQUIPMENT,
+  choiceShortcut,
   currentChoice,
   equipmentChoices,
   fitChoices,
@@ -239,10 +240,10 @@ export function EquipmentBar() {
                 </TooltipTrigger>
                 <TooltipContent>
                   {t('equipmentBar.choiceHint', { name })}
-                  {choice.type.shortcut && (
+                  {choiceShortcut(choice) && (
                     <>
                       {' '}
-                      <Kbd>{choice.type.shortcut}</Kbd>
+                      <Kbd>{choiceShortcut(choice)}</Kbd>
                     </>
                   )}
                 </TooltipContent>
@@ -274,8 +275,8 @@ export function EquipmentBar() {
                     className="text-xs"
                   >
                     <span className="truncate">{choiceName(choice, t)}</span>
-                    {choice.type.shortcut && (
-                      <DropdownMenuShortcut>{choice.type.shortcut}</DropdownMenuShortcut>
+                    {choiceShortcut(choice) && (
+                      <DropdownMenuShortcut>{choiceShortcut(choice)}</DropdownMenuShortcut>
                     )}
                   </DropdownMenuRadioItem>
                 ))}

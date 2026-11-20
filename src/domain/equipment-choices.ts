@@ -103,3 +103,13 @@ export function wheelIndex(dx: number, dy: number, count: number, deadZone: numb
 export function wheelAngle(index: number, count: number): number {
   return -Math.PI / 2 + (index * 2 * Math.PI) / count;
 }
+
+/**
+ * The keys that count a choice (ANN-08): its type's key, with Shift for the
+ * automated actuation ("1", "Shift+1"); null for a type without a key.
+ */
+export function choiceShortcut(choice: EquipmentChoice): string | null {
+  const key = choice.type.shortcut?.toUpperCase();
+  if (!key) return null;
+  return choice.actuation === 'automated' ? `Shift+${key}` : key;
+}

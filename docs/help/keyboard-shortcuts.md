@@ -24,16 +24,19 @@ counted. Pressing the key of a tool from the other stage says where it is.
 
 ## Equipment types
 
-Keys set the type of the selected item and of the next circle. The starter library (the
+While counting with an equipment shape picked, **point at a symbol and press its type's key**: a
+marker counted as that type is placed under the pointer (over a marker already placed, the key
+changes its type). Hold `Shift` for the automated actuation (`Shift+1` is an automated valve). With
+**Select**, keys set the type of the selected item and of the next marker. The starter library (the
 equipment of the A2.1 parts count sheet) uses:
 
-| Key | Type                             |
-| --- | -------------------------------- |
-| `1` | Valve                            |
-| `2` | Flange                           |
-| `3` | Small-bore instrument connection |
-| `4` | Pressure vessel                  |
-| `5` | Pump, centrifugal (single seal)  |
+| Key | Type                                |
+| --- | ----------------------------------- |
+| `1` | Valve (manual; `Shift+1` automated) |
+| `2` | Flange                              |
+| `3` | Small-bore instrument connection    |
+| `4` | Pressure vessel                     |
+| `5` | Pump, centrifugal (single seal)     |
 
 Change or add keys in **Project › Equipment library** (column **Key**).
 
@@ -56,10 +59,10 @@ Change or add keys in **Project › Equipment library** (column **Key**).
 
 ## Mouse
 
-| Action                                 | What it does                                                                                                                                    |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Right-click the drawing                | Menu of editing commands: undo, redo, cut, copy, paste here, delete, select all, edit, count as, move to segment, switch tool                   |
-| Press and hold the left button (count) | Quick-pick wheel with an equipment shape picked: move towards a type and let go to count the symbol as it; let go in the middle to keep it open |
+| Action                           | What it does                                                                                                                                                                |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Right-click the drawing          | Menu of editing commands: undo, redo, cut, copy, paste here, delete, select all, edit, count as, move to segment, switch tool. While counting: on a marker, or with `Shift` |
+| Right-click the paper (counting) | Quick-pick wheel: flick towards a type and let go to count the symbol as it; let go in the middle to keep it open; right-click again for the menu                           |
 
 ## View
 

@@ -41,9 +41,45 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
       ['1', 'eqt_valve'],
       ['c', 'eqt_custom'],
     ]);
-    expect(shortcutFor(key('1'), keys)).toEqual({ kind: 'equipmentType', typeId: 'eqt_valve' });
-    expect(shortcutFor(key('C'), keys)).toEqual({ kind: 'equipmentType', typeId: 'eqt_custom' });
+    expect(shortcutFor(key('1'), keys)).toEqual({
+      kind: 'equipmentType',
+      typeId: 'eqt_valve',
+      automated: false,
+    });
+    expect(shortcutFor(key('C'), keys)).toEqual({
+      kind: 'equipmentType',
+      typeId: 'eqt_custom',
+      automated: false,
+    });
     expect(shortcutFor(key('1', { ctrlKey: true }), keys)).toBeNull();
+  });
+
+  it('picks the automated actuation with Shift, whatever the keyboard layout', () => {
+    const keys = new Map([
+      ['1', 'eqt_valve'],
+      ['p', 'eqt_pump'],
+    ]);
+    // Shift+1 is "!" on a US keyboard and "+" on a Swiss one: the physical key counts.
+    for (const shifted of ['!', '+']) {
+      expect(shortcutFor({ ...key(shifted, { shiftKey: true }), code: 'Digit1' }, keys)).toEqual({
+        kind: 'equipmentType',
+        typeId: 'eqt_valve',
+        automated: true,
+      });
+    }
+    expect(shortcutFor({ ...key('1', { shiftKey: true }), code: 'Numpad1' }, keys)).toEqual({
+      kind: 'equipmentType',
+      typeId: 'eqt_valve',
+      automated: true,
+    });
+    expect(shortcutFor({ ...key('P', { shiftKey: true }), code: 'KeyP' }, keys)).toEqual({
+      kind: 'equipmentType',
+      typeId: 'eqt_pump',
+      automated: true,
+    });
+    // Shift with a tool letter or an unkeyed digit is nothing.
+    expect(shortcutFor({ ...key('C', { shiftKey: true }), code: 'KeyC' }, keys)).toBeNull();
+    expect(shortcutFor({ ...key('@', { shiftKey: true }), code: 'Digit2' }, keys)).toBeNull();
   });
 
   it('maps delete and escape, and ignores Alt combinations', () => {

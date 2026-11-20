@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import { Kbd } from '@/components/ui/kbd';
 import { TOOLS } from '@/app/tools';
+import { choiceShortcut, equipmentChoices } from '@/domain/equipment-choices';
+import { choiceName } from '@/features/count/choice-name';
 import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 
@@ -51,9 +53,11 @@ export function ShortcutsDialog() {
   const open = useUiStore((s) => s.dialog === 'shortcuts');
   const openDialog = useUiStore((s) => s.openDialog);
   const types = useProjectStore((s) => s.doc?.library.equipmentTypes);
-  const typeRows: [ReactNode, string[]][] = (types ?? [])
-    .filter((type) => type.shortcut)
-    .map((type) => [type.name, [type.shortcut!]]);
+  // One row per choice: valves once per actuation (the key, and Shift+key for automated).
+  const typeRows: [ReactNode, string[]][] = equipmentChoices(types ?? []).flatMap((choice) => {
+    const keys = choiceShortcut(choice);
+    return keys ? [[choiceName(choice, t), [keys]] as [ReactNode, string[]]] : [];
+  });
 
   return (
     <Dialog open={open} onOpenChange={(next) => openDialog(next ? 'shortcuts' : null)}>
@@ -86,7 +90,7 @@ export function ShortcutsDialog() {
               [t('shortcuts.finish'), ['Enter']],
               [t('shortcuts.deselect'), ['Esc']],
               [t('shortcuts.contextMenu'), [t('shortcuts.rightClick')]],
-              [t('shortcuts.quickPick'), [t('shortcuts.hold')]],
+              [t('shortcuts.quickPick'), [t('shortcuts.rightClick')]],
               [t('shortcuts.renameDrawing'), ['F2']],
             ]}
           />

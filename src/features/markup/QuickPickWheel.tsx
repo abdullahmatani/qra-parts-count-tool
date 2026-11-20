@@ -1,13 +1,13 @@
 /**
  * The quick-pick wheel (count stage): a marking menu of the equipment types
- * met most often, opened round the pointer by pressing and holding the left
- * button with the equipment marker tool. Pointing into a wedge and letting go
- * places a marker counted as that type where the button was pressed.
+ * met most often, opened round the pointer by a right-click on the drawing.
+ * Flicking into a wedge and letting go places a marker counted as that type
+ * where the button was pressed. Each type shows its key, to learn them by.
  *
  * The wheel only draws; the canvas keeps the pointer, so it never takes events.
  */
 import { useTranslation } from 'react-i18next';
-import { wheelAngle, type EquipmentChoice } from '@/domain/equipment-choices';
+import { choiceShortcut, wheelAngle, type EquipmentChoice } from '@/domain/equipment-choices';
 import type { XY } from '@/domain/markup/geometry';
 import { choiceName } from '@/features/count/choice-name';
 import { cn } from '@/lib/utils';
@@ -95,6 +95,7 @@ export function QuickPickWheel({ centre, choices, active, sticky }: QuickPickWhe
           const cos = Math.cos(angle);
           const sin = Math.sin(angle);
           const name = choiceName(choice, t);
+          const keys = choiceShortcut(choice);
           return (
             <div
               key={choice.key}
@@ -104,9 +105,9 @@ export function QuickPickWheel({ centre, choices, active, sticky }: QuickPickWhe
               data-actuation={choice.actuation ?? ''}
               data-active={i === active ? 'true' : 'false'}
               aria-current={i === active ? 'true' : undefined}
-              title={name}
+              title={keys ? `${name} (${keys})` : name}
               className={cn(
-                'absolute max-w-44 truncate rounded-full border px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm transition-colors duration-75',
+                'absolute flex max-w-52 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm transition-colors duration-75',
                 i === active
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'bg-popover text-popover-foreground',
@@ -118,7 +119,18 @@ export function QuickPickWheel({ centre, choices, active, sticky }: QuickPickWhe
                 transform: `translate(${-50 + cos * 50}%, ${-50 + sin * 50}%)`,
               }}
             >
-              {name}
+              <span className="truncate">{name}</span>
+              {keys && (
+                <kbd
+                  data-testid="quick-pick-key"
+                  className={cn(
+                    'shrink-0 rounded px-1 font-mono text-[10px] leading-4',
+                    i === active ? 'bg-primary-foreground/20' : 'bg-muted text-muted-foreground',
+                  )}
+                >
+                  {keys}
+                </kbd>
+              )}
             </div>
           );
         })}

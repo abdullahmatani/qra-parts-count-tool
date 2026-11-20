@@ -487,7 +487,9 @@ function ViewerSurface({
       onContextMenu={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-        interaction?.onContextMenu?.({ screen, point: toolContext.toDrawing(screen) }, toolContext);
+        const point = toolContext.toDrawing(screen);
+        // A tool that used the right-click (the quick-pick wheel) keeps the menu shut.
+        if (interaction?.onContextMenu?.({ screen, point }, toolContext)) event.preventDefault();
       }}
       onKeyDown={onKeyDown}
       onKeyUp={(event) => {

@@ -21,7 +21,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { equipmentChoices, type EquipmentChoice } from '@/domain/equipment-choices';
+import { choiceShortcut, equipmentChoices, type EquipmentChoice } from '@/domain/equipment-choices';
 import { choiceName } from '@/features/count/choice-name';
 import { updateItemsCommand } from '@/features/count/item-commands';
 import { useStage, useStageTools } from '@/features/stage/stage';
@@ -37,13 +37,6 @@ import {
   selectAllOnDrawing,
 } from './marker-commands';
 import type { MarkupContextMenu } from './useMarkupTools';
-
-/**
- * How long (ms) after the menu opens a release cannot choose an item. On
- * Linux and macOS the menu opens when the right button goes down, so letting
- * go of it could otherwise land on the item under the pointer.
- */
-const OPEN_GUARD_MS = 250;
 
 /** A value for "No segment" in the segment radio group (segment ids never look like this). */
 const NO_SEGMENT = '__none__';
@@ -67,10 +60,19 @@ export function CanvasContextMenu({
   const stage = useStage();
   const stageTools = useStageTools();
   const editable = !readOnly;
-  const openedAt = useRef(0);
-  /** An item's action, unless the menu has only just opened (it then stays open). */
+  // On Linux and macOS the menu opens as the right button goes down, so its
+  // release could land on the item under the pointer: until that button is
+  // let go, no item is chosen. (On Windows the menu opens as it comes up.)
+  const openingClick = useRef(false);
+  const onOpen = (event: React.MouseEvent) => {
+    if ((event.buttons & 2) === 0) return;
+    openingClick.current = true;
+    // Window listeners run after the menu's own, so the release is still ignored there.
+    window.addEventListener('pointerup', () => (openingClick.current = false), { once: true });
+  };
+  /** An item's action, unless it is chosen by the release of the click that opened the menu. */
   const run = (action: () => unknown) => (event: Event) => {
-    if (performance.now() - openedAt.current < OPEN_GUARD_MS) {
+    if (openingClick.current) {
       event.preventDefault();
       return;
     }
@@ -133,12 +135,10 @@ export function CanvasContextMenu({
   };
 
   return (
-    <ContextMenu
-      onOpenChange={(open) => {
-        if (open) openedAt.current = performance.now();
-      }}
-    >
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+    <ContextMenu>
+      <ContextMenuTrigger asChild onContextMenu={onOpen}>
+        {children}
+      </ContextMenuTrigger>
       <ContextMenuContent className="w-60" data-testid="canvas-context-menu">
         {menu.drawingLine && (
           <>
@@ -253,8 +253,8 @@ export function CanvasContextMenu({
                     data-actuation={choice.actuation ?? ''}
                   >
                     <span className="truncate">{choiceName(choice, t)}</span>
-                    {choice.type.shortcut && (
-                      <ContextMenuShortcut>{choice.type.shortcut}</ContextMenuShortcut>
+                    {choiceShortcut(choice) && (
+                      <ContextMenuShortcut>{choiceShortcut(choice)}</ContextMenuShortcut>
                     )}
                   </ContextMenuRadioItem>
                 ))}

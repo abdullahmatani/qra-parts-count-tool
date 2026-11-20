@@ -144,9 +144,9 @@
     "more": "{{count}} more",
     "empty": "No equipment types yet: add them in Project › Equipment library.",
     "hints": {
-      "dot": "Click a symbol to mark it with a dot. Press and hold to pick its type from the quick-pick wheel.",
-      "circle": "Click a symbol, or drag out the size of the ring. Press and hold to pick its type from the quick-pick wheel.",
-      "square": "Click a symbol, or drag out the size of the square. Press and hold to pick its type from the quick-pick wheel.",
+      "dot": "Click a symbol to mark it with a dot, or point at it and press its type key. Right-click for the quick-pick wheel.",
+      "circle": "Click a symbol, or drag out the size of the ring; or point at it and press its type key. Right-click for the quick-pick wheel.",
+      "square": "Click a symbol, or drag out the size of the square; or point at it and press its type key. Right-click for the quick-pick wheel.",
       "freeform": "Drag around a symbol to outline it."
     }
   },
@@ -508,7 +508,7 @@
     "licenceText": "GNU GPL v3",
     "thirdParty": "Third-party licences",
     "quickPick": "Quick-pick wheel while counting",
-    "quickPickHint": "With the equipment marker tool, press and hold the left mouse button on a symbol: a wheel of the equipment types that have a shortcut key opens round the pointer. Move towards a type and let go to count the symbol as it."
+    "quickPickHint": "While counting, right-click the drawing on a symbol: a wheel of the equipment types that have a shortcut key opens round the pointer. Flick towards a type and let go to count the symbol as it. Right-click a marker, or Shift+right-click, for the menu of editing commands."
   },
   "start": {
     "newProject": "New project",
@@ -836,10 +836,9 @@
     "selectAll": "Select all markers on the drawing",
     "delete": "Delete selected markers, or the selected link (asks first if it has a target)",
     "deselect": "Cancel drawing and return to Select; press again to clear the selection",
-    "contextMenu": "Menu of editing commands for the drawing",
+    "contextMenu": "Menu of editing commands (on a marker, or Shift+right-click while counting)",
     "rightClick": "Right-click",
-    "quickPick": "Quick-pick wheel of equipment types (counting, equipment marker tool)",
-    "hold": "Hold left button",
+    "quickPick": "Quick-pick wheel of equipment types (counting, on the paper)",
     "renameDrawing": "Rename the drawing selected in the drawing list",
     "nudge": "Nudge selected markers (Shift: 10 px)",
     "finish": "Finish a dashed line run",
@@ -852,7 +851,7 @@
     "drag": "Drag",
     "middleDrag": "Middle-button drag",
     "space": "Space",
-    "types": "Equipment types (sets the selected item and the next one)",
+    "types": "Equipment types: point at a symbol and press, while placing equipment",
     "back": "Back after following a drawing link",
     "find": "Find text on the drawing",
     "autoTrace": "Auto trace: highlight the segment out to its ESDVs and end flanges, then click pipes to trace them"
@@ -1622,8 +1621,8 @@
   },
   "quickPick": {
     "label": "Quick-pick equipment type",
-    "hint": "Move towards a type and let go to count the symbol as it; let go in the middle to keep the wheel open.",
-    "stickyHint": "Click a type to count the symbol as it. Click elsewhere or press Esc to close."
+    "hint": "Flick towards a type and let go to count the symbol as it; let go in the middle to keep the wheel open.",
+    "stickyHint": "Click a type to count the symbol as it. Right-click for more commands; Esc closes."
   },
   "contextMenu": {
     "finishLine": "Finish line run",

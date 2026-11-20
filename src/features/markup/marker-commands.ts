@@ -24,15 +24,22 @@ import {
 import type { Erasure } from '@/domain/markup/eraser';
 import type { HighlighterPen } from '@/domain/markup/highlighter';
 import type { Draft } from 'immer';
-import { addItem, nextTag, type ItemDefaults } from '@/domain/actions/items';
+import { addItem, itemForMarker, nextTag, type ItemDefaults } from '@/domain/actions/items';
 import { updateEsdv, type EsdvPatch } from '@/domain/actions/segments';
 import { newEndFlangeData } from '@/domain/end-flange';
 import { newEsdvData } from '@/domain/esdv';
-import { geometryBounds, unionBoxes, type XY } from '@/domain/markup/geometry';
+import {
+  DOT_SCALE,
+  geometryBounds,
+  pickMarker,
+  unionBoxes,
+  type XY,
+} from '@/domain/markup/geometry';
 import { highlightsOn, segmentUnder } from '@/domain/markup/highlighted-segment';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import type { ProjectDoc } from '@/domain/model';
 import type {
+  Actuation,
   CircleGeometry,
   DoubleLineGeometry,
   EndFlangeDestination,
@@ -43,7 +50,9 @@ import type {
   StrokeGeometry,
 } from '@/domain/schema/types';
 import { isEditableInStage } from '@/domain/stage';
+import { updateItemCommand } from '@/features/count/item-commands';
 import { currentStage } from '@/features/stage/stage';
+import { BASE_SCALE } from '@/features/viewer/view-transform';
 import i18n from '@/i18n';
 import { newId } from '@/lib/ids';
 import { usePreferences } from '@/store/preferences';
@@ -270,7 +279,13 @@ export function placeTracedStrokes(
 export function placeMarker(
   drawingId: string,
   geometry: MarkerGeometry,
-  options: { stamp?: boolean; symbol?: MarkerSymbol; outline?: MarkerStyle['outline'] } = {},
+  options: {
+    stamp?: boolean;
+    symbol?: MarkerSymbol;
+    outline?: MarkerStyle['outline'];
+    /** Open the new item in the editor with the keyboard focus (default); false only selects it. */
+    focus?: boolean;
+  } = {},
 ): string | null {
   if (geometry.type === 'stroke') return placeStroke(drawingId, geometry)[0] ?? null;
   const doc = useProjectStore.getState().doc;
@@ -317,9 +332,88 @@ export function placeMarker(
   // A typed label counts up for the next marker; a stamp copies no label.
   if (itemId && !stamp && defaults.tag) ui.setItemDefaults({ tag: nextTag(defaults.tag) });
   // A stamped item is complete: select it without taking the keyboard focus.
-  if (withItem && !stamp) ui.requestEdit(marker.id);
+  if (withItem && !stamp && options.focus !== false) ui.requestEdit(marker.id);
   else ui.setSelection([marker.id]);
   return marker.id;
+}
+
+/** What a marker counts, picked on the quick-pick wheel or with a type's key. */
+export interface EquipmentPick {
+  typeId: string;
+  /** The valve actuation, for types that carry one. */
+  actuation: Actuation | null;
+}
+
+/**
+ * Places an equipment marker centred on `centre`, counted as `pick`, with the
+ * shape and size of the equipment bar (a ring for the free-form shape, which
+ * is dragged round a symbol). The pick becomes what the next markers count,
+ * as if chosen in the bar. With `focus` the item editor takes the keyboard for
+ * its size; without, the marker is only selected, so the next key can place
+ * the next one.
+ */
+export function placeEquipment(
+  drawingId: string,
+  centre: XY,
+  pick: EquipmentPick,
+  { focus }: { focus: boolean },
+): string | null {
+  const ui = useUiStore.getState();
+  ui.setItemDefaults({
+    equipmentTypeId: pick.typeId,
+    ...(pick.actuation ? { actuation: pick.actuation } : {}),
+  });
+  const drawing = useProjectStore.getState().doc?.drawings[drawingId];
+  if (!drawing) return null;
+  const symbol: MarkerSymbol = ui.markerSymbol === 'freeform' ? 'circle' : ui.markerSymbol;
+  const longSide = Math.max(drawing.size.width, drawing.size.height);
+  const r = ui.circleRadiusFraction * longSide * (symbol === 'dot' ? DOT_SCALE : 1);
+  return placeMarker(
+    drawingId,
+    { type: 'circle', cx: centre.x, cy: centre.y, r },
+    { symbol, focus },
+  );
+}
+
+/** How near (CSS px) the pointer must be to a marker for a type key to change it. */
+const KEY_HIT_TOLERANCE = 6;
+
+/**
+ * Point and press (ANN-08, CNT-01): a type's key pressed with the pointer on
+ * the drawing counts what is under it. Over an equipment marker, its item
+ * takes the type and the editor opens at its size; elsewhere a new marker is
+ * placed there, counted as the type, without taking the keyboard, so the next
+ * symbol is counted by pointing at it and pressing its key. Returns false
+ * when the pointer is not on the active drawing.
+ */
+export function countAtPointer(pick: EquipmentPick): boolean {
+  const ui = useUiStore.getState();
+  const doc = useProjectStore.getState().doc;
+  const { activeDrawingId: drawingId, cursor } = ui;
+  if (!doc || !drawingId || !cursor || !doc.drawings[drawingId]) return false;
+  const zoom = ui.viewports[drawingId]?.zoom;
+  if (!zoom) return false;
+  const items = itemsByMarker(doc.items);
+  const stage = currentStage();
+  const equipment = Object.values(doc.markers).filter(
+    (m) =>
+      m.drawingId === drawingId &&
+      m.geometry.type === 'circle' &&
+      isMarkerVisible(m, items.get(m.id), ui.filters) &&
+      isEditableInStage(m, stage, doc.settings.pipeLengthCounting),
+  );
+  const hit = pickMarker(equipment, cursor, KEY_HIT_TOLERANCE / (zoom * BASE_SCALE));
+  if (hit) {
+    const item = itemForMarker(doc, hit.id);
+    if (!item) return false;
+    updateItemCommand(item.id, {
+      equipmentTypeId: pick.typeId,
+      ...(pick.actuation ? { actuation: pick.actuation } : {}),
+    });
+    ui.requestEdit(hit.id, 'size');
+    return true;
+  }
+  return placeEquipment(drawingId, cursor, pick, { focus: false }) !== null;
 }
 
 /**
