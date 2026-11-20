@@ -29,6 +29,9 @@ describe('workspace shortcuts (ANN-08, PRJ-09)', () => {
     expect(shortcutFor(key('z', { metaKey: true, shiftKey: true }))).toEqual({ kind: 'redo' });
     expect(shortcutFor(key('y', { ctrlKey: true }))).toEqual({ kind: 'redo' });
     expect(shortcutFor(key('c', { ctrlKey: true }))).toEqual({ kind: 'copy' });
+    expect(shortcutFor(key('x', { ctrlKey: true }))).toEqual({ kind: 'cut' });
+    // Without Ctrl, X is still the eraser.
+    expect(shortcutFor(key('x'))).toEqual({ kind: 'tool', tool: 'eraser' });
     expect(shortcutFor(key('v', { ctrlKey: true }))).toEqual({ kind: 'paste' });
     expect(shortcutFor(key('a', { ctrlKey: true }))).toEqual({ kind: 'selectAll' });
   });

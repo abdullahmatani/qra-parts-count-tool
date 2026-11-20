@@ -488,8 +488,25 @@ export function pasteOffset(
   return { x: step * count, y: step * count };
 }
 
-export function pasteClipboard(): number {
-  const { activeDrawingId, cursor } = useUiStore.getState();
+/**
+ * Copies the selected markers and deletes them, as one undo step for the
+ * delete. Returns how many were cut.
+ */
+export function cutSelection(): number {
+  const ids = selectedMarkerIds();
+  const count = copySelection();
+  if (count === 0) return 0;
+  return deleteMarkerIds(ids) ? count : 0;
+}
+
+/**
+ * Pastes the clipboard on the active drawing: centred on `at` (drawing
+ * coordinates) when given, as from the canvas's context menu, else as
+ * `pasteOffset` places it from the pointer.
+ */
+export function pasteClipboard(at?: XY | null): number {
+  const { activeDrawingId } = useUiStore.getState();
+  const cursor = at ?? useUiStore.getState().cursor;
   const doc = useProjectStore.getState().doc;
   const clip = clipboard;
   if (!clip || !activeDrawingId || !doc?.drawings[activeDrawingId]) return 0;

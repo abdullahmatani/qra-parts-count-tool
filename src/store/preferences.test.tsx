@@ -13,6 +13,7 @@ describe('preferences', () => {
       autoAssignSegment: true,
       drawingNamesFromFiles: true,
       drawingListView: 'all',
+      quickPickWheel: true,
     });
     document.documentElement.className = '';
   });
@@ -39,7 +40,15 @@ describe('preferences', () => {
       autoAssignSegment: true,
       drawingNamesFromFiles: true,
       drawingListView: 'all',
+      quickPickWheel: true,
     });
+  });
+
+  it('opens the quick-pick wheel while counting until it is switched off', () => {
+    expect(usePreferences.getState().quickPickWheel).toBe(true);
+    usePreferences.getState().setQuickPickWheel(false);
+    const stored = JSON.parse(localStorage.getItem('qrapc.preferences') ?? '{}');
+    expect(stored.state.quickPickWheel).toBe(false);
   });
 
   it('remembers whether the drawing list is organised by plant unit (DRW-11)', () => {

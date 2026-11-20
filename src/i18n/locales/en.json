@@ -144,9 +144,9 @@
     "more": "{{count}} more",
     "empty": "No equipment types yet: add them in Project › Equipment library.",
     "hints": {
-      "dot": "Click a symbol to mark it with a dot.",
-      "circle": "Click a symbol, or drag out the size of the ring.",
-      "square": "Click a symbol, or drag out the size of the square.",
+      "dot": "Click a symbol to mark it with a dot. Press and hold to pick its type from the quick-pick wheel.",
+      "circle": "Click a symbol, or drag out the size of the ring. Press and hold to pick its type from the quick-pick wheel.",
+      "square": "Click a symbol, or drag out the size of the square. Press and hold to pick its type from the quick-pick wheel.",
       "freeform": "Drag around a symbol to outline it."
     }
   },
@@ -506,7 +506,9 @@
     "licence": "Free software: you can redistribute and change it under the GNU General Public License, version 3 or later. It comes with no warranty.",
     "sourceCode": "Source code",
     "licenceText": "GNU GPL v3",
-    "thirdParty": "Third-party licences"
+    "thirdParty": "Third-party licences",
+    "quickPick": "Quick-pick wheel while counting",
+    "quickPickHint": "With the equipment marker tool, press and hold the left mouse button on a symbol: a wheel of the equipment types that have a shortcut key opens round the pointer. Move towards a type and let go to count the symbol as it."
   },
   "start": {
     "newProject": "New project",
@@ -767,6 +769,8 @@
     },
     "copied_one": "Copied {{count}} marker.",
     "copied_other": "Copied {{count}} markers.",
+    "cut_one": "Cut {{count}} marker.",
+    "cut_other": "Cut {{count}} markers.",
     "pasted_one": "Pasted {{count}} marker.",
     "pasted_other": "Pasted {{count}} markers.",
     "readOnly": "The project is read-only.",
@@ -827,10 +831,15 @@
     "undo": "Undo",
     "redo": "Redo",
     "copy": "Copy selected markers",
+    "cut": "Cut selected markers",
     "paste": "Paste (at the pointer when it is over the drawing)",
     "selectAll": "Select all markers on the drawing",
     "delete": "Delete selected markers, or the selected link (asks first if it has a target)",
     "deselect": "Cancel drawing and return to Select; press again to clear the selection",
+    "contextMenu": "Menu of editing commands for the drawing",
+    "rightClick": "Right-click",
+    "quickPick": "Quick-pick wheel of equipment types (counting, equipment marker tool)",
+    "hold": "Hold left button",
     "renameDrawing": "Rename the drawing selected in the drawing list",
     "nudge": "Nudge selected markers (Shift: 10 px)",
     "finish": "Finish a dashed line run",
@@ -1610,5 +1619,29 @@
         "body": "Segment defined, parts counted, a note for the checker and the results exported. For a real study, start a **New project** in an empty folder, adjust the equipment library to the client’s dataset, and map the client’s Excel template once in **Project › Template mapper**. Press `F1` at any time for the documentation."
       }
     }
+  },
+  "quickPick": {
+    "label": "Quick-pick equipment type",
+    "hint": "Move towards a type and let go to count the symbol as it; let go in the middle to keep the wheel open.",
+    "stickyHint": "Click a type to count the symbol as it. Click elsewhere or press Esc to close."
+  },
+  "contextMenu": {
+    "finishLine": "Finish line run",
+    "cancelDrawing": "Cancel drawing",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste here",
+    "delete_one": "Delete",
+    "delete_other": "Delete {{count}} markers",
+    "selectAll": "Select all",
+    "deselect": "Clear selection",
+    "edit": "Edit…",
+    "countAs_one": "Count as",
+    "countAs_other": "Count {{count}} items as",
+    "moveToSegment_one": "Move to segment",
+    "moveToSegment_other": "Move {{count}} markers to segment",
+    "tool": "Tool"
   }
 }

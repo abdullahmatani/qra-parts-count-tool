@@ -76,6 +76,7 @@ export function ShortcutsDialog() {
             rows={[
               [t('shortcuts.undo'), ['Ctrl+Z']],
               [t('shortcuts.redo'), ['Ctrl+Y', 'Ctrl+Shift+Z']],
+              [t('shortcuts.cut'), ['Ctrl+X']],
               [t('shortcuts.copy'), ['Ctrl+C']],
               [t('shortcuts.paste'), ['Ctrl+V']],
               [t('shortcuts.selectAll'), ['Ctrl+A']],
@@ -84,6 +85,8 @@ export function ShortcutsDialog() {
               [t('shortcuts.nudge'), ['←', '↑', '→', '↓']],
               [t('shortcuts.finish'), ['Enter']],
               [t('shortcuts.deselect'), ['Esc']],
+              [t('shortcuts.contextMenu'), [t('shortcuts.rightClick')]],
+              [t('shortcuts.quickPick'), [t('shortcuts.hold')]],
               [t('shortcuts.renameDrawing'), ['F2']],
             ]}
           />
