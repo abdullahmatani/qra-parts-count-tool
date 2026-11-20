@@ -1,6 +1,5 @@
 import { ChevronDown } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,8 +20,8 @@ import {
   currentChoice,
   equipmentChoices,
   fitChoices,
-  type EquipmentChoice,
 } from '@/domain/equipment-choices';
+import { choiceName } from '@/features/count/choice-name';
 import type { MarkerSymbol } from '@/domain/schema/types';
 import { SymbolIcon } from '@/features/markup/SymbolIcon';
 import { cn } from '@/lib/utils';
@@ -39,15 +38,6 @@ const GAP = 2;
 
 /** A type button: the type's name, with its actuation for valves. */
 const CHOICE = 'inline-flex h-8 max-w-48 shrink-0 items-center px-2 text-xs font-medium';
-
-function choiceName(choice: EquipmentChoice, t: TFunction): string {
-  return choice.actuation
-    ? t('equipmentBar.withActuation', {
-        type: choice.type.name,
-        actuation: t(`equipmentBar.actuation.${choice.actuation}`),
-      })
-    : choice.type.name;
-}
 
 interface Room {
   /** Width of the row the type buttons go in. */

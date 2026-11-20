@@ -28,11 +28,17 @@
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
+ * - Quick-pick wheel (count stage, equipment marker tool): press and hold the
+ *   left button and a wheel of the most-used equipment types opens round the
+ *   pointer; point into one and let go to place a marker counted as it. Let
+ *   go in the middle and the wheel stays open for a click; Esc closes it.
+ * - Right-click: selects the marker under the pointer (when it is not
+ *   selected already) before the canvas's context menu opens.
  * - Esc cancels a shape being drawn and returns to Select.
  *
  * Pan stays on the middle button or Space + drag; the wheel zooms.
  */
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
@@ -66,6 +72,8 @@ import { LineTracer, inkMap, lineAt, type InkMap } from '@/domain/markup/line-tr
 import { UNASSIGNED_COLOUR, segmentAppearance } from '@/domain/palette';
 import { isMarkerVisible, itemsByMarker } from '@/domain/markup/presentation';
 import { isEditableInStage } from '@/domain/stage';
+import { wheelChoices, wheelIndex, type EquipmentChoice } from '@/domain/equipment-choices';
+import { usePreferences } from '@/store/preferences';
 import { useStage } from '@/features/stage/stage';
 import type {
   DoubleLineGeometry,
@@ -86,6 +94,7 @@ import { BackButton } from '@/features/links/BackButton';
 import { createLinkCommand, followLink } from '@/features/links/link-commands';
 import { autoTraceAt } from '@/features/trace/auto-trace-actions';
 import { Draft, SelectionBox, type DraftShape } from './MarkupDrafts';
+import { QuickPickWheel, WHEEL_DEAD_ZONE } from './QuickPickWheel';
 import {
   eraseStrokes,
   moveMarkerIds,
@@ -105,6 +114,8 @@ const HANDLE_TOLERANCE = 8;
 const MAGNET = 14;
 /** How near a drawn line (CSS px) a click puts a double line or end flange across it. */
 const LINE_SNAP = 12;
+/** How long (ms) the left button is held still before the quick-pick wheel opens. */
+export const WHEEL_HOLD_MS = 300;
 
 type Gesture =
   | { kind: 'none' }
@@ -162,7 +173,16 @@ type Gesture =
     }
   | { kind: 'box'; start: XY; startScreen: XY; current: XY; dragging: boolean; additive: boolean }
   | { kind: 'link'; start: XY; startScreen: XY; current: XY; dragging: boolean }
-  | { kind: 'follow'; linkId: string; startScreen: XY };
+  | { kind: 'follow'; linkId: string; startScreen: XY }
+  | {
+      kind: 'wheel';
+      /** Where the button was pressed (drawing units): where the marker goes. */
+      centre: XY;
+      /** The wedge pointed at. */
+      active: number | null;
+      /** Let go in the middle: the wheel stays open until the next click. */
+      sticky: boolean;
+    };
 
 const NONE: Gesture = { kind: 'none' };
 
@@ -230,10 +250,23 @@ const HANDLE_CURSORS: Record<string, string> = {
   se: 'nwse-resize',
 };
 
+/** What the canvas's context menu needs from the tools. */
+export interface MarkupContextMenu {
+  /** Where the canvas was right-clicked (drawing units), if it was. */
+  point(): XY | null;
+  /** A dashed line run is being drawn. */
+  drawingLine: boolean;
+  /** Ends the line run being drawn (as Enter does). */
+  finishLine(): void;
+  /** Cancels whatever is being drawn (as Esc does). */
+  cancelDrawing(): void;
+}
+
 export interface MarkupTools {
   interaction: ViewerInteraction;
   overlay: (context: ViewerContext) => ReactNode;
   screenOverlay: (context: ViewerContext) => ReactNode;
+  contextMenu: MarkupContextMenu;
 }
 
 export function useMarkupTools(drawingId: string): MarkupTools {
@@ -268,6 +301,10 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const traceHints = useUiStore((s) =>
     s.traceHints?.drawingId === drawingId ? s.traceHints.paths : null,
   );
+  // The quick-pick wheel: equipment types round the pointer while counting.
+  const equipmentTypes = useProjectStore((s) => s.doc?.library.equipmentTypes);
+  const wheel = useMemo(() => wheelChoices(equipmentTypes ?? []), [equipmentTypes]);
+  const quickPick = usePreferences((s) => s.quickPickWheel);
 
   const [gesture, setGestureState] = useState<Gesture>(NONE);
   const gestureRef = useRef<Gesture>(NONE);
@@ -276,6 +313,15 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     setGestureState(next);
   }, []);
   const traceRef = useRef<StrokeTrace | null>(null);
+  // The timer that opens the quick-pick wheel when the button is held still.
+  const holdRef = useRef<number | null>(null);
+  const clearHold = useCallback(() => {
+    if (holdRef.current !== null) window.clearTimeout(holdRef.current);
+    holdRef.current = null;
+  }, []);
+  useEffect(() => clearHold, [clearHold]);
+  // Where the canvas was last right-clicked, and the view then (the context menu).
+  const menuRef = useRef<{ point: XY; context: ViewerContext } | null>(null);
   const [polyline, setPolylineState] = useState<{ points: XY[]; hover: XY | null } | null>(null);
   const polylineRef = useRef(polyline);
   const setPolyline = useCallback((next: typeof polyline) => {
@@ -352,6 +398,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     tool === 'link';
   const selectLike = !drawingTool;
   const editable = !readOnly;
+  const wheelOn =
+    quickPick && editable && stage === 'count' && tool === 'circle' && wheel.length > 0;
 
   /** The ESDV or end flange a highlighter stroke snaps to at `point` (none while Alt is held). */
   const snapAt = (
@@ -446,7 +494,31 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     placeMarker(drawingId, { type: 'polyline', points: points.map((p) => [p.x, p.y]) });
   };
 
+  /**
+   * Places a marker counted as `choice` at `centre`, picked on the quick-pick
+   * wheel, with the size and shape of the equipment bar. The choice becomes
+   * what the next markers count, as if picked in the bar.
+   */
+  const placeFromWheel = (choice: EquipmentChoice, centre: XY) => {
+    const ui = useUiStore.getState();
+    ui.setItemDefaults({
+      equipmentTypeId: choice.type.id,
+      ...(choice.actuation ? { actuation: choice.actuation } : {}),
+    });
+    // A free-form outline is dragged round a symbol: the wheel places a ring instead.
+    const shape: MarkerSymbol = symbol === 'freeform' ? 'circle' : symbol;
+    const r = ui.circleRadiusFraction * longSide * (shape === 'dot' ? DOT_SCALE : 1);
+    placeMarker(drawingId, { type: 'circle', cx: centre.x, cy: centre.y, r }, { symbol: shape });
+  };
+
+  /** The wedge of the wheel under `screen`, for a wheel round `centre` (drawing units). */
+  const wheelAt = (centre: XY, screen: XY, context: ViewerContext) => {
+    const middle = context.toScreen(centre);
+    return wheelIndex(screen.x - middle.x, screen.y - middle.y, wheel.length, WHEEL_DEAD_ZONE);
+  };
+
   const cancel = (): boolean => {
+    clearHold();
     if (polylineRef.current) {
       setPolyline(null);
       return true;
@@ -462,21 +534,33 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   const interaction: ViewerInteraction = {
     cursor: tracing
       ? 'progress'
-      : drawingTool
-        ? 'crosshair'
-        : gesture.kind === 'move' && gesture.dragging
-          ? 'grabbing'
-          : hover.handle
-            ? (HANDLE_CURSORS[hover.handle] ?? 'move')
-            : hover.id
-              ? editable
-                ? 'move'
-                : 'pointer'
-              : hover.linkId
-                ? 'pointer'
-                : 'default',
+      : gesture.kind === 'wheel'
+        ? 'default'
+        : drawingTool
+          ? 'crosshair'
+          : gesture.kind === 'move' && gesture.dragging
+            ? 'grabbing'
+            : hover.handle
+              ? (HANDLE_CURSORS[hover.handle] ?? 'move')
+              : hover.id
+                ? editable
+                  ? 'move'
+                  : 'pointer'
+                : hover.linkId
+                  ? 'pointer'
+                  : 'default',
 
     onPointerDown(event, context) {
+      const open = gestureRef.current;
+      if (open.kind === 'wheel') {
+        // The wheel left open: a click on a type places it, anywhere else closes it.
+        const index =
+          event.native.button === 0 ? wheelAt(open.centre, event.screen, context) : null;
+        setGesture(NONE);
+        const choice = index === null ? undefined : wheel[index];
+        if (choice) placeFromWheel(choice, open.centre);
+        return;
+      }
       if (event.native.button !== 0) return;
       event.native.currentTarget.setPointerCapture(event.native.pointerId);
       const { point, screen } = event;
@@ -493,6 +577,17 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           });
         } else {
           setGesture({ kind: 'circle', centre: point, start: screen, radius: null });
+        }
+        // Held still, the press opens the quick-pick wheel instead (count stage).
+        if (wheelOn) {
+          clearHold();
+          holdRef.current = window.setTimeout(() => {
+            holdRef.current = null;
+            const g = gestureRef.current;
+            const still =
+              (g.kind === 'circle' && g.radius === null) || (g.kind === 'freeform' && !g.dragging);
+            if (still) setGesture({ kind: 'wheel', centre: point, active: null, sticky: false });
+          }, WHEEL_HOLD_MS);
         }
         return;
       }
@@ -637,6 +732,11 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       const { point, screen } = event;
       const g = gestureRef.current;
       switch (g.kind) {
+        case 'wheel': {
+          const active = wheelAt(g.centre, screen, context);
+          if (active !== g.active) setGesture({ ...g, active });
+          return;
+        }
         case 'circle':
           if (screenDistance(screen, g.start) > DRAG_THRESHOLD) {
             setGesture({ ...g, radius: Math.hypot(point.x - g.centre.x, point.y - g.centre.y) });
@@ -758,6 +858,19 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
     onPointerUp(event, context) {
       const g = gestureRef.current;
+      clearHold();
+      if (g.kind === 'wheel') {
+        const index = wheelAt(g.centre, event.screen, context);
+        const choice = index === null ? undefined : wheel[index];
+        if (choice) {
+          setGesture(NONE);
+          placeFromWheel(choice, g.centre);
+        } else if (!g.sticky) {
+          // Let go in the middle: the wheel stays open for a click.
+          setGesture({ ...g, active: null, sticky: true });
+        }
+        return;
+      }
       setGesture(NONE);
       const { point } = event;
       switch (g.kind) {
@@ -921,6 +1034,16 @@ export function useMarkupTools(drawingId: string): MarkupTools {
       setEraserAt(null);
     },
 
+    onContextMenu(event, context) {
+      clearHold();
+      if (gestureRef.current.kind === 'wheel') setGesture(NONE);
+      menuRef.current = { point: event.point, context };
+      // The menu acts on the marker right-clicked: select it, unless it is in the selection.
+      const hit = pickMarker(visible, event.point, HIT_TOLERANCE * context.unitsPerPixel);
+      const ui = useUiStore.getState();
+      if (hit && !ui.selection.includes(hit.id)) ui.setSelection([hit.id]);
+    },
+
     onDoubleClick(event, context) {
       if (polylineRef.current) {
         finishPolyline(context);
@@ -932,6 +1055,12 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     },
 
     onKeyDown(event, context) {
+      if (event.key === 'Escape' && gestureRef.current.kind === 'wheel') {
+        // Closes the wheel and stays with the tool.
+        setGesture(NONE);
+        event.preventDefault();
+        return true;
+      }
       if (event.key === 'Escape') {
         // Otherwise the workspace shortcut handles it: Select tool, then deselect.
         if (!cancel()) return false;
@@ -1129,9 +1258,29 @@ export function useMarkupTools(drawingId: string): MarkupTools {
             bounds={context.canvasSize}
           />
         )}
+        {gesture.kind === 'wheel' && (
+          <QuickPickWheel
+            centre={context.toScreen(gesture.centre)}
+            choices={wheel}
+            active={gesture.active}
+            sticky={gesture.sticky}
+          />
+        )}
       </>
     );
   };
 
-  return { interaction, overlay, screenOverlay };
+  const contextMenu: MarkupContextMenu = {
+    point: () => menuRef.current?.point ?? null,
+    drawingLine: polyline !== null,
+    finishLine: () => {
+      const context = menuRef.current?.context;
+      if (context) finishPolyline(context);
+    },
+    cancelDrawing: () => {
+      cancel();
+    },
+  };
+
+  return { interaction, overlay, screenOverlay, contextMenu };
 }

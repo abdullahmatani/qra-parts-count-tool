@@ -32,6 +32,11 @@ export interface PreferencesState {
    */
   drawingNamesFromFiles: boolean;
   drawingListView: DrawingListView;
+  /**
+   * While counting, pressing and holding the left button with the equipment
+   * marker tool opens the quick-pick wheel of equipment types around the pointer.
+   */
+  quickPickWheel: boolean;
   setTheme: (theme: ThemePreference) => void;
   setCadColorMode: (mode: CadColorMode) => void;
   setDensity: (density: Density) => void;
@@ -39,6 +44,7 @@ export interface PreferencesState {
   setAutoAssignSegment: (autoAssignSegment: boolean) => void;
   setDrawingNamesFromFiles: (drawingNamesFromFiles: boolean) => void;
   setDrawingListView: (drawingListView: DrawingListView) => void;
+  setQuickPickWheel: (quickPickWheel: boolean) => void;
 }
 
 export const usePreferences = create<PreferencesState>()(
@@ -51,6 +57,7 @@ export const usePreferences = create<PreferencesState>()(
       autoAssignSegment: true,
       drawingNamesFromFiles: true,
       drawingListView: 'all',
+      quickPickWheel: true,
       setTheme: (theme) => set({ theme }),
       setCadColorMode: (cadColorMode) => set({ cadColorMode }),
       setDensity: (density) => set({ density }),
@@ -58,6 +65,7 @@ export const usePreferences = create<PreferencesState>()(
       setAutoAssignSegment: (autoAssignSegment) => set({ autoAssignSegment }),
       setDrawingNamesFromFiles: (drawingNamesFromFiles) => set({ drawingNamesFromFiles }),
       setDrawingListView: (drawingListView) => set({ drawingListView }),
+      setQuickPickWheel: (quickPickWheel) => set({ quickPickWheel }),
     }),
     {
       name: 'qrapc.preferences',
@@ -71,6 +79,7 @@ export const usePreferences = create<PreferencesState>()(
         autoAssignSegment,
         drawingNamesFromFiles,
         drawingListView,
+        quickPickWheel,
       }) => ({
         theme,
         density,
@@ -79,6 +88,7 @@ export const usePreferences = create<PreferencesState>()(
         autoAssignSegment,
         drawingNamesFromFiles,
         drawingListView,
+        quickPickWheel,
       }),
     },
   ),

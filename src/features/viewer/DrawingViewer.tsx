@@ -484,6 +484,11 @@ function ViewerSurface({
         const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
         interaction?.onDoubleClick?.({ screen, point: toolContext.toDrawing(screen) }, toolContext);
       }}
+      onContextMenu={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+        interaction?.onContextMenu?.({ screen, point: toolContext.toDrawing(screen) }, toolContext);
+      }}
       onKeyDown={onKeyDown}
       onKeyUp={(event) => {
         if (event.key === ' ') spaceRef.current = false;

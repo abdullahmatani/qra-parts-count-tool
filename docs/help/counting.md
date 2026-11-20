@@ -61,6 +61,23 @@ The same bar chooses, before you click:
 - the **label** shown on new markers, for example `HV-1`: a trailing number counts up after each
   marker. Leave it empty to show `#1`, `#2`, ….
 
+## The quick-pick wheel
+
+To count a symbol as a different type without going up to the bar, **press and hold** the left
+mouse button on it with an equipment shape picked. After a moment a wheel of equipment types opens
+round the pointer: move towards a type (it lights up) and let go. A marker counted as that type is
+placed where you pressed, and the type becomes the one the bar counts next. A quick click still
+places the type chosen in the bar, and a drag still sizes the ring or draws a free-form outline.
+
+- The wheel holds the types that have a **key** in the equipment library: with the starter library,
+  **Valve (manual)**, **Valve (automated)**, **Flange**, **Small-bore instrument connection**,
+  **Pressure vessel** and **Pump, centrifugal (single seal)**. Give a type a key in
+  **Project › Equipment library** to put it on the wheel (up to eight).
+- Let go in the middle and the wheel stays open: click a type, or click elsewhere or press `Esc` to
+  close it without placing anything.
+- The wheel only opens while counting. Turn it off in **Settings › General › Quick-pick wheel while
+  counting**.
+
 ## Stamp
 
 For a run of identical items, switch to **Stamp** (`S`) in the toolbar. Each click logs a copy of
@@ -181,13 +198,20 @@ items; **Highlight incomplete items** does the same for items still missing some
 
 - Select with a click, add with `Shift`+click, or drag a box. `Ctrl+A` selects all on the drawing.
 - Drag to move, drag a handle to resize, and use the arrow keys to nudge (`Shift` for 10 px).
-- `Ctrl+C` and `Ctrl+V` copy and paste markers with their items, to another drawing too.
+- `Ctrl+C` and `Ctrl+V` copy and paste markers with their items, to another drawing too; `Ctrl+X`
+  cuts them (copies, then deletes).
 - With several markers selected, the panel edits their items together (**bulk edit**): pick a
   type, actuation or size once for all of them. Fields that differ show **Mixed**; sizes apply to
   sized types only.
 - `Delete` removes the selection. `Ctrl+Z` and `Ctrl+Y` undo and redo any change.
 - `Esc` cancels a shape you are drawing and returns to the **Select** tool; press it again to clear
   the selection.
+- **Right-click** the drawing for a menu of these commands: **Undo**, **Redo**, **Cut**, **Copy**,
+  **Paste here** (centred where you right-clicked), **Delete**, **Select all** and **Clear
+  selection**; for the markers selected, **Edit…**, **Count as** (change the type of their items,
+  while counting) and **Move to segment**; and **Tool** to switch tools. Right-clicking a marker
+  that is not selected selects it first. While a dashed line run is being drawn, the menu can also
+  finish or cancel it.
 
 **Marker filters** in the toolbar hide segments or equipment types, or show only the markers that
 are in no segment.

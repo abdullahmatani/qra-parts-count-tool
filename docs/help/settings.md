@@ -7,14 +7,15 @@ three tabs.
 
 These preferences belong to you and this browser, not to the project:
 
-| Setting                                     | What it does                                                                                                                                     |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Theme                                       | **System**, **Light** or **Dark**                                                                                                                |
-| Table density                               | **Compact** or **Comfortable** rows in tables                                                                                                    |
-| DWG and DXF drawings                        | **Monochrome, like a plot** or **CAD colours**                                                                                                   |
-| Your initials                               | Stamped on the notes you write, so checkers' comments stay separate                                                                              |
-| Assign equipment to the highlighted segment | Equipment placed on a segment's highlighting goes to that segment instead of the active one (see [Highlighting and auto trace](highlighting.md)) |
-| Name drawings after their files             | Imported drawings take the name of their file; turn off to read the drawing number and sheet from the title block                                |
+| Setting                                     | What it does                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Theme                                       | **System**, **Light** or **Dark**                                                                                                                                        |
+| Table density                               | **Compact** or **Comfortable** rows in tables                                                                                                                            |
+| DWG and DXF drawings                        | **Monochrome, like a plot** or **CAD colours**                                                                                                                           |
+| Your initials                               | Stamped on the notes you write, so checkers' comments stay separate                                                                                                      |
+| Assign equipment to the highlighted segment | Equipment placed on a segment's highlighting goes to that segment instead of the active one (see [Highlighting and auto trace](highlighting.md))                         |
+| Name drawings after their files             | Imported drawings take the name of their file; turn off to read the drawing number and sheet from the title block                                                        |
+| Quick-pick wheel while counting             | Pressing and holding the left button with an equipment shape opens a wheel of equipment types round the pointer (see [Counting parts](counting.md#the-quick-pick-wheel)) |
 
 ## Project
 

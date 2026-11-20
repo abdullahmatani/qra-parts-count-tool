@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { starterLibrary } from './count/starter-library';
-import { ANY_EQUIPMENT, currentChoice, equipmentChoices, fitChoices } from './equipment-choices';
+import {
+  ANY_EQUIPMENT,
+  WHEEL_MAX,
+  currentChoice,
+  equipmentChoices,
+  fitChoices,
+  wheelAngle,
+  wheelChoices,
+  wheelIndex,
+} from './equipment-choices';
 
 describe('equipment bar choices', () => {
   const types = starterLibrary().equipmentTypes;
@@ -45,5 +54,61 @@ describe('fitChoices', () => {
     // The 150 wide choice takes its room first: More, 150, then 100 and 120.
     expect(fit(440, 3)).toEqual([0, 1, 3]);
     expect(fit(50, 4)).toEqual([4]);
+  });
+});
+
+describe('quick-pick wheel', () => {
+  const types = starterLibrary().equipmentTypes;
+
+  it('offers the keyed types of the starter library, valves once per actuation', () => {
+    const names = wheelChoices(types).map((c) =>
+      c.actuation ? `${c.type.name} (${c.actuation})` : c.type.name,
+    );
+    expect(names).toEqual([
+      'Valve (manual)',
+      'Valve (automated)',
+      'Flange',
+      'Small-bore instrument connection',
+      'Pressure vessel',
+      'Pump, centrifugal (single seal)',
+    ]);
+  });
+
+  it('falls back to the first choices when no type has a key, and caps the wheel', () => {
+    const unkeyed = types.map((t) => ({ ...t, shortcut: null }));
+    const choices = wheelChoices(unkeyed);
+    expect(choices).toHaveLength(WHEEL_MAX);
+    expect(choices.map((c) => c.key)).toEqual(
+      equipmentChoices(unkeyed)
+        .slice(0, WHEEL_MAX)
+        .map((c) => c.key),
+    );
+    expect(wheelChoices([])).toEqual([]);
+  });
+
+  it('picks the wedge the pointer points into, clockwise from the top', () => {
+    // Four wedges: up, right, down, left.
+    expect(wheelIndex(0, -50, 4, 20)).toBe(0);
+    expect(wheelIndex(50, 0, 4, 20)).toBe(1);
+    expect(wheelIndex(0, 50, 4, 20)).toBe(2);
+    expect(wheelIndex(-50, 0, 4, 20)).toBe(3);
+    // Just left of straight up is still the top wedge.
+    expect(wheelIndex(-10, -50, 4, 20)).toBe(0);
+    // Six wedges, 60° each: down-right is wedge 2 (120°).
+    expect(wheelIndex(43, 25, 6, 20)).toBe(2);
+  });
+
+  it('picks nothing near the centre', () => {
+    expect(wheelIndex(5, 5, 6, 20)).toBeNull();
+    expect(wheelIndex(50, 0, 0, 20)).toBeNull();
+  });
+
+  it('puts each wedge where the pointer picks it', () => {
+    for (const count of [2, 3, 6, 8]) {
+      for (let i = 0; i < count; i += 1) {
+        const a = wheelAngle(i, count);
+        expect(wheelIndex(Math.cos(a) * 60, Math.sin(a) * 60, count, 20)).toBe(i);
+      }
+    }
   });
 });

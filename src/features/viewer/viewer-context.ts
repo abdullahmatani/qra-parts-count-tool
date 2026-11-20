@@ -39,4 +39,6 @@ export interface ViewerInteraction {
   onPointerLeave?(): void;
   onDoubleClick?(event: { point: Point2; screen: Point2 }, context: ViewerContext): void;
   onKeyDown?(event: React.KeyboardEvent<HTMLElement>, context: ViewerContext): boolean;
+  /** A right-click on the canvas, before its context menu opens. */
+  onContextMenu?(event: { point: Point2; screen: Point2 }, context: ViewerContext): void;
 }

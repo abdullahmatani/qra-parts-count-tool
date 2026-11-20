@@ -43,6 +43,7 @@ Change or add keys in **Project › Equipment library** (column **Key**).
 | ------------------------ | ----------------------------------------------------------------------------------- |
 | `Ctrl+Z`                 | Undo                                                                                |
 | `Ctrl+Y`, `Ctrl+Shift+Z` | Redo                                                                                |
+| `Ctrl+X`                 | Cut selected markers (copy, then delete)                                            |
 | `Ctrl+C`                 | Copy selected markers (with their items)                                            |
 | `Ctrl+V`                 | Paste (at the pointer when it is over the drawing)                                  |
 | `Ctrl+A`                 | Select all markers on the drawing                                                   |
@@ -52,6 +53,13 @@ Change or add keys in **Project › Equipment library** (column **Key**).
 | `Enter`                  | Finish a dashed line run; in a field, confirm the value                             |
 | `Esc`                    | Cancel drawing and return to the Select tool; press again to clear the selection    |
 | `F2`                     | Rename the drawing selected in the drawing list                                     |
+
+## Mouse
+
+| Action                                 | What it does                                                                                                                                    |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Right-click the drawing                | Menu of editing commands: undo, redo, cut, copy, paste here, delete, select all, edit, count as, move to segment, switch tool                   |
+| Press and hold the left button (count) | Quick-pick wheel with an equipment shape picked: move towards a type and let go to count the symbol as it; let go in the middle to keep it open |
 
 ## View
 

@@ -69,3 +69,37 @@ export function fitChoices(
   }
   return [...shown].sort((a, b) => a - b);
 }
+
+/** The most wedges the quick-pick wheel shows; more would be too narrow to flick into. */
+export const WHEEL_MAX = 8;
+
+/**
+ * The choices on the quick-pick wheel (count stage): the types that have a
+ * shortcut key in the library, the ones met most often (in the starter
+ * library: manual and automated valve, flange, small-bore connection, vessel
+ * and pump). Without any keyed types, the first choices of the library.
+ * At most `WHEEL_MAX`.
+ */
+export function wheelChoices(types: readonly EquipmentType[]): EquipmentChoice[] {
+  const choices = equipmentChoices(types);
+  const keyed = choices.filter((choice) => choice.type.shortcut);
+  return (keyed.length > 0 ? keyed : choices).slice(0, WHEEL_MAX);
+}
+
+/**
+ * The wedge of a wheel of `count` wedges that the pointer points into, `dx`,
+ * `dy` (screen px) from its centre; null within `deadZone` of the centre.
+ * Wedge 0 is centred straight up and the wedges go round clockwise.
+ */
+export function wheelIndex(dx: number, dy: number, count: number, deadZone: number): number | null {
+  if (count <= 0 || Math.hypot(dx, dy) < deadZone) return null;
+  // Clockwise from straight up, in degrees [0, 360). Screen y points down.
+  const degrees = ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
+  const step = 360 / count;
+  return Math.round(degrees / step) % count;
+}
+
+/** The direction (radians, screen axes) of the middle of wedge `index` of `count`. */
+export function wheelAngle(index: number, count: number): number {
+  return -Math.PI / 2 + (index * 2 * Math.PI) / count;
+}

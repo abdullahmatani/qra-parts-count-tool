@@ -17,6 +17,7 @@ import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import {
   copySelection,
+  cutSelection,
   deleteMarkerIds,
   pasteClipboard,
   selectAllOnDrawing,
@@ -38,6 +39,7 @@ export type ShortcutAction =
   | { kind: 'redo' }
   | { kind: 'delete' }
   | { kind: 'copy' }
+  | { kind: 'cut' }
   | { kind: 'paste' }
   | { kind: 'selectAll' }
   | { kind: 'escape' }
@@ -61,6 +63,7 @@ export function shortcutFor(
     if (key === 'z') return event.shiftKey ? { kind: 'redo' } : { kind: 'undo' };
     if (key === 'y') return { kind: 'redo' };
     if (key === 'c') return { kind: 'copy' };
+    if (key === 'x') return { kind: 'cut' };
     if (key === 'v') return { kind: 'paste' };
     if (key === 'a') return { kind: 'selectAll' };
     if (key === 'f') return { kind: 'find' };
@@ -134,6 +137,12 @@ export function runShortcut(action: ShortcutAction): boolean {
     case 'copy': {
       const count = copySelection();
       if (count) toast(t('markup.copied', { count }), { duration: 1500 });
+      return count > 0;
+    }
+    case 'cut': {
+      if (project.readOnly) return false;
+      const count = cutSelection();
+      if (count) toast(t('markup.cut', { count }), { duration: 1500 });
       return count > 0;
     }
     case 'paste': {

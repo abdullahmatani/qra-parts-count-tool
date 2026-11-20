@@ -5,6 +5,21 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
 
 ## Unreleased
 
+- **Right-click menu on the drawing** (ANN-04, ANN-08): right-clicking the drawing opens a menu with
+  **Undo**, **Redo**, **Cut**, **Copy**, **Paste here** (centred where you right-clicked),
+  **Delete**, **Select all** and **Clear selection**; for the markers selected, **Edit…**,
+  **Count as** (while counting) and **Move to segment**; and **Tool** to switch tools. A marker
+  right-clicked is selected first, so the menu acts on it. While a dashed line run is being drawn,
+  the menu finishes or cancels it. `Ctrl+X` now cuts the selected markers.
+
+- **Quick-pick wheel while counting** (CNT-01, ANN-08): with an equipment shape picked, press and
+  hold the left button on a symbol and a wheel of equipment types opens round the pointer, as in a
+  CAD marking menu. Move towards **Valve (manual)**, **Valve (automated)**, **Flange**,
+  **Small-bore instrument connection** or another type and let go: the symbol is counted as it, and
+  the bar counts that type next. The wheel holds the library types that have a key (up to eight).
+  Let go in the middle and the wheel stays open for a click; `Esc` closes it. A quick click or a drag
+  works as before. It can be turned off in **Settings › General**.
+
 - **Identify equipment, sized from the line numbers** (roadmap #59, #60, CNT-01): **Identify** in
   the toolbar (while counting) searches the open drawing for every kind of equipment counted so far,
   at once: each type and actuation counted on the drawing, and kinds counted only on other drawings
