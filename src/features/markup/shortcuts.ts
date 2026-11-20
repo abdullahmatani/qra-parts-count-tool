@@ -17,6 +17,7 @@ import { useProjectStore } from '@/store/project-store';
 import { useUiStore } from '@/store/ui-store';
 import {
   copySelection,
+  countAtPointer,
   cutSelection,
   deleteMarkerIds,
   pasteClipboard,
@@ -43,17 +44,35 @@ export type ShortcutAction =
   | { kind: 'paste' }
   | { kind: 'selectAll' }
   | { kind: 'escape' }
-  | { kind: 'equipmentType'; typeId: string }
+  | {
+      kind: 'equipmentType';
+      typeId: string;
+      /** Shift was held: the automated actuation, for types that carry one. */
+      automated: boolean;
+    }
   | { kind: 'back' }
   | { kind: 'find' }
   | { kind: 'autoTrace' };
 
 /**
+ * The key a physical key stands for without Shift ("Digit1" is "1", "KeyP"
+ * is "p"), so Shift+1 can be told apart from "!" on any layout.
+ */
+function unshifted(code: string | undefined): string | null {
+  const match = code ? /^(?:Digit|Numpad)(\d)$|^Key([A-Z])$/.exec(code) : null;
+  if (!match) return null;
+  return match[1] ?? match[2]!.toLowerCase();
+}
+
+/**
  * Maps a key press to a workspace action. `typeKeys` maps equipment type
- * shortcut keys (e.g. "1" for valves) to type ids (ANN-08).
+ * shortcut keys (e.g. "1" for valves) to type ids (ANN-08); with Shift, a
+ * type's key picks its automated actuation.
  */
 export function shortcutFor(
-  event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'altKey'>,
+  event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'altKey'> & {
+    code?: string;
+  },
   typeKeys: ReadonlyMap<string, string> = new Map(),
 ): ShortcutAction | null {
   const mod = event.ctrlKey || event.metaKey;
@@ -71,9 +90,12 @@ export function shortcutFor(
   }
   if (event.key === 'Delete' || event.key === 'Backspace') return { kind: 'delete' };
   if (event.key === 'Escape') return { kind: 'escape' };
-  if (event.shiftKey) return null;
+  if (event.shiftKey) {
+    const shiftedType = typeKeys.get(unshifted(event.code) ?? key);
+    return shiftedType ? { kind: 'equipmentType', typeId: shiftedType, automated: true } : null;
+  }
   const typeId = typeKeys.get(key);
-  if (typeId) return { kind: 'equipmentType', typeId };
+  if (typeId) return { kind: 'equipmentType', typeId, automated: false };
   const tool = TOOLS.find((def) => def.shortcut.toLowerCase() === key);
   if (tool) return { kind: 'tool', tool: tool.tool };
   return key === 't' ? { kind: 'autoTrace' } : null;
@@ -154,18 +176,26 @@ export function runShortcut(action: ShortcutAction): boolean {
     case 'selectAll':
       return selectAllOnDrawing() > 0 || ui.activeDrawingId !== null;
     case 'equipmentType': {
-      // Sets the type of the selected item and of the next circle placed.
       if (project.readOnly || currentStage() !== 'count') return false;
-      ui.setItemDefaults({ equipmentTypeId: action.typeId });
+      const type = project.doc.library.equipmentTypes.find((e) => e.id === action.typeId);
+      if (!type) return false;
+      // The key is manual, Shift+key automated, for valves and other types with actuation.
+      const actuation = type.hasActuation ? (action.automated ? 'automated' : 'manual') : null;
+      // Placing equipment, the key counts what the pointer is on (point and press).
+      if (
+        (ui.tool === 'circle' || ui.tool === 'stamp') &&
+        countAtPointer({ typeId: type.id, actuation })
+      ) {
+        return true;
+      }
+      // Otherwise it sets the type of the selected item and of the next marker placed.
+      ui.setItemDefaults({ equipmentTypeId: type.id, ...(actuation ? { actuation } : {}) });
       const ids = selectedMarkerIds();
       const item = ids.length === 1 ? itemForMarker(project.doc, ids[0]!) : undefined;
       if (item) {
-        const type = project.doc.library.equipmentTypes.find((e) => e.id === action.typeId);
         updateItemCommand(item.id, {
-          equipmentTypeId: action.typeId,
-          ...(type?.hasActuation && !item.actuation
-            ? { actuation: ui.itemDefaults.actuation }
-            : {}),
+          equipmentTypeId: type.id,
+          ...(actuation ? { actuation } : {}),
         });
         ui.requestEdit(item.markerId, 'size');
       }

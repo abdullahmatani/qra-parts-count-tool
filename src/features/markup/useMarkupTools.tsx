@@ -28,17 +28,19 @@
  * - Select: click a marker to select it (Shift/Ctrl adds), drag to move the
  *   selection, drag a handle to resize, drag on empty paper to box-select,
  *   double-click to edit, arrow keys to nudge.
- * - Quick-pick wheel (count stage, equipment marker tool): press and hold the
- *   left button and a wheel of the most-used equipment types opens round the
- *   pointer; point into one and let go to place a marker counted as it. Let
- *   go in the middle and the wheel stays open for a click; Esc closes it.
- * - Right-click: selects the marker under the pointer (when it is not
- *   selected already) before the canvas's context menu opens.
+ * - Quick-pick wheel (count stage): right-click the drawing away from the
+ *   markers and a wheel of the most-used equipment types opens round the
+ *   pointer; flick towards one and let go of the button to place a marker
+ *   counted as it. Let go in the middle and the wheel stays open for a click;
+ *   right-click again for the context menu instead; Esc closes it.
+ * - Right-click on a marker, Shift+right-click, and any right-click while
+ *   defining segments: selects the marker under the pointer (when it is not
+ *   selected already) and opens the canvas's context menu.
  * - Esc cancels a shape being drawn and returns to Select.
  *
  * Pan stays on the middle button or Space + drag; the wheel zooms.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
@@ -100,6 +102,7 @@ import {
   moveMarkerIds,
   placeEndFlange,
   placeEsdv,
+  placeEquipment,
   placeMarker,
   placeStroke,
   resizeMarker,
@@ -114,8 +117,6 @@ const HANDLE_TOLERANCE = 8;
 const MAGNET = 14;
 /** How near a drawn line (CSS px) a click puts a double line or end flange across it. */
 const LINE_SNAP = 12;
-/** How long (ms) the left button is held still before the quick-pick wheel opens. */
-export const WHEEL_HOLD_MS = 300;
 
 type Gesture =
   | { kind: 'none' }
@@ -313,13 +314,8 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     setGestureState(next);
   }, []);
   const traceRef = useRef<StrokeTrace | null>(null);
-  // The timer that opens the quick-pick wheel when the button is held still.
-  const holdRef = useRef<number | null>(null);
-  const clearHold = useCallback(() => {
-    if (holdRef.current !== null) window.clearTimeout(holdRef.current);
-    holdRef.current = null;
-  }, []);
-  useEffect(() => clearHold, [clearHold]);
+  // A right-click opened the quick-pick wheel: its context menu event is not to open the menu.
+  const wheelClickRef = useRef(false);
   // Where the canvas was last right-clicked, and the view then (the context menu).
   const menuRef = useRef<{ point: XY; context: ViewerContext } | null>(null);
   const [polyline, setPolylineState] = useState<{ points: XY[]; hover: XY | null } | null>(null);
@@ -398,8 +394,7 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     tool === 'link';
   const selectLike = !drawingTool;
   const editable = !readOnly;
-  const wheelOn =
-    quickPick && editable && stage === 'count' && tool === 'circle' && wheel.length > 0;
+  const wheelOn = quickPick && editable && stage === 'count' && wheel.length > 0;
 
   /** The ESDV or end flange a highlighter stroke snaps to at `point` (none while Alt is held). */
   const snapAt = (
@@ -496,19 +491,15 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
   /**
    * Places a marker counted as `choice` at `centre`, picked on the quick-pick
-   * wheel, with the size and shape of the equipment bar. The choice becomes
-   * what the next markers count, as if picked in the bar.
+   * wheel; the item editor opens at its size.
    */
   const placeFromWheel = (choice: EquipmentChoice, centre: XY) => {
-    const ui = useUiStore.getState();
-    ui.setItemDefaults({
-      equipmentTypeId: choice.type.id,
-      ...(choice.actuation ? { actuation: choice.actuation } : {}),
-    });
-    // A free-form outline is dragged round a symbol: the wheel places a ring instead.
-    const shape: MarkerSymbol = symbol === 'freeform' ? 'circle' : symbol;
-    const r = ui.circleRadiusFraction * longSide * (shape === 'dot' ? DOT_SCALE : 1);
-    placeMarker(drawingId, { type: 'circle', cx: centre.x, cy: centre.y, r }, { symbol: shape });
+    placeEquipment(
+      drawingId,
+      centre,
+      { typeId: choice.type.id, actuation: choice.actuation },
+      { focus: true },
+    );
   };
 
   /** The wedge of the wheel under `screen`, for a wheel round `centre` (drawing units). */
@@ -518,7 +509,6 @@ export function useMarkupTools(drawingId: string): MarkupTools {
   };
 
   const cancel = (): boolean => {
-    clearHold();
     if (polylineRef.current) {
       setPolyline(null);
       return true;
@@ -551,14 +541,32 @@ export function useMarkupTools(drawingId: string): MarkupTools {
                   : 'default',
 
     onPointerDown(event, context) {
+      wheelClickRef.current = false;
       const open = gestureRef.current;
       if (open.kind === 'wheel') {
-        // The wheel left open: a click on a type places it, anywhere else closes it.
+        // The wheel left open: a click on a type places it, anywhere else closes
+        // it; a right-click closes it and opens the context menu instead.
         const index =
           event.native.button === 0 ? wheelAt(open.centre, event.screen, context) : null;
         setGesture(NONE);
+        wheelClickRef.current = false;
         const choice = index === null ? undefined : wheel[index];
         if (choice) placeFromWheel(choice, open.centre);
+        return;
+      }
+      // Counting, a right-click away from the markers opens the quick-pick
+      // wheel (Shift+right-click, or one on a marker, opens the context menu).
+      if (
+        event.native.button === 2 &&
+        wheelOn &&
+        !event.native.shiftKey &&
+        gestureRef.current.kind === 'none' &&
+        !polylineRef.current &&
+        !pickMarker(visible, event.point, HIT_TOLERANCE * context.unitsPerPixel)
+      ) {
+        event.native.currentTarget.setPointerCapture(event.native.pointerId);
+        wheelClickRef.current = true;
+        setGesture({ kind: 'wheel', centre: event.point, active: null, sticky: false });
         return;
       }
       if (event.native.button !== 0) return;
@@ -577,17 +585,6 @@ export function useMarkupTools(drawingId: string): MarkupTools {
           });
         } else {
           setGesture({ kind: 'circle', centre: point, start: screen, radius: null });
-        }
-        // Held still, the press opens the quick-pick wheel instead (count stage).
-        if (wheelOn) {
-          clearHold();
-          holdRef.current = window.setTimeout(() => {
-            holdRef.current = null;
-            const g = gestureRef.current;
-            const still =
-              (g.kind === 'circle' && g.radius === null) || (g.kind === 'freeform' && !g.dragging);
-            if (still) setGesture({ kind: 'wheel', centre: point, active: null, sticky: false });
-          }, WHEEL_HOLD_MS);
         }
         return;
       }
@@ -858,7 +855,6 @@ export function useMarkupTools(drawingId: string): MarkupTools {
 
     onPointerUp(event, context) {
       const g = gestureRef.current;
-      clearHold();
       if (g.kind === 'wheel') {
         const index = wheelAt(g.centre, event.screen, context);
         const choice = index === null ? undefined : wheel[index];
@@ -1035,13 +1031,19 @@ export function useMarkupTools(drawingId: string): MarkupTools {
     },
 
     onContextMenu(event, context) {
-      clearHold();
+      // The right-click opened the wheel (the menu event comes as the button goes
+      // down on Linux and macOS, as it comes up on Windows): no menu.
+      if (wheelClickRef.current) {
+        wheelClickRef.current = false;
+        return true;
+      }
       if (gestureRef.current.kind === 'wheel') setGesture(NONE);
       menuRef.current = { point: event.point, context };
       // The menu acts on the marker right-clicked: select it, unless it is in the selection.
       const hit = pickMarker(visible, event.point, HIT_TOLERANCE * context.unitsPerPixel);
       const ui = useUiStore.getState();
       if (hit && !ui.selection.includes(hit.id)) ui.setSelection([hit.id]);
+      return false;
     },
 
     onDoubleClick(event, context) {

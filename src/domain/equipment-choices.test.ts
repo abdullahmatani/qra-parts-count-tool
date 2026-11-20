@@ -3,6 +3,7 @@ import { starterLibrary } from './count/starter-library';
 import {
   ANY_EQUIPMENT,
   WHEEL_MAX,
+  choiceShortcut,
   currentChoice,
   equipmentChoices,
   fitChoices,
@@ -110,5 +111,18 @@ describe('quick-pick wheel', () => {
         expect(wheelIndex(Math.cos(a) * 60, Math.sin(a) * 60, count, 20)).toBe(i);
       }
     }
+  });
+});
+
+describe('choice shortcuts', () => {
+  it('is the type key, with Shift for the automated actuation', () => {
+    const choices = equipmentChoices(starterLibrary().equipmentTypes);
+    const keys = Object.fromEntries(choices.map((c) => [c.key, choiceShortcut(c)]));
+    const [manual, automated, flange] = choices;
+    expect(keys[manual!.key]).toBe('1');
+    expect(keys[automated!.key]).toBe('Shift+1');
+    expect(keys[flange!.key]).toBe('2');
+    // A type without a key has none.
+    expect(choices.some((c) => choiceShortcut(c) === null)).toBe(true);
   });
 });

@@ -63,20 +63,36 @@ The same bar chooses, before you click:
 
 ## The quick-pick wheel
 
-To count a symbol as a different type without going up to the bar, **press and hold** the left
-mouse button on it with an equipment shape picked. After a moment a wheel of equipment types opens
-round the pointer: move towards a type (it lights up) and let go. A marker counted as that type is
-placed where you pressed, and the type becomes the one the bar counts next. A quick click still
-places the type chosen in the bar, and a drag still sizes the ring or draws a free-form outline.
+To count a symbol as any type without going up to the bar, **right-click** it. A wheel of
+equipment types opens round the pointer: flick towards a type (it lights up) and let go of the
+button. A marker counted as that type is placed where you right-clicked, the item editor opens at
+its size, and the type becomes the one the bar counts next.
 
-- The wheel holds the types that have a **key** in the equipment library: with the starter library,
-  **Valve (manual)**, **Valve (automated)**, **Flange**, **Small-bore instrument connection**,
-  **Pressure vessel** and **Pump, centrifugal (single seal)**. Give a type a key in
-  **Project › Equipment library** to put it on the wheel (up to eight).
-- Let go in the middle and the wheel stays open: click a type, or click elsewhere or press `Esc` to
-  close it without placing anything.
+- The wheel holds the types that have a **key** in the equipment library, each shown with its key:
+  with the starter library, **Valve (manual)** `1`, **Valve (automated)** `Shift+1`, **Flange**
+  `2`, **Small-bore instrument connection** `3`, **Pressure vessel** `4` and **Pump, centrifugal
+  (single seal)** `5`. Give a type a key in **Project › Equipment library** to put it on the wheel
+  (up to eight).
+- Let go in the middle (a plain right-click) and the wheel stays open: click a type, or click
+  elsewhere or press `Esc` to close it without placing anything. **Right-click again** for the menu
+  of editing commands instead.
+- A right-click on a marker, or `Shift`+right-click anywhere, opens the menu of editing commands
+  (see [Editing markers](#editing-markers)).
 - The wheel only opens while counting. Turn it off in **Settings › General › Quick-pick wheel while
-  counting**.
+  counting**, and a right-click always opens the menu.
+
+## Point and press
+
+The fastest way to count: with an equipment shape picked, **point at a symbol and press its type's
+key**. A marker counted as that type is placed under the pointer, without a click, and the keyboard
+stays on the drawing, so you point at the next symbol and press again. Hold `Shift` for the
+automated actuation of a valve (`1` is a manual valve, `Shift+1` an automated one).
+
+- Pressed over a marker already placed, the key changes what it counts instead and opens its size:
+  so "click, then press the key" works as before.
+- Sizes are left empty: type them as you go, or use **Fill sizes** in the toolbar afterwards to
+  read them from the line numbers (see [Sizes from line numbers](#sizes-from-line-numbers)).
+- With **Select** (`V`), the key changes the type of the selected item instead.
 
 ## Stamp
 
@@ -206,7 +222,8 @@ items; **Highlight incomplete items** does the same for items still missing some
 - `Delete` removes the selection. `Ctrl+Z` and `Ctrl+Y` undo and redo any change.
 - `Esc` cancels a shape you are drawing and returns to the **Select** tool; press it again to clear
   the selection.
-- **Right-click** the drawing for a menu of these commands: **Undo**, **Redo**, **Cut**, **Copy**,
+- **Right-click** the drawing (while counting: a marker, or `Shift`+right-click on the paper) for a
+  menu of these commands: **Undo**, **Redo**, **Cut**, **Copy**,
   **Paste here** (centred where you right-clicked), **Delete**, **Select all** and **Clear
   selection**; for the markers selected, **Edit…**, **Count as** (change the type of their items,
   while counting) and **Move to segment**; and **Tool** to switch tools. Right-clicking a marker

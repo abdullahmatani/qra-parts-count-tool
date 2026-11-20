@@ -10,15 +10,24 @@ Versions follow the [roadmap](docs/ROADMAP.md). Requirement IDs refer to the
   **Delete**, **Select all** and **Clear selection**; for the markers selected, **Edit…**,
   **Count as** (while counting) and **Move to segment**; and **Tool** to switch tools. A marker
   right-clicked is selected first, so the menu acts on it. While a dashed line run is being drawn,
-  the menu finishes or cancels it. `Ctrl+X` now cuts the selected markers.
+  the menu finishes or cancels it. `Ctrl+X` now cuts the selected markers. While counting, the menu
+  opens on a marker or with `Shift`+right-click; a right-click on the paper opens the quick-pick
+  wheel.
 
-- **Quick-pick wheel while counting** (CNT-01, ANN-08): with an equipment shape picked, press and
-  hold the left button on a symbol and a wheel of equipment types opens round the pointer, as in a
-  CAD marking menu. Move towards **Valve (manual)**, **Valve (automated)**, **Flange**,
-  **Small-bore instrument connection** or another type and let go: the symbol is counted as it, and
-  the bar counts that type next. The wheel holds the library types that have a key (up to eight).
-  Let go in the middle and the wheel stays open for a click; `Esc` closes it. A quick click or a drag
-  works as before. It can be turned off in **Settings › General**.
+- **Quick-pick wheel while counting** (CNT-01, ANN-08): right-click a symbol and a wheel of
+  equipment types opens round the pointer, as in a CAD marking menu. Flick towards
+  **Valve (manual)**, **Valve (automated)**, **Flange**, **Small-bore instrument connection** or
+  another type and let go: the symbol is counted as it, and the bar counts that type next. The wheel
+  holds the library types that have a key (up to eight), each shown with its key. A plain
+  right-click keeps the wheel open for a click; right-click again for the menu, or `Esc` to close it.
+  It can be turned off in **Settings › General**.
+
+- **Point and press** (CNT-01, ANN-08): while counting with an equipment shape picked, point at a
+  symbol and press its type's key: a marker counted as that type is placed under the pointer
+  without a click, and the keyboard stays on the drawing for the next one. Pressed over a marker,
+  the key changes its type instead. `Shift` with a type's key picks the automated actuation
+  (`Shift+1` is an automated valve, `1` a manual one), with any keyboard layout; the keys are shown
+  in the equipment bar, the wheel, the **Count as** menu and the shortcut list.
 
 - **Identify equipment, sized from the line numbers** (roadmap #59, #60, CNT-01): **Identify** in
   the toolbar (while counting) searches the open drawing for every kind of equipment counted so far,
